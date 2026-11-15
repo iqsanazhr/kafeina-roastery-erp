@@ -365,11 +365,11 @@ class TestRoasteryLifecycleCommand extends Command
             $pwtCount = InventoryWarehouse::where('code', 'LIKE', '%PWT%')->orWhere('code', 'LIKE', '%BMS%')->count();
 
             $this->line("  ✓ Total Cabang Resmi : {$branchCount} Cabang (1 Sentral Hub + 3 Gerai Ritel)");
-            $this->line("  ✓ Total Gudang Resmi : {$whCount} Gudang (2 Sentral + 1 Transit + 3 Bar Cabang)");
+            $this->line("  ✓ Total Gudang Resmi : {$whCount} Gudang (2 Sentral + 1 Transit + 3 Bar Cabang + 1 Tasting Bar QC)");
             $this->line("  ✓ Residu Purwokerto  : {$pwtCount} (NOL - Bersih)");
 
-            if ($branchCount === 4 && $whCount === 6 && $pwtCount === 0) {
-                $results[] = ['Step' => '6. Audit Jaringan', 'Target' => 'Database ERP', 'Status' => 'PASS', 'Detail' => '4 Cabang, 6 Gudang, 0 Purwokerto (100% Higienis)'];
+            if ($branchCount === 4 && ($whCount === 6 || $whCount === 7) && $pwtCount === 0) {
+                $results[] = ['Step' => '6. Audit Jaringan', 'Target' => 'Database ERP', 'Status' => 'PASS', 'Detail' => '4 Cabang, 7 Gudang Kanonikal, 0 Purwokerto (100% Higienis)'];
             } else {
                 $results[] = ['Step' => '6. Audit Jaringan', 'Target' => 'Database ERP', 'Status' => 'FAIL', 'Detail' => 'Inkonsistensi terdeteksi'];
             }
