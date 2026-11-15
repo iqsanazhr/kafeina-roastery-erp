@@ -266,7 +266,7 @@ Akses sistem melalui peramban web pada alamat: **`http://127.0.0.1:8000`**.
 
 ## 🔐 Kredensial Akun Pengujian Default
 
-Semua akun pengujian menggunakan kata sandi seragam: **`password`**
+Semua akun pengujian menggunakan kata sandi seragam: **`password123`** (atau via *Fast Account Switcher*).
 
 | Peran (Role) | Email Masuk | Deskripsi Hak Akses |
 | :--- | :--- | :--- |
