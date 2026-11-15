@@ -47,12 +47,12 @@
             <!-- Workspace Selector & Toggle Button -->
             <div class="flex items-center" :class="sidebarCollapsed ? 'flex-col items-center gap-2' : 'justify-between'">
                 <a href="{{ route('dashboard.index') }}" class="flex items-center gap-2.5 min-w-0 group" :class="sidebarCollapsed ? 'justify-center' : 'flex-1'" :title="sidebarCollapsed ? 'KAFEINA Roastery' : ''">
-                    <div class="w-6 h-6 rounded-full bg-white flex items-center justify-center text-neutral-950 shadow-2xs shrink-0 border border-neutral-200/90 group-hover:border-neutral-300 transition-colors">
-                        <svg class="w-3.5 h-3.5" viewBox="0 0 40 40" fill="none">
-                            <rect x="8" y="7" width="5" height="26" rx="2.5" fill="#0A0A0A"/>
-                            <path d="M16 19.5C16 13 22 8 29 8C29 15 23 20 16 19.5Z" fill="#0A0A0A"/>
+                    <div class="w-7 h-7 rounded-lg bg-neutral-950 flex items-center justify-center text-white shadow-xs shrink-0 border border-neutral-800 group-hover:scale-105 transition-all">
+                        <svg class="w-4.5 h-4.5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="8" y="7" width="5" height="26" rx="2.5" fill="#FFFFFF"/>
+                            <path d="M16 19.5C16 13 22 8 29 8C29 15 23 20 16 19.5Z" fill="#FFFFFF"/>
                             <path d="M16 20.5C21 21 31 23 31 32C24 32 18 28 16 20.5Z" fill="#EA580C"/>
-                            <path d="M21 11.5C22.5 13.5 24 16 23.5 18" stroke="#FFFFFF" stroke-width="1.5" stroke-linecap="round"/>
+                            <path d="M21 11.5C22.5 13.5 24 16 23.5 18" stroke="#171717" stroke-width="1.5" stroke-linecap="round"/>
                         </svg>
                     </div>
                     <span x-show="!sidebarCollapsed" class="font-semibold text-[13px] text-neutral-900 truncate tracking-tight">kafeina-roastery</span>
@@ -711,7 +711,7 @@
                     </div>
                     <!-- Username text -->
                     <span x-show="!sidebarCollapsed" class="text-[13px] font-normal text-neutral-900 group-hover:text-black truncate max-w-[115px] tracking-tight">
-                        {{ $currentUser ? Str::slug(explode(' (', $currentUser->name)[0], '-') : 'iqsan17azhar-3960' }}
+                        {{ $currentUser ? Str::slug(explode(' (', $currentUser->name)[0], '-') : 'kelompok-1-erp' }}
                     </span>
                 </button>
 
