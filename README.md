@@ -186,6 +186,21 @@ sequenceDiagram
 
 ---
 
+## 📸 Galeri Antarmuka Sistem (2-Column Grid)
+
+| Halaman & Fitur Sistem | Halaman & Fitur Sistem |
+| :---: | :---: |
+| <img src="docs/screenshots/01_login_screen.png" width="100%" alt="Halaman Masuk Sistem" /><br /><b>01. Masuk ke Sistem (Compact Split View & Circular K Logo)</b> | <img src="docs/screenshots/02_executive_dashboard.png" width="100%" alt="Executive Analytics Dashboard" /><br /><b>02. Dasbor Eksekutif & Analitik Multi-Cabang</b> |
+| <img src="docs/screenshots/03_spotlight_search.png" width="100%" alt="Spotlight Command Palette" /><br /><b>03. Spotlight Command Palette (Shortcut <code>/</code>)</b> | <img src="docs/screenshots/04_ios27_notification.png" width="100%" alt="iOS 27 Dynamic Island" /><br /><b>04. Notifikasi Apple iOS 27 Dynamic Island (Light Glass)</b> |
+| <img src="docs/screenshots/05_touchscreen_pos.png" width="100%" alt="Touchscreen POS Kasir" /><br /><b>05. Terminal Kasir Layar Sentuh POS (Senopati Flagship)</b> | <img src="docs/screenshots/06_qris_midtrans_payment.png" width="100%" alt="Dynamic QRIS Midtrans" /><br /><b>06. Simulasi Pembayaran Dinamis QRIS Midtrans</b> |
+| <img src="docs/screenshots/07_sales_orders_ledger.png" width="100%" alt="Buku Penjualan & Audit Resep" /><br /><b>07. Riwayat Penjualan & Audit Pemotongan Resep POS</b> | <img src="docs/screenshots/08_roastery_work_orders.png" width="100%" alt="Roastery Work Orders" /><br /><b>08. Roastery & Penjadwalan Mesin Sangrai Giesen W15A</b> |
+| <img src="docs/screenshots/09_yield_loss_monitoring.png" width="100%" alt="Yield Loss Monitor" /><br /><b>09. Audit Susut Bobot Sangrai (Yield Loss) & HPP Riil</b> | <img src="docs/screenshots/10_qc_lab_cupping.png" width="100%" alt="QC Lab SCA Cupping" /><br /><b>10. Laboratorium Mutu QC Lab SCA 100-Point Form</b> |
+| <img src="docs/screenshots/11_inventory_stock_cards.png" width="100%" alt="Inventori & Kartu Stok" /><br /><b>11. Manajemen Inventori 7 Gudang & Kartu Stok FIFO</b> | <img src="docs/screenshots/12_logistics_delivery_notes.png" width="100%" alt="Logistik & Surat Jalan" /><br /><b>12. Logistik Permintaan Barang (MR) & Surat Jalan (DN)</b> |
+| <img src="docs/screenshots/13_procurement_suppliers.png" width="100%" alt="Pengadaan & Mitra Petani" /><br /><b>13. Pengadaan Green Beans & Kemitraan Koperasi Petani</b> | <img src="docs/screenshots/14_vouchers_management.png" width="100%" alt="Voucher & Promo" /><br /><b>14. Manajemen Kupon Promo & Kuota Penukaran</b> |
+| <img src="docs/screenshots/15_financial_reports.png" width="100%" alt="Laporan Finansial" /><br /><b>15. Analitik Finansial & Laporan Arus Kas Multi-Gerai</b> | <img src="docs/screenshots/16_whitebox_test_terminal.png" width="100%" alt="White-Box Testing Terminal" /><br /><b>16. Eksekusi Pengujian White-Box PowerShell (100% Pass)</b> |
+
+---
+
 ## 🛠️ Tech Stack & Ketergantungan
 
 | Layer | Teknologi & Komponen | Deskripsi & Peran |
@@ -284,8 +299,8 @@ Semua akun pengujian menggunakan kata sandi seragam: **`password123`** (atau via
 
 ## 👥 Tim Pengembang & Atribusi
 
-- **Arsitek & Lead Full-Stack Developer**:
-  - **Iqsan Azhar** ([@iqsanazhr](https://github.com/iqsanazhr)) — Perancangan arsitektur ERP kopi, skema basis data relasional, modul sangrai industri Giesen W15A, terminal kasir layar sentuh, dan sistem notifikasi Apple iOS 27 Dynamic Island.
+- **Arsitek & Tim Pengembang Sistem**:
+  - **Kelompok 1 ERP** — Perancangan arsitektur ERP kopi spesialti, skema basis data relasional multi-cabang, modul sangrai industri Giesen W15A, terminal kasir layar sentuh (POS), integrasi sistem notifikasi Apple iOS 27 Dynamic Island, serta pengujian perangkat lunak berbasis White-Box testing.
 
 ---
 
@@ -296,5 +311,5 @@ Proyek ini didistribusikan di bawah ketentuan lisensi terbuka **MIT License**. S
 ---
 
 <p align="center">
-  <b>KAFEINA</b> &bull; Crafted with precision by <b>Iqsan Azhar</b> &bull; Specialty Coffee Roastery &amp; Enterprise POS Platform
+  <b>KAFEINA</b> &bull; Crafted with precision by <b>Kelompok 1 ERP</b> &bull; Specialty Coffee Roastery &amp; Enterprise POS Platform
 </p>
