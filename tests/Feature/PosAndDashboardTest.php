@@ -309,9 +309,9 @@ class PosAndDashboardTest extends TestCase
     }
 
     /**
-     * Test checkout with Debit Card saves payment method and EDC reference.
+     * Test checkout with BCA Virtual Account saves payment method and reference.
      */
-    public function test_checkout_with_debit_card_saves_payment_method_and_reference(): void
+    public function test_checkout_with_bca_virtual_account_saves_payment_method_and_reference(): void
     {
         $response = $this->postJson('/pos/checkout', [
             'items' => [
@@ -320,25 +320,24 @@ class PosAndDashboardTest extends TestCase
             'customer_name' => 'Rian Pratama',
             'table_number' => '12',
             'order_type' => 'Dine In',
-            'payment_method' => 'debit',
-            'debit_bank' => 'BCA',
-            'debit_last4' => '4821',
-            'debit_approval_code' => '918234',
+            'payment_method' => 'transfer',
+            'va_bank' => 'bca',
+            'va_number' => '95717346649330894954079',
         ]);
 
         $response->assertStatus(200);
         $response->assertJson([
             'success' => true,
             'order' => [
-                'payment_method' => 'debit',
+                'payment_method' => 'transfer',
                 'customer_name' => 'Rian Pratama',
             ],
         ]);
 
         $this->assertDatabaseHas('pos_orders', [
             'customer_name' => 'Rian Pratama',
-            'payment_method' => 'DEBIT_CARD',
-            'payment_reference' => 'BCA EDC • ****4821 • APP-918234',
+            'payment_method' => 'BANK_TRANSFER',
+            'payment_reference' => 'bca VA • 95717346649330894954079',
         ]);
     }
 

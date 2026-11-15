@@ -930,7 +930,6 @@ class PosController extends Controller
             $rawMethod = strtoupper((string) $paymentMethod);
             $mappedPaymentMethod = match ($rawMethod) {
                 'QRIS', 'QRIS_MIDTRANS' => 'QRIS_MIDTRANS',
-                'DEBIT', 'DEBIT_CARD' => 'DEBIT_CARD',
                 'TRANSFER', 'VA', 'BANK_TRANSFER' => 'BANK_TRANSFER',
                 'NON_REVENUE' => 'NON_REVENUE',
                 'SPLIT_BILL' => 'SPLIT_BILL',
@@ -942,11 +941,6 @@ class PosController extends Controller
             if (! $paymentReference) {
                 if ($mappedPaymentMethod === 'QRIS_MIDTRANS') {
                     $paymentReference = $request->input('qris_order_number');
-                } elseif ($mappedPaymentMethod === 'DEBIT_CARD') {
-                    $bank = $request->input('debit_bank', 'EDC');
-                    $last4 = $request->input('debit_last4', '----');
-                    $approval = $request->input('debit_approval_code') ? ' • APP-'.$request->input('debit_approval_code') : '';
-                    $paymentReference = "{$bank} EDC • ****{$last4}{$approval}";
                 } elseif ($mappedPaymentMethod === 'BANK_TRANSFER') {
                     $vaBank = $request->input('va_bank', 'VA');
                     $vaNum = $request->input('va_number', '');

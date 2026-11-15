@@ -97,8 +97,7 @@
             </div>
             <div class="text-[11px] text-neutral-400 mt-2 pt-2 border-t border-[#f5f5f5] flex items-center justify-between">
                 <span>Tunai: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('CASH') ? $paymentBreakdown['CASH']->count : 0 }}</strong></span>
-                <span>Debit: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('DEBIT_CARD') ? $paymentBreakdown['DEBIT_CARD']->count : 0 }}</strong></span>
-                <span>VA: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('BANK_TRANSFER') ? $paymentBreakdown['BANK_TRANSFER']->count : 0 }}</strong></span>
+                <span>Transfer VA: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('BANK_TRANSFER') ? $paymentBreakdown['BANK_TRANSFER']->count : 0 }}</strong></span>
             </div>
         </div>
     </div>
@@ -162,7 +161,6 @@
                     <option value="ALL">Semua Pembayaran</option>
                     <option value="QRIS_MIDTRANS" {{ $selectedPayment === 'QRIS_MIDTRANS' ? 'selected' : '' }}>QRIS Midtrans</option>
                     <option value="CASH" {{ $selectedPayment === 'CASH' ? 'selected' : '' }}>Tunai (Cash)</option>
-                    <option value="DEBIT_CARD" {{ $selectedPayment === 'DEBIT_CARD' ? 'selected' : '' }}>Kartu Debit / EDC</option>
                     <option value="BANK_TRANSFER" {{ $selectedPayment === 'BANK_TRANSFER' ? 'selected' : '' }}>Transfer Bank / VA</option>
                     <option value="NON_REVENUE" {{ $selectedPayment === 'NON_REVENUE' ? 'selected' : '' }}>Non-Revenue (Tester/Staf)</option>
                 </select>

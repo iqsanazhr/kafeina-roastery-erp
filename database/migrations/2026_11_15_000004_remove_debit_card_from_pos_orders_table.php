@@ -1,0 +1,31 @@
+<?php
+
+declare(strict_types=1);
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\DB;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        // Convert any existing DEBIT_CARD orders to BANK_TRANSFER to avoid truncation
+        DB::table('pos_orders')
+            ->where('payment_method', 'DEBIT_CARD')
+            ->update(['payment_method' => 'BANK_TRANSFER']);
+
+        // Alter enum to remove DEBIT_CARD
+        DB::statement("ALTER TABLE `pos_orders` MODIFY COLUMN `payment_method` ENUM('CASH', 'QRIS_MIDTRANS', 'BANK_TRANSFER', 'NON_REVENUE', 'SPLIT_BILL') NOT NULL DEFAULT 'CASH'");
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        DB::statement("ALTER TABLE `pos_orders` MODIFY COLUMN `payment_method` ENUM('CASH', 'QRIS_MIDTRANS', 'DEBIT_CARD', 'BANK_TRANSFER', 'NON_REVENUE', 'SPLIT_BILL') NOT NULL DEFAULT 'CASH'");
+    }
+};

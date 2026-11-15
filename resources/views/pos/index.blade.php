@@ -863,8 +863,8 @@
             </div>
 
             <div class="p-5 flex flex-col gap-4 overflow-y-auto">
-                <!-- Payment Method Segmented Tabs -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-1.5 p-1 bg-neutral-100 rounded-xl border border-neutral-200/80 text-xs shrink-0">
+                <!-- Payment Method Segmented Tabs (3 Channels: Cash, QRIS Midtrans, Transfer VA) -->
+                <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;" class="p-1 bg-neutral-100 rounded-xl border border-neutral-200/80 text-xs shrink-0">
                     <button @click="switchPaymentMethod('cash')"
                             :class="paymentMethod === 'cash' ? 'bg-white text-neutral-900 font-semibold shadow-xs' : 'text-neutral-500 hover:text-neutral-900'"
                             class="py-2.5 rounded-lg transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5">
@@ -876,12 +876,6 @@
                             class="py-2.5 rounded-lg transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5">
                         <svg class="w-3.5 h-3.5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/></svg>
                         <span>QRIS</span>
-                    </button>
-                    <button @click="switchPaymentMethod('debit')"
-                            :class="paymentMethod === 'debit' ? 'bg-white text-neutral-900 font-semibold shadow-xs' : 'text-neutral-500 hover:text-neutral-900'"
-                            class="py-2.5 rounded-lg transition-colors cursor-pointer text-center flex items-center justify-center gap-1.5">
-                        <svg class="w-3.5 h-3.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
-                        <span>Debit / EDC</span>
                     </button>
                     <button @click="switchPaymentMethod('transfer')"
                             :class="paymentMethod === 'transfer' ? 'bg-white text-neutral-900 font-semibold shadow-xs' : 'text-neutral-500 hover:text-neutral-900'"
@@ -1040,190 +1034,94 @@
                     </div>
                 </div>
 
-                <!-- Debit Card Section (Mesin EDC & Kartu Debit) -->
-                <div x-show="paymentMethod === 'debit'" class="space-y-3.5">
-                    <!-- Bank EDC Selector -->
-                    <div>
-                        <label class="block text-[11px] font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Pilih Terminal / Bank EDC:</label>
-                        <div class="grid grid-cols-4 gap-2">
-                            <template x-for="b in ['BCA', 'Mandiri', 'BRI', 'BNI']" :key="b">
-                                <button type="button" @click="debitBank = b"
-                                        :class="debitBank === b ? 'bg-neutral-900 text-white font-bold border-neutral-900 shadow-xs' : 'bg-white text-neutral-700 hover:bg-neutral-50 border-neutral-200'"
-                                        class="py-2 px-1 text-xs rounded-lg border text-center transition-colors cursor-pointer flex flex-col items-center gap-0.5">
-                                    <span class="text-[10px] text-neutral-400 font-mono" :class="debitBank === b ? 'text-neutral-300' : ''">EDC</span>
-                                    <span x-text="b" class="font-bold"></span>
-                                </button>
-                            </template>
-                        </div>
-                    </div>
 
-                    <!-- Virtual Physical Card Preview -->
-                    <div class="relative overflow-hidden rounded-2xl p-4 bg-gradient-to-tr from-neutral-950 via-neutral-900 to-neutral-800 text-white shadow-md border border-neutral-700/60 font-mono">
-                        <div class="flex items-center justify-between mb-4">
-                            <!-- EMV Chip & NFC Waves -->
-                            <div class="flex items-center gap-2">
-                                <div class="w-9 h-7 rounded-md bg-gradient-to-br from-amber-200 via-amber-400 to-amber-600 border border-amber-300/80 shadow-inner flex items-center justify-center">
-                                    <div class="w-6 h-4 border border-amber-700/40 rounded-xs grid grid-cols-2 gap-0.5"></div>
-                                </div>
-                                <svg class="w-4 h-4 text-neutral-400" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.5 7.5a6 6 0 010 9m3.5-12a10 10 0 010 15m3.5-15a14 14 0 010 15"/>
-                                </svg>
-                            </div>
-                            <!-- Bank Badge -->
-                            <div class="text-right">
-                                <span class="px-2.5 py-0.5 rounded bg-white/10 backdrop-blur-xs text-xs font-bold uppercase tracking-wider text-white border border-white/20" x-text="debitBank"></span>
-                            </div>
-                        </div>
-
-                        <!-- Card Number Placeholder -->
-                        <div class="text-lg tracking-widest font-mono text-neutral-200 font-medium mb-3">
-                            <span>•••• •••• •••• </span>
-                            <span class="text-amber-400 font-bold" x-text="debitLast4 ? debitLast4.padEnd(4, '•') : '••••'"></span>
-                        </div>
-
-                        <div class="flex items-end justify-between text-[11px] font-sans">
-                            <div>
-                                <div class="text-[9px] text-neutral-400 uppercase tracking-wider font-mono">Pemilik Kartu</div>
-                                <div class="font-medium text-neutral-200 tracking-wide uppercase" x-text="customerName ? customerName : 'PELANGGAN KAFEINA'"></div>
-                            </div>
-                            <div class="text-right font-mono">
-                                <div class="text-[9px] text-neutral-400 uppercase tracking-wider">Total Tagihan</div>
-                                <div class="text-xs font-bold text-emerald-400">Rp <span x-text="formatNumber(grandTotal)"></span></div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Input EDC Details -->
-                    <div class="grid grid-cols-2 gap-2.5">
-                        <div>
-                            <label class="block text-[11px] font-semibold text-neutral-700 mb-1">
-                                4 Digit Terakhir Kartu <span class="text-red-500">*</span>
-                            </label>
-                            <input type="text" 
-                                   x-model="debitLast4" 
-                                   maxlength="4" 
-                                   placeholder="Contoh: 4821" 
-                                   class="w-full px-3 py-2 bg-neutral-50 rounded-lg border border-neutral-300 font-mono text-center text-sm font-bold text-neutral-900 focus:bg-white focus:border-neutral-900 focus:outline-none transition-colors" />
-                            <p class="text-[10px] text-neutral-400 mt-0.5">Wajib diisi dari kartu fisik</p>
-                        </div>
-                        <div>
-                            <label class="block text-[11px] font-semibold text-neutral-700 mb-1">
-                                Kode Otorisasi (Appr Code)
-                            </label>
-                            <input type="text" 
-                                   x-model="debitApprovalCode" 
-                                   placeholder="Contoh: 918234" 
-                                   class="w-full px-3 py-2 bg-neutral-50 rounded-lg border border-neutral-300 font-mono text-center text-sm text-neutral-900 focus:bg-white focus:border-neutral-900 focus:outline-none transition-colors" />
-                            <p class="text-[10px] text-neutral-400 mt-0.5">Dari struk kertas mesin EDC</p>
-                        </div>
-                    </div>
-
-                    <div class="p-2.5 bg-blue-50/70 rounded-xl border border-blue-200/80 flex items-start gap-2 text-xs text-blue-900">
-                        <svg class="w-4 h-4 text-blue-600 shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <div class="leading-relaxed text-[11px]">
-                            Masukkan kartu debit nasabah pada slot chip EDC <strong><span x-text="debitBank"></span></strong>, mintakan PIN nasabah di mesin EDC, lalu salin nomor approval slip.
-                        </div>
-                    </div>
-                </div>
 
                 <!-- Bank Transfer / Virtual Account Section (Midtrans Dynamic VA) -->
                 <div x-show="paymentMethod === 'transfer'" class="space-y-3">
                     <!-- Bank Selection Tabs -->
                     <div>
-                        <label class="block text-[11px] font-semibold text-neutral-700 uppercase tracking-wider mb-1.5">Pilih Bank Virtual Account:</label>
-                        <div class="grid grid-cols-5 gap-1.5">
+                        <label class="block text-[11px] font-semibold text-neutral-500 uppercase tracking-wider mb-1.5">Pilih Bank Virtual Account:</label>
+                        <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px;" class="p-1 bg-neutral-100 rounded-xl border border-neutral-200/80">
                             <template x-for="b in [
-                                { code: 'bca', label: 'BCA VA' },
+                                { code: 'bca', label: 'BCA' },
                                 { code: 'mandiri', label: 'Mandiri' },
-                                { code: 'bni', label: 'BNI VA' },
-                                { code: 'bri', label: 'BRI VA' },
+                                { code: 'bni', label: 'BNI' },
+                                { code: 'bri', label: 'BRI' },
                                 { code: 'permata', label: 'Permata' }
                             ]" :key="b.code">
                                 <button type="button" @click="changeVaBank(b.code)"
-                                        :class="vaBank === b.code ? 'bg-neutral-900 text-white font-bold border-neutral-900 shadow-xs' : 'bg-white text-neutral-700 hover:bg-neutral-50 border-neutral-200'"
-                                        class="py-2 px-1 text-xs rounded-lg border text-center transition-colors cursor-pointer flex flex-col items-center justify-center">
-                                    <span x-text="b.label" class="text-[11px] font-bold"></span>
+                                        :class="vaBank === b.code ? 'bg-neutral-900 text-white font-bold shadow-xs' : 'text-neutral-600 hover:text-neutral-900 hover:bg-white/60'"
+                                        class="py-2 px-1 text-xs rounded-lg text-center transition-all cursor-pointer flex flex-col items-center justify-center">
+                                    <span x-text="b.label" class="text-xs font-semibold"></span>
                                 </button>
                             </template>
                         </div>
                     </div>
 
-                    <!-- Virtual Account Box Container -->
+                    <!-- Virtual Account Box Container (Clean Minimalist) -->
                     <div class="border border-neutral-200/90 rounded-2xl overflow-hidden shadow-2xs bg-white">
-                        <!-- Top Header Bar -->
-                        <div class="bg-gradient-to-r from-amber-600 via-amber-600 to-yellow-600 px-4 py-2.5 text-white flex items-center justify-between shadow-xs">
-                            <div class="flex items-center gap-2">
-                                <span class="bg-white text-amber-700 font-black text-xs px-1.5 py-0.5 rounded font-mono tracking-wider">
-                                    MIDTRANS VA
-                                </span>
-                                <div class="text-[11px] font-medium leading-tight">
-                                    <div class="font-semibold tracking-wide" x-text="vaBank.toUpperCase() + ' VIRTUAL ACCOUNT'"></div>
-                                    <div class="text-[9px] text-amber-100 opacity-90">Verifikasi Otomatis Real-time 24/7</div>
+                        <!-- Header: Total Tagihan & Status -->
+                        <div class="p-3.5 bg-neutral-50/80 border-b border-neutral-100 flex items-center justify-between">
+                            <div>
+                                <div class="text-[10px] text-neutral-500 uppercase font-mono tracking-wider">Total Tagihan</div>
+                                <div class="text-lg font-bold text-neutral-900 font-mono">
+                                    Rp <span x-text="formatNumber(grandTotal)"></span>
                                 </div>
                             </div>
-                            <span class="text-[9px] uppercase px-2 py-0.5 rounded-full bg-white/20 text-white font-mono font-bold tracking-wider">
-                                0% FEE
-                            </span>
+                            <div class="text-right">
+                                <span class="inline-flex items-center gap-1.5 text-[11px] px-2.5 py-1 rounded-full font-mono font-bold"
+                                      :class="vaSettled ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'">
+                                    <span class="w-1.5 h-1.5 rounded-full" :class="vaSettled ? 'bg-emerald-600' : 'bg-amber-600 animate-pulse'"></span>
+                                    <span x-text="vaSettled ? 'Lunas Terverifikasi' : 'Menunggu Transfer'"></span>
+                                </span>
+                            </div>
                         </div>
 
-                        <div class="p-4 space-y-3.5">
+                        <div class="p-4 space-y-3">
                             <!-- State 1: Loading State -->
                             <div x-show="vaLoading" class="py-8 flex flex-col items-center justify-center gap-2">
-                                <div class="w-8 h-8 rounded-full border-3 border-neutral-200 border-t-amber-600 animate-spin"></div>
-                                <p class="text-xs font-semibold text-neutral-800">Menghubungkan ke Midtrans Core API...</p>
-                                <p class="text-[11px] text-neutral-500">Menerbitkan nomor rekening virtual account unik</p>
+                                <div class="w-7 h-7 rounded-full border-2 border-neutral-200 border-t-neutral-900 animate-spin"></div>
+                                <p class="text-xs font-medium text-neutral-600">Menghubungkan ke Midtrans VA...</p>
                             </div>
 
                             <!-- State 2: Active VA Details -->
                             <div x-show="!vaLoading" class="space-y-3">
-                                <!-- Nominal Section -->
-                                <div class="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 flex items-center justify-between">
-                                    <div>
-                                        <div class="text-[10px] text-neutral-500 uppercase tracking-wider">Total Tagihan Pesanan</div>
-                                        <div class="text-base font-bold text-neutral-900 font-mono">
-                                            Rp <span x-text="formatNumber(grandTotal)"></span>
-                                        </div>
-                                    </div>
-                                    <div class="text-right">
-                                        <span class="text-[10px] px-2 py-0.5 rounded font-mono font-bold"
-                                              :class="vaSettled ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300 animate-pulse'">
-                                            <span x-text="vaSettled ? '✔ LUNAS' : '● MENUNGGU TRANSFER'"></span>
-                                        </span>
-                                    </div>
-                                </div>
-
                                 <!-- Mandiri Company Code (if Mandiri) -->
-                                <div x-show="vaBank === 'mandiri'" class="p-3 bg-amber-50/50 rounded-xl border border-amber-200/80">
-                                    <div class="text-[10px] text-amber-800 font-semibold uppercase tracking-wider">Kode Perusahaan (Biller Code):</div>
-                                    <div class="text-base font-mono font-bold text-neutral-900 tracking-wider">70012 <span class="text-xs text-neutral-500 font-sans font-normal">(Kafeina Roastery)</span></div>
+                                <div x-show="vaBank === 'mandiri'" class="p-2.5 bg-amber-50/70 border border-amber-200/80 rounded-xl flex items-center justify-between font-mono text-xs">
+                                    <span class="text-[11px] text-amber-900">Kode Perusahaan (Biller Code):</span>
+                                    <strong class="text-neutral-900 text-sm">70012</strong>
                                 </div>
 
                                 <!-- Virtual Account Number Card -->
-                                <div class="p-3.5 bg-neutral-900 text-white rounded-xl shadow-xs space-y-1.5">
-                                    <div class="flex items-center justify-between text-[10px] text-neutral-400 font-mono">
-                                        <span>NOMOR VIRTUAL ACCOUNT:</span>
-                                        <span class="text-amber-400" x-text="vaBank.toUpperCase()"></span>
-                                    </div>
-                                    <div class="flex items-center justify-between gap-2">
-                                        <div class="font-mono text-xl sm:text-2xl font-bold tracking-widest text-amber-300" x-text="vaNumber || 'Generating...'"></div>
-                                        <button type="button" @click="copyVaNumber()" class="px-2.5 py-1 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white rounded-lg text-xs font-medium border border-white/20 transition-colors cursor-pointer shrink-0">
-                                            Salin
+                                <div class="p-4 bg-neutral-900 text-white rounded-xl space-y-2">
+                                    <div class="flex items-center justify-between text-[11px]">
+                                        <div class="flex items-center gap-1.5 text-neutral-400 font-mono">
+                                            <span>NOMOR VIRTUAL ACCOUNT</span>
+                                            <span class="px-1.5 py-0.5 rounded bg-white/10 text-amber-300 text-[10px] font-bold uppercase" x-text="vaBank"></span>
+                                        </div>
+                                        <button type="button" @click="copyVaNumber()"
+                                                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                                                :class="vaCopied ? 'bg-emerald-600 text-white' : 'bg-white/10 hover:bg-white/20 text-neutral-200'">
+                                            <svg x-show="!vaCopied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                            <svg x-show="vaCopied" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                            <span x-text="vaCopied ? 'Tersalin' : 'Salin'"></span>
                                         </button>
+                                    </div>
+                                    <div class="font-mono text-lg sm:text-xl font-bold tracking-wider text-amber-300 break-all select-all leading-normal"
+                                         x-text="vaNumber || 'Memuat nomor VA...'">
                                     </div>
                                 </div>
 
-                                <!-- Sandbox Simulation Controls -->
-                                <div class="pt-2 border-t border-neutral-100 flex items-center justify-between gap-2">
-                                    <div class="text-[11px] text-neutral-500">
-                                        <span>Order: </span>
-                                        <span class="font-mono font-semibold text-neutral-700" x-text="vaOrderNumber"></span>
+                                <!-- Direct Link to Official Midtrans Payment Simulator -->
+                                <div class="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                                    <div class="text-[11px] text-neutral-500 font-mono">
+                                        Order: <span class="font-semibold text-neutral-800" x-text="vaOrderNumber || '-'"></span>
                                     </div>
-                                    <button type="button" @click="simulateVaPayment()"
-                                            :disabled="vaSettled || vaSimulating"
-                                            class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-900 rounded-lg text-xs font-semibold border border-amber-300 shadow-2xs transition-colors cursor-pointer flex items-center gap-1.5">
-                                        <svg class="w-3.5 h-3.5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
-                                        <span>Simulasikan Lunas (Sandbox)</span>
-                                    </button>
+                                    <a :href="getMidtransVaSimulatorUrl()" target="_blank" rel="noopener noreferrer"
+                                       class="inline-flex items-center gap-1.5 text-xs font-semibold text-neutral-900 hover:text-amber-700 underline underline-offset-2 transition-colors cursor-pointer">
+                                        <span>Buka Midtrans Payment Simulator</span>
+                                        <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                    </a>
                                 </div>
                             </div>
                         </div>
@@ -1280,9 +1178,9 @@
                 </button>
 
                 <button @click="processCheckout()" 
-                        :disabled="(paymentMethod === 'cash' && paidAmount < grandTotal) || (paymentMethod === 'qris' && !qrisSettled) || (paymentMethod === 'debit' && (!debitLast4 || debitLast4.length < 4)) || (paymentMethod === 'transfer' && !vaSettled)"
+                        :disabled="(paymentMethod === 'cash' && paidAmount < grandTotal) || (paymentMethod === 'qris' && !qrisSettled) || (paymentMethod === 'transfer' && !vaSettled)"
                         class="flex-1 min-h-[48px] py-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 disabled:opacity-40 disabled:pointer-events-none text-white font-semibold text-xs shadow-xs transition-colors cursor-pointer flex items-center justify-center gap-2">
-                    <span x-show="paymentMethod === 'cash' || qrisSettled || paymentMethod === 'debit' || (paymentMethod === 'transfer' && vaSettled)">SELESAIKAN & CETAK STRUK</span>
+                    <span x-show="paymentMethod === 'cash' || qrisSettled || (paymentMethod === 'transfer' && vaSettled)">SELESAIKAN & CETAK STRUK</span>
                     <span x-show="paymentMethod === 'qris' && !qrisSettled" class="flex items-center gap-2">
                         <svg class="w-4 h-4 animate-spin text-neutral-400" viewBox="0 0 24 24" fill="none">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -1841,11 +1739,6 @@ function posApp() {
         paymentMethod: 'cash',
         paidAmount: 130000,
 
-        // Debit Card Properties
-        debitBank: 'BCA',
-        debitLast4: '',
-        debitApprovalCode: '',
-
         // Midtrans Virtual Account Properties
         vaBank: 'bca',
         vaOrderNumber: null,
@@ -1854,6 +1747,7 @@ function posApp() {
         vaLoading: false,
         vaSettled: false,
         vaSimulating: false,
+        vaCopied: false,
         vaPollInterval: null,
 
         // Midtrans Dynamic QRIS Properties
@@ -2816,8 +2710,19 @@ function posApp() {
         copyVaNumber() {
             if (this.vaNumber) {
                 navigator.clipboard.writeText(this.vaNumber);
-                alert('Nomor Virtual Account ' + this.vaBank.toUpperCase() + ' berhasil disalin:\n' + this.vaNumber);
+                this.vaCopied = true;
+                setTimeout(() => {
+                    this.vaCopied = false;
+                }, 2000);
             }
+        },
+
+        getMidtransVaSimulatorUrl() {
+            const bank = (this.vaBank || 'bca').toLowerCase();
+            if (bank === 'mandiri') {
+                return 'https://simulator.sandbox.midtrans.com/mandiri/bill/index';
+            }
+            return `https://simulator.sandbox.midtrans.com/${bank}/va/index`;
         },
 
         async processCheckout(forcedMethod = null) {
@@ -2837,8 +2742,6 @@ function posApp() {
             let paymentRef = null;
             if (method === 'QRIS') {
                 paymentRef = this.qrisCurrentOrderNumber;
-            } else if (method === 'DEBIT' || method === 'DEBIT_CARD') {
-                paymentRef = `${this.debitBank} EDC • ****${this.debitLast4}${this.debitApprovalCode ? ' • APP-' + this.debitApprovalCode : ''}`;
             } else if (method === 'TRANSFER' || method === 'VA' || method === 'BANK_TRANSFER') {
                 paymentRef = `${this.vaBank.toUpperCase()} VA • ${this.vaNumber || '-'}`;
             }
@@ -2861,9 +2764,6 @@ function posApp() {
                 total: this.grandTotal,
                 payment_method: method,
                 payment_reference: paymentRef,
-                debit_bank: this.debitBank,
-                debit_last4: this.debitLast4,
-                debit_approval_code: this.debitApprovalCode,
                 va_bank: this.vaBank,
                 va_number: this.vaNumber,
                 paid_amount: method === 'CASH' ? this.paidAmount : this.grandTotal,
@@ -2908,8 +2808,6 @@ function posApp() {
             this.qrisData = null;
             this.qrisSettled = false;
             this.qrisCurrentOrderNumber = null;
-            this.debitLast4 = '';
-            this.debitApprovalCode = '';
             this.vaNumber = '';
             this.vaOrderNumber = null;
             this.vaSettled = false;

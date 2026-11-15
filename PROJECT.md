@@ -51,7 +51,7 @@ KAFEINA ERP implements a high-performance Three-Tier Client-Server Architecture 
 | 17 | Reorder Point & Safety Stock Alerts | Monitor stock thresholds and generate low-stock visual warning alerts | M4 | URS FR-INV-07 |
 | 18 | Cashier Shift Opening & Cash Validation | Cashier inputs beginning drawer cash (`opening_cash`) before unlocking POS | M5 | SDD §5.2.4, SRS REQ-POS-01 |
 | 19 | Touchscreen Web POS Ordering & Cart | Responsive touch interface ($\ge$48px), category grid, numeric keypad, cart | M5 | SDD §7.1, URS FR-POS-01 |
-| 20 | Multi-Payment Checkout | Cash with change calculator, dynamic QRIS, debit/credit cards | M5 | SDD §4.3, SRS REQ-POS-04 |
+| 20 | Multi-Payment Checkout | Cash with change calculator, dynamic QRIS, bank transfer (VA) | M5 | SDD §4.3, SRS REQ-POS-04 |
 | 21 | Pessimistic Recipe Auto-Deduct Engine | Atomic `SELECT ... FOR UPDATE` on branch stocks, deduct ingredients per recipe | M5 | SDD §5.2.4, SDD §9, SRS REQ-POS-02 |
 | 22 | Split Bill & Order Splitting | Split dining order into multiple child bills with distinct payment methods | M5 | SDD §2.3.2, SRS REQ-POS-03 |
 | 23 | Non-Revenue Transactions | Process calibration espresso, customer cupping tester, barista staff quota | M5 | SRS REQ-POS-04, URS FR-POS-03 |

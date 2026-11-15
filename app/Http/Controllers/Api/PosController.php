@@ -108,7 +108,7 @@ class PosController extends Controller
             'order_type' => 'nullable|in:DINE_IN,TAKE_AWAY,NON_REVENUE',
             'non_revenue_reason' => 'nullable|required_if:order_type,NON_REVENUE|in:CALIBRATION,TESTER,STAFF_QUOTA',
             'discount_amount' => 'nullable|numeric|min:0',
-            'payment_method' => 'nullable|in:CASH,QRIS_MIDTRANS,DEBIT_CARD,NON_REVENUE',
+            'payment_method' => 'nullable|in:CASH,QRIS_MIDTRANS,BANK_TRANSFER,NON_REVENUE',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
