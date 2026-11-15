@@ -927,6 +927,33 @@ class PosController extends Controller
             $items, $subtotal, $discountAmount, $pb1Tax, $totalAmount, $paymentMethod,
             $mappedReason, $nonRevenueReason, $request
         ) {
+            $rawMethod = strtoupper((string) $paymentMethod);
+            $mappedPaymentMethod = match ($rawMethod) {
+                'QRIS', 'QRIS_MIDTRANS' => 'QRIS_MIDTRANS',
+                'DEBIT', 'DEBIT_CARD' => 'DEBIT_CARD',
+                'TRANSFER', 'VA', 'BANK_TRANSFER' => 'BANK_TRANSFER',
+                'NON_REVENUE' => 'NON_REVENUE',
+                'SPLIT_BILL' => 'SPLIT_BILL',
+                default => 'CASH',
+            };
+
+            // Format Payment Reference
+            $paymentReference = $request->input('payment_reference');
+            if (! $paymentReference) {
+                if ($mappedPaymentMethod === 'QRIS_MIDTRANS') {
+                    $paymentReference = $request->input('qris_order_number');
+                } elseif ($mappedPaymentMethod === 'DEBIT_CARD') {
+                    $bank = $request->input('debit_bank', 'EDC');
+                    $last4 = $request->input('debit_last4', '----');
+                    $approval = $request->input('debit_approval_code') ? ' • APP-'.$request->input('debit_approval_code') : '';
+                    $paymentReference = "{$bank} EDC • ****{$last4}{$approval}";
+                } elseif ($mappedPaymentMethod === 'BANK_TRANSFER') {
+                    $vaBank = $request->input('va_bank', 'VA');
+                    $vaNum = $request->input('va_number', '');
+                    $paymentReference = "{$vaBank} VA • {$vaNum}";
+                }
+            }
+
             $order = PosOrder::create([
                 'order_number' => $orderNumber,
                 'shift_id' => $shift->id,
@@ -941,9 +968,9 @@ class PosController extends Controller
                 'tax_amount' => $pb1Tax,
                 'discount_amount' => $discountAmount,
                 'total_amount' => $totalAmount,
-                'payment_method' => strtoupper($paymentMethod) === 'QRIS' ? 'QRIS_MIDTRANS' : (strtoupper($paymentMethod) === 'NON_REVENUE' ? 'NON_REVENUE' : 'CASH'),
+                'payment_method' => $mappedPaymentMethod,
                 'payment_status' => 'PAID',
-                'payment_reference' => $request->input('payment_reference') ?: ($request->input('qris_order_number') ?? null),
+                'payment_reference' => $paymentReference,
             ]);
 
             $barWarehouse = InventoryWarehouse::where('branch_id', $branch->id)
@@ -1270,6 +1297,60 @@ class PosController extends Controller
      * API: Simulate QRIS Payment Success (for Sandbox Testing).
      */
     public function simulateQrisPayment(Request $request, MidtransQrisService $qrisService): JsonResponse
+    {
+        $orderNumber = (string) $request->input('order_number');
+        if (! $orderNumber) {
+            return response()->json(['success' => false, 'message' => 'Order number diperlukan.'], 422);
+        }
+
+        $result = $qrisService->simulatePayment($orderNumber);
+
+        return response()->json($result);
+    }
+
+    /**
+     * API: Generate Dynamic Virtual Account / Bank Transfer via Midtrans.
+     */
+    public function generateVa(Request $request, MidtransQrisService $qrisService): JsonResponse
+    {
+        $body = $request->isJson() ? $request->json()->all() : $request->all();
+        if (empty($body)) {
+            $rawContent = trim($request->getContent(), "\xEF\xBB\xBF \t\n\r\0\x0B");
+            $raw = json_decode($rawContent, true) ?: [];
+            $body = array_merge($raw, $request->all());
+        }
+
+        $amount = (float) ($body['amount'] ?? $request->input('amount', 0));
+        $orderNumber = (string) ($body['order_number'] ?? $request->input('order_number', 'KAF-'.date('YmdHis')));
+        $bank = (string) ($body['bank'] ?? $request->input('bank', 'bca'));
+        $customerName = (string) ($body['customer_name'] ?? $request->input('customer_name', 'Tamu Kafeina'));
+
+        if ($amount <= 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nominal tagihan harus lebih dari Rp 0.',
+            ], 422);
+        }
+
+        $result = $qrisService->createVaCharge($orderNumber, $amount, $bank, $customerName);
+
+        return response()->json($result);
+    }
+
+    /**
+     * API: Poll Dynamic Virtual Account Payment Status.
+     */
+    public function checkVaStatus(string $orderNumber, MidtransQrisService $qrisService): JsonResponse
+    {
+        $status = $qrisService->checkStatus($orderNumber);
+
+        return response()->json($status);
+    }
+
+    /**
+     * API: Simulate Virtual Account Payment Success (for Sandbox Testing).
+     */
+    public function simulateVaPayment(Request $request, MidtransQrisService $qrisService): JsonResponse
     {
         $orderNumber = (string) $request->input('order_number');
         if (! $orderNumber) {

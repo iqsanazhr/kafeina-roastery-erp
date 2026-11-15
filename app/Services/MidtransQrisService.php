@@ -237,7 +237,154 @@ class MidtransQrisService
             'status' => 'settlement',
             'paid' => true,
             'order_id' => $orderNumber,
-            'message' => 'Pembayaran QRIS Midtrans berhasil diverifikasi (Simulasi Sandbox)!',
+            'message' => 'Pembayaran berhasil diverifikasi (Simulasi Sandbox)!',
+        ];
+    }
+
+    /**
+     * Create a dynamic Virtual Account / Bank Transfer transaction via Midtrans Core API.
+     */
+    public function createVaCharge(
+        string $orderNumber,
+        float $grossAmount,
+        string $bank = 'bca',
+        string $customerName = 'Tamu Kafeina'
+    ): array {
+        $grossInt = (int) round($grossAmount);
+        $bank = strtolower(trim($bank));
+        if (! in_array($bank, ['bca', 'bni', 'bri', 'permata', 'mandiri'], true)) {
+            $bank = 'bca';
+        }
+
+        $payload = [
+            'transaction_details' => [
+                'order_id' => $orderNumber,
+                'gross_amount' => $grossInt,
+            ],
+            'customer_details' => [
+                'first_name' => $customerName,
+                'email' => 'cashier@kafeina.id',
+            ],
+        ];
+
+        if ($bank === 'mandiri') {
+            $payload['payment_type'] = 'echannel';
+            $payload['echannel'] = [
+                'bill_info1' => 'Pesanan POS',
+                'bill_info2' => 'Kafeina Roastery',
+            ];
+        } elseif ($bank === 'permata') {
+            $payload['payment_type'] = 'permata';
+        } else {
+            $payload['payment_type'] = 'bank_transfer';
+            $payload['bank_transfer'] = [
+                'bank' => $bank,
+            ];
+        }
+
+        try {
+            $response = Http::withBasicAuth($this->serverKey, '')
+                ->timeout(10)
+                ->withHeaders([
+                    'Accept' => 'application/json',
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$this->baseUrl}/charge", $payload);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                $vaNumber = '';
+                $billerCode = null;
+
+                if ($bank === 'mandiri') {
+                    $vaNumber = $data['bill_key'] ?? '';
+                    $billerCode = $data['biller_code'] ?? '70012';
+                } elseif ($bank === 'permata') {
+                    $vaNumber = $data['permata_va_number'] ?? '';
+                } else {
+                    $vaNumber = $data['va_numbers'][0]['va_number'] ?? '';
+                }
+
+                $transactionId = $data['transaction_id'] ?? '';
+                $expiryTime = $data['expiry_time'] ?? now()->addDay()->format('Y-m-d H:i:s');
+
+                Cache::put("midtrans_qris_{$orderNumber}", [
+                    'status' => 'pending',
+                    'order_id' => $orderNumber,
+                    'transaction_id' => $transactionId,
+                    'gross_amount' => $grossInt,
+                    'va_number' => $vaNumber,
+                    'biller_code' => $billerCode,
+                    'bank' => strtoupper($bank),
+                    'created_at' => now()->toIso8601String(),
+                ], 86400);
+
+                return [
+                    'success' => true,
+                    'order_id' => $orderNumber,
+                    'transaction_id' => $transactionId,
+                    'gross_amount' => $grossInt,
+                    'bank' => strtoupper($bank),
+                    'va_number' => $vaNumber,
+                    'biller_code' => $billerCode,
+                    'expiry_time' => $expiryTime,
+                    'is_sandbox' => ! $this->isProduction,
+                ];
+            }
+
+            Log::warning('Midtrans VA Charge non-200 response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            return $this->fallbackOfflineVa($orderNumber, $grossInt, $bank);
+        } catch (\Throwable $e) {
+            Log::error('Midtrans VA Charge error: '.$e->getMessage());
+
+            return $this->fallbackOfflineVa($orderNumber, $grossInt, $bank);
+        }
+    }
+
+    /**
+     * Fallback mock VA generation if sandbox/offline.
+     */
+    protected function fallbackOfflineVa(string $orderNumber, int $grossAmount, string $bank): array
+    {
+        $bankUpper = strtoupper($bank);
+        $seed = abs(crc32($orderNumber)) % 100000000;
+        $seedStr = str_pad((string) $seed, 8, '0', STR_PAD_LEFT);
+
+        $vaNumber = match ($bank) {
+            'bca' => '88012'.$seedStr,
+            'bni' => '98801'.$seedStr,
+            'bri' => '12888'.$seedStr,
+            'permata' => '89812'.$seedStr,
+            'mandiri' => '88012'.$seedStr,
+            default => '88012'.$seedStr,
+        };
+
+        $billerCode = $bank === 'mandiri' ? '70012' : null;
+
+        Cache::put("midtrans_qris_{$orderNumber}", [
+            'status' => 'pending',
+            'order_id' => $orderNumber,
+            'gross_amount' => $grossAmount,
+            'va_number' => $vaNumber,
+            'biller_code' => $billerCode,
+            'bank' => $bankUpper,
+            'offline' => true,
+        ], 86400);
+
+        return [
+            'success' => true,
+            'order_id' => $orderNumber,
+            'gross_amount' => $grossAmount,
+            'bank' => $bankUpper,
+            'va_number' => $vaNumber,
+            'biller_code' => $billerCode,
+            'expiry_time' => now()->addDay()->format('Y-m-d H:i:s'),
+            'is_sandbox' => true,
+            'is_fallback' => true,
         ];
     }
 

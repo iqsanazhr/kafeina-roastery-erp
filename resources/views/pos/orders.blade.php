@@ -96,8 +96,9 @@
                 <span class="text-xs font-semibold text-sky-700 bg-sky-50 px-1.5 py-0.5 rounded border border-sky-200">QRIS Midtrans</span>
             </div>
             <div class="text-[11px] text-neutral-400 mt-2 pt-2 border-t border-[#f5f5f5] flex items-center justify-between">
-                <span>Tunai: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('CASH') ? $paymentBreakdown['CASH']->count : 0 }} trx</strong></span>
-                <span>Debit: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('DEBIT_CARD') ? $paymentBreakdown['DEBIT_CARD']->count : 0 }} trx</strong></span>
+                <span>Tunai: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('CASH') ? $paymentBreakdown['CASH']->count : 0 }}</strong></span>
+                <span>Debit: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('DEBIT_CARD') ? $paymentBreakdown['DEBIT_CARD']->count : 0 }}</strong></span>
+                <span>VA: <strong class="text-neutral-700 font-mono">{{ $paymentBreakdown->has('BANK_TRANSFER') ? $paymentBreakdown['BANK_TRANSFER']->count : 0 }}</strong></span>
             </div>
         </div>
     </div>
@@ -162,6 +163,7 @@
                     <option value="QRIS_MIDTRANS" {{ $selectedPayment === 'QRIS_MIDTRANS' ? 'selected' : '' }}>QRIS Midtrans</option>
                     <option value="CASH" {{ $selectedPayment === 'CASH' ? 'selected' : '' }}>Tunai (Cash)</option>
                     <option value="DEBIT_CARD" {{ $selectedPayment === 'DEBIT_CARD' ? 'selected' : '' }}>Kartu Debit / EDC</option>
+                    <option value="BANK_TRANSFER" {{ $selectedPayment === 'BANK_TRANSFER' ? 'selected' : '' }}>Transfer Bank / VA</option>
                     <option value="NON_REVENUE" {{ $selectedPayment === 'NON_REVENUE' ? 'selected' : '' }}>Non-Revenue (Tester/Staf)</option>
                 </select>
             </div>
@@ -271,10 +273,20 @@
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-purple-50 text-purple-700 border border-purple-200">
                                     Kartu Debit EDC
                                 </span>
+                            @elseif($order->payment_method === 'BANK_TRANSFER')
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                                    Transfer VA
+                                </span>
                             @else
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-neutral-100 text-neutral-600 border border-neutral-200">
                                     {{ $order->non_revenue_reason ?? 'Non-Revenue' }}
                                 </span>
+                            @endif
+
+                            @if($order->payment_reference)
+                                <div class="text-[9px] font-mono text-neutral-400 mt-1 max-w-[140px] mx-auto truncate" title="{{ $order->payment_reference }}">
+                                    {{ $order->payment_reference }}
+                                </div>
                             @endif
                         </td>
 

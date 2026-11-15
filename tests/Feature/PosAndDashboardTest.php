@@ -309,6 +309,118 @@ class PosAndDashboardTest extends TestCase
     }
 
     /**
+     * Test checkout with Debit Card saves payment method and EDC reference.
+     */
+    public function test_checkout_with_debit_card_saves_payment_method_and_reference(): void
+    {
+        $response = $this->postJson('/pos/checkout', [
+            'items' => [
+                ['id' => 'PRD-ESP-01', 'name' => 'Single Origin Espresso', 'price' => 28000, 'qty' => 1],
+            ],
+            'customer_name' => 'Rian Pratama',
+            'table_number' => '12',
+            'order_type' => 'Dine In',
+            'payment_method' => 'debit',
+            'debit_bank' => 'BCA',
+            'debit_last4' => '4821',
+            'debit_approval_code' => '918234',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'order' => [
+                'payment_method' => 'debit',
+                'customer_name' => 'Rian Pratama',
+            ],
+        ]);
+
+        $this->assertDatabaseHas('pos_orders', [
+            'customer_name' => 'Rian Pratama',
+            'payment_method' => 'DEBIT_CARD',
+            'payment_reference' => 'BCA EDC • ****4821 • APP-918234',
+        ]);
+    }
+
+    /**
+     * Test checkout with Bank Transfer / Virtual Account saves payment method and reference.
+     */
+    public function test_checkout_with_bank_transfer_va_saves_payment_method_and_reference(): void
+    {
+        $response = $this->postJson('/pos/checkout', [
+            'items' => [
+                ['id' => 'PRD-V60-01', 'name' => 'V60 Pour Over', 'price' => 35000, 'qty' => 1],
+            ],
+            'customer_name' => 'Siti Nurhaliza',
+            'table_number' => '08',
+            'order_type' => 'Dine In',
+            'payment_method' => 'transfer',
+            'va_bank' => 'mandiri',
+            'va_number' => '88012081299281',
+        ]);
+
+        $response->assertStatus(200);
+        $response->assertJson([
+            'success' => true,
+            'order' => [
+                'payment_method' => 'transfer',
+                'customer_name' => 'Siti Nurhaliza',
+            ],
+        ]);
+
+        $this->assertDatabaseHas('pos_orders', [
+            'customer_name' => 'Siti Nurhaliza',
+            'payment_method' => 'BANK_TRANSFER',
+            'payment_reference' => 'mandiri VA • 88012081299281',
+        ]);
+    }
+
+    /**
+     * Test Midtrans Virtual Account generate, status polling, and simulation endpoints.
+     */
+    public function test_midtrans_va_generate_status_and_simulation(): void
+    {
+        $orderNum = 'KAF-VA-'.time();
+
+        // 1. Generate Dynamic VA for BCA
+        $generateRes = $this->postJson('/pos/va/generate', [
+            'order_number' => $orderNum,
+            'amount' => 62160,
+            'bank' => 'bca',
+            'customer_name' => 'Budi Sudarsono',
+        ]);
+
+        $generateRes->assertStatus(200);
+        $generateRes->assertJson([
+            'success' => true,
+            'order_id' => $orderNum,
+            'bank' => 'BCA',
+        ]);
+        $this->assertNotEmpty($generateRes->json('va_number'));
+
+        // 2. Poll status before payment
+        $statusRes = $this->getJson("/pos/va/status/{$orderNum}");
+        $statusRes->assertStatus(200);
+        $this->assertFalse($statusRes->json('paid'));
+
+        // 3. Simulate Payment Settlement
+        $simulateRes = $this->postJson('/pos/va/simulate-pay', [
+            'order_number' => $orderNum,
+        ]);
+        $simulateRes->assertStatus(200);
+        $simulateRes->assertJson([
+            'success' => true,
+            'status' => 'settlement',
+            'paid' => true,
+        ]);
+
+        // 4. Poll status after settlement
+        $statusSettledRes = $this->getJson("/pos/va/status/{$orderNum}");
+        $statusSettledRes->assertStatus(200);
+        $this->assertTrue($statusSettledRes->json('paid'));
+    }
+
+    /**
      * Test application timezone is configured to Asia/Jakarta (WIB).
      */
     public function test_application_timezone_is_wib(): void

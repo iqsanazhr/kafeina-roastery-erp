@@ -50,6 +50,11 @@ Route::prefix('pos')->name('pos.')->middleware('role:super_admin,cashier,supervi
     Route::get('/qris/status/{orderNumber}', [PosController::class, 'checkQrisStatus'])->name('qris.status');
     Route::post('/qris/simulate-pay', [PosController::class, 'simulateQrisPayment'])->name('qris.simulate');
 
+    // Virtual Account / Bank Transfer Midtrans Endpoints
+    Route::post('/va/generate', [PosController::class, 'generateVa'])->name('va.generate');
+    Route::get('/va/status/{orderNumber}', [PosController::class, 'checkVaStatus'])->name('va.status');
+    Route::post('/va/simulate-pay', [PosController::class, 'simulateVaPayment'])->name('va.simulate');
+
     // Sales History & Customer Orders
     Route::get('/orders', [SalesOrderController::class, 'index'])->name('orders');
     Route::get('/orders/export-csv', [SalesOrderController::class, 'exportCsv'])->name('orders.export.csv');
