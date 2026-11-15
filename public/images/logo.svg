@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="128" height="128">
+  <defs>
+    <linearGradient id="kafeina-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1c1917"/>
+      <stop offset="100%" stop-color="#0c0a09"/>
+    </linearGradient>
+    <linearGradient id="amber-stream" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="100%" stop-color="#d97706"/>
+    </linearGradient>
+  </defs>
+  <!-- Circular Base Badge -->
+  <circle cx="50" cy="50" r="48" fill="url(#kafeina-grad)" stroke="#292524" stroke-width="2"/>
+  <!-- Stem of K -->
+  <rect x="26" y="24" width="10" height="52" rx="5" fill="#FFFFFF"/>
+  <!-- Top Diagonal Bean Arm -->
+  <path d="M42 48 C42 34 54 24 68 24 C71 24 74 38 60 48 Z" fill="#FFFFFF"/>
+  <path d="M52 32 C58 35 62 40 62 44" stroke="#0c0a09" stroke-width="2" stroke-linecap="round"/>
+  <!-- Bottom Diagonal Extraction Stream -->
+  <path d="M42 50 C54 52 74 56 74 76 C60 76 46 68 42 50 Z" fill="url(#amber-stream)"/>
+  <circle cx="70" cy="74" r="2.5" fill="#f59e0b"/>
+</svg>
