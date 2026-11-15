@@ -348,24 +348,58 @@
                         </template>
                     </select>
                 </div>
+
+                <!-- Master SKU Dropdown Selector -->
                 <div>
-                    <label class="block text-neutral-700 font-medium mb-1">Varietas Biji Kopi:</label>
-                    <input type="text" x-model="poForm.variety" required 
-                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all" 
-                           placeholder="Cth: Aceh Gayo Honey Anaerobic / Ateng Super" />
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-neutral-700 font-medium">Bahan Baku / Master SKU:</label>
+                        <span class="text-[10px] text-neutral-400 font-mono">Standar ERP</span>
+                    </div>
+                    <select x-model="poForm.product_id" @change="onRawMaterialChange()" required 
+                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all font-medium">
+                        <option value="">-- Pilih Master SKU Green Beans --</option>
+                        <template x-for="rm in rawMaterials" :key="rm.id">
+                            <option :value="rm.id" x-text="'[' + rm.sku + '] ' + rm.name + ' — Acuan: Rp ' + formatNumber(rm.cost_per_kg) + '/kg'"></option>
+                        </template>
+                        <option value="CUSTOM">+ Varietas Baru / Lot Khusus Petani</option>
+                    </select>
                 </div>
+
+                <!-- Conditional Input if CUSTOM Variety -->
+                <div x-show="poForm.product_id === 'CUSTOM'" class="p-3 bg-amber-50/70 rounded-xl border border-amber-200/80 space-y-1">
+                    <label class="block text-[11px] font-semibold text-amber-900">Nama Varietas Baru / Lot Petani <span class="text-red-500">*</span>:</label>
+                    <input type="text" x-model="poForm.custom_variety" :required="poForm.product_id === 'CUSTOM'"
+                           class="w-full px-3 py-2 bg-white border border-amber-300 focus:border-amber-900 rounded-lg text-neutral-900 outline-none text-xs" 
+                           placeholder="Contoh: Yellow Caturra Anaerobic / Ateng Super" />
+                    <p class="text-[10px] text-amber-700">Akan dicatat sebagai komoditas varietas baru pada kontrak PO ini.</p>
+                </div>
+
+                <!-- Spesifikasi Sub-Lot / Catatan Petani -->
+                <div>
+                    <div class="flex items-center justify-between mb-1">
+                        <label class="block text-neutral-700 font-medium">Spesifikasi Sub-Lot / Catatan Petani:</label>
+                        <span class="text-[10px] text-neutral-400">Opsional</span>
+                    </div>
+                    <input type="text" x-model="poForm.sub_variety" 
+                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all" 
+                           placeholder="Contoh: Lot #04 Koperasi Baburrayyan • Ketinggian 1.550 mdpl" />
+                </div>
+
                 <div class="grid grid-cols-2 gap-2.5">
                     <div>
                         <label class="block text-neutral-700 font-medium mb-1">Volume (kg):</label>
-                        <input type="number" step="1" x-model.number="poForm.weight_kg" required 
+                        <input type="number" step="1" min="1" x-model.number="poForm.weight_kg" required 
                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all font-mono font-bold" 
-                               placeholder="100" />
+                               placeholder="50" />
                     </div>
                     <div>
-                        <label class="block text-neutral-700 font-medium mb-1">Harga Beli / kg (Rp):</label>
-                        <input type="number" step="1000" x-model.number="poForm.price_per_kg" required 
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-neutral-700 font-medium">Harga Beli / kg:</label>
+                            <span x-show="selectedReferenceCost > 0" class="text-[10px] text-emerald-700 font-mono font-semibold" x-text="'Acuan: ' + formatNumber(selectedReferenceCost)"></span>
+                        </div>
+                        <input type="number" step="1000" min="1000" x-model.number="poForm.price_per_kg" required 
                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all font-mono font-bold" 
-                               placeholder="125000" />
+                               placeholder="130000" />
                     </div>
                 </div>
 
@@ -397,6 +431,8 @@ function procurementApp() {
 
         suppliers: @json($suppliers),
         purchaseOrders: @json($purchaseOrders),
+        rawMaterials: @json($rawMaterials),
+        selectedReferenceCost: 0,
 
         supplierForm: {
             name: '',
@@ -409,10 +445,26 @@ function procurementApp() {
 
         poForm: {
             supplier_id: '',
-            variety: '',
+            product_id: '',
+            custom_variety: '',
+            sub_variety: '',
             weight_kg: 50,
             price_per_kg: 130000,
             notes: ''
+        },
+
+        onRawMaterialChange() {
+            if (this.poForm.product_id === 'CUSTOM') {
+                this.selectedReferenceCost = 0;
+                return;
+            }
+            const found = this.rawMaterials.find(rm => rm.id == this.poForm.product_id);
+            if (found) {
+                this.selectedReferenceCost = found.cost_per_kg;
+                this.poForm.price_per_kg = found.cost_per_kg;
+            } else {
+                this.selectedReferenceCost = 0;
+            }
         },
 
         get filteredSuppliers() {
@@ -473,6 +525,34 @@ function procurementApp() {
         },
 
         async submitPo() {
+            if (!this.poForm.product_id) {
+                alert('Silakan pilih Master SKU Bahan Baku atau Varietas Baru.');
+                return;
+            }
+            if (this.poForm.product_id === 'CUSTOM' && !this.poForm.custom_variety.trim()) {
+                alert('Nama varietas baru / lot petani wajib diisi.');
+                return;
+            }
+
+            let varietyName = '';
+            if (this.poForm.product_id === 'CUSTOM') {
+                varietyName = this.poForm.custom_variety.trim();
+            } else {
+                const found = this.rawMaterials.find(rm => rm.id == this.poForm.product_id);
+                varietyName = found ? found.name : '';
+            }
+
+            const payload = {
+                supplier_id: this.poForm.supplier_id,
+                product_id: this.poForm.product_id === 'CUSTOM' ? null : this.poForm.product_id,
+                variety: varietyName,
+                custom_variety: this.poForm.custom_variety,
+                sub_variety: this.poForm.sub_variety,
+                weight_kg: this.poForm.weight_kg,
+                price_per_kg: this.poForm.price_per_kg,
+                notes: this.poForm.sub_variety ? ('Sub-lot: ' + this.poForm.sub_variety) : ''
+            };
+
             try {
                 const res = await fetch("{{ route('procurement.po.store') }}", {
                     method: 'POST',
@@ -480,7 +560,7 @@ function procurementApp() {
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': '{{ csrf_token() }}'
                     },
-                    body: JSON.stringify(this.poForm)
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
                 if (data.success) {
@@ -488,7 +568,8 @@ function procurementApp() {
                     this.alertMessage = data.message;
                     this.purchaseOrders.unshift(data.po);
                     this.openPoModal = false;
-                    this.poForm = { supplier_id: '', variety: '', weight_kg: 50, price_per_kg: 130000, notes: '' };
+                    this.poForm = { supplier_id: '', product_id: '', custom_variety: '', sub_variety: '', weight_kg: 50, price_per_kg: 130000, notes: '' };
+                    this.selectedReferenceCost = 0;
                 } else {
                     this.alertType = 'error';
                     this.alertMessage = data.message;

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\GreenBeanLot;
+use App\Models\Product;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\QualityControl;
@@ -26,7 +27,23 @@ class ProcurementController extends Controller
             $totalContractedBeansKg = round((float) GreenBeanLot::sum('initial_weight_grams') / 1000, 1);
         }
 
-        return view('procurement.index', compact('suppliers', 'purchaseOrders', 'qualityControls', 'lots', 'branches', 'totalContractedBeansKg'));
+        $rawMaterials = Product::where('is_raw_material', true)
+            ->where('sku', 'LIKE', 'RAW-GB%')
+            ->orderBy('sku')
+            ->get()
+            ->map(function ($p) {
+                $costPerKg = $p->unit === 'gram' ? (float) $p->cost_price * 1000 : (float) $p->cost_price;
+
+                return [
+                    'id' => $p->id,
+                    'sku' => $p->sku,
+                    'name' => $p->name,
+                    'cost_per_kg' => round($costPerKg),
+                    'unit' => $p->unit,
+                ];
+            });
+
+        return view('procurement.index', compact('suppliers', 'purchaseOrders', 'qualityControls', 'lots', 'branches', 'totalContractedBeansKg', 'rawMaterials'));
     }
 
     public function storeSupplier(Request $request): JsonResponse
@@ -67,7 +84,10 @@ class ProcurementController extends Controller
         try {
             $validated = $request->validate([
                 'supplier_id' => 'required|exists:suppliers,id',
-                'variety' => 'required|string',
+                'product_id' => 'nullable',
+                'variety' => 'nullable|string',
+                'custom_variety' => 'nullable|string',
+                'sub_variety' => 'nullable|string',
                 'weight_kg' => 'required|numeric|min:1',
                 'price_per_kg' => 'required|numeric|min:1000',
                 'notes' => 'nullable|string',
@@ -80,6 +100,29 @@ class ProcurementController extends Controller
             $totalAmount = $validated['weight_kg'] * $validated['price_per_kg'];
             $poNumber = 'PO-'.date('Ym').'-'.str_pad(PurchaseOrder::count() + 1, 3, '0', STR_PAD_LEFT);
 
+            // Determine Product and Display Name
+            $product = null;
+            $productIdInput = $validated['product_id'] ?? null;
+            if ($productIdInput && is_numeric($productIdInput)) {
+                $product = Product::find($productIdInput);
+            }
+
+            $rawVariety = trim((string) ($validated['custom_variety'] ?? $validated['variety'] ?? ''));
+            if ($product) {
+                $varietyName = $product->name;
+                $displayItemName = "[{$product->sku}] {$product->name}";
+            } else {
+                $varietyName = $rawVariety ?: 'Green Beans Specialty';
+                $displayItemName = "Green Beans {$varietyName}";
+            }
+
+            $subVariety = trim((string) ($validated['sub_variety'] ?? ''));
+            if ($subVariety !== '') {
+                $displayItemName .= " • {$subVariety}";
+            }
+
+            $notes = ($validated['notes'] ?? null) ?: ($subVariety ? "Sub-lot: {$subVariety}" : 'Pengadaan Green Beans Terverifikasi');
+
             $po = PurchaseOrder::create([
                 'po_number' => $poNumber,
                 'supplier_id' => $supplier->id,
@@ -89,12 +132,13 @@ class ProcurementController extends Controller
                 'expected_delivery_date' => now()->addDays(7),
                 'total_amount' => $totalAmount,
                 'status' => 'ISSUED',
-                'notes' => $validated['notes'] ?? 'Pengadaan Green Beans Terverifikasi',
+                'notes' => $notes,
             ]);
 
             PurchaseOrderItem::create([
                 'purchase_order_id' => $po->id,
-                'product_name' => 'Green Beans '.$validated['variety'],
+                'product_id' => $product?->id,
+                'product_name' => $displayItemName,
                 'quantity_kg' => $validated['weight_kg'],
                 'unit_price' => $validated['price_per_kg'],
                 'subtotal' => $totalAmount,

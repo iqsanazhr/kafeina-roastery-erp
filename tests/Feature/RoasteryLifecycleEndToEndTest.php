@@ -361,4 +361,66 @@ class RoasteryLifecycleEndToEndTest extends TestCase
         $this->assertDatabaseMissing('inventory_warehouses', ['code' => 'WH-RAW-ROAST']);
         $this->assertDatabaseMissing('inventory_warehouses', ['code' => 'WH-RST-ROAST']);
     }
+
+    /**
+     * Test procurement PO issuance with Master SKU link and sub-variety lot details.
+     */
+    public function test_procurement_po_creation_with_master_sku_link(): void
+    {
+        $supplier = Supplier::firstOrCreate(['code' => 'SUP-TEST-01'], [
+            'name' => 'Koperasi Baitul Qiradh Baburrayyan',
+            'contact_person' => 'Pak Aman',
+            'phone' => '081299991122',
+            'address' => 'Aceh Tengah',
+            'farm_location' => 'Pegasing',
+            'altitude_masl' => 1500,
+            'is_active' => true,
+        ]);
+
+        $product = Product::where('sku', 'RAW-GB-GAYO')->firstOrFail();
+
+        // 1. PO with Master SKU
+        $responseSku = $this->actingAs($this->adminUser)->postJson(route('procurement.po.store'), [
+            'supplier_id' => $supplier->id,
+            'product_id' => $product->id,
+            'sub_variety' => 'Lot #04 Ateng Super',
+            'weight_kg' => 60,
+            'price_per_kg' => 130000,
+            'notes' => 'Panen petik merah optimal',
+        ]);
+
+        $responseSku->assertStatus(200);
+        $responseSku->assertJson([
+            'success' => true,
+        ]);
+
+        $this->assertDatabaseHas('purchase_order_items', [
+            'product_id' => $product->id,
+            'quantity_kg' => 60,
+            'unit_price' => 130000,
+            'subtotal' => 7800000,
+        ]);
+
+        // 2. PO with Custom Variety (Petani experimental microlot)
+        $responseCustom = $this->actingAs($this->adminUser)->postJson(route('procurement.po.store'), [
+            'supplier_id' => $supplier->id,
+            'product_id' => null,
+            'custom_variety' => 'Yellow Caturra Double Anaerobic',
+            'weight_kg' => 30,
+            'price_per_kg' => 175000,
+        ]);
+
+        $responseCustom->assertStatus(200);
+        $responseCustom->assertJson([
+            'success' => true,
+        ]);
+
+        $this->assertDatabaseHas('purchase_order_items', [
+            'product_id' => null,
+            'product_name' => 'Green Beans Yellow Caturra Double Anaerobic',
+            'quantity_kg' => 30,
+            'unit_price' => 175000,
+            'subtotal' => 5250000,
+        ]);
+    }
 }
