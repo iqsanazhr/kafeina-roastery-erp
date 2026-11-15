@@ -1572,7 +1572,7 @@ function kafeinaApp() {
     </div>
 
     <!-- ============================================================== -->
-    <!-- APPLE IPHONE iOS 27 DYNAMIC ISLAND NOTIFICATION SYSTEM         -->
+    <!-- MODERN FLOATING TOAST NOTIFICATION SYSTEM                       -->
     <!-- ============================================================== -->
     <div x-data="iosNotificationEngine()" 
          x-cloak
@@ -1587,7 +1587,7 @@ function kafeinaApp() {
              x-transition:leave-end="opacity-0 -translate-y-5 scale-95"
              class="pointer-events-auto max-w-sm sm:max-w-md w-full bg-white/95 backdrop-blur-2xl border border-neutral-200/90 text-neutral-900 shadow-[0_20px_50px_rgba(0,0,0,0.12),0_4px_16px_rgba(0,0,0,0.06),0_0_0_1px_rgba(0,0,0,0.04)] rounded-3xl p-3.5 flex items-center gap-3.5 ring-1 ring-black/5">
              
-             <!-- Dynamic Island Leading Icon / Squircle (iOS Light Theme) -->
+             <!-- Leading Status Icon / Squircle (Light Theme) -->
              <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
                   :class="{
                       'bg-emerald-50 text-emerald-600 border border-emerald-200/90': current.type === 'success',

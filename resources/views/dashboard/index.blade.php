@@ -625,7 +625,7 @@
                         </template>
                     </div>
 
-                    <!-- TOMBOL RESMI BUAT PO KONSOLIDASI (DENGAN REAL API & NOTIFIKASI iOS 27) -->
+                    <!-- TOMBOL RESMI BUAT PO KONSOLIDASI (DENGAN REAL API & NOTIFIKASI SISTEM) -->
                     <button @click="createConsolidatedPo()" 
                             :disabled="poLoading"
                             class="mt-3.5 w-full py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-400 text-xs font-semibold text-white transition-all flex items-center justify-center gap-2 text-center font-sans cursor-pointer shadow-xs active:scale-[0.99]">

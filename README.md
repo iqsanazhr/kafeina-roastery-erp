@@ -15,7 +15,7 @@
   <a href="https://alpinejs.dev"><img src="https://img.shields.io/badge/Alpine.js-3.x-8BC0D0?style=for-the-badge&logo=alpine.js&logoColor=white" alt="Alpine.js" /></a>
   <a href="https://mysql.com"><img src="https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL 8" /></a>
   <a href="https://vitejs.dev"><img src="https://img.shields.io/badge/Vite-5.x-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite" /></a>
-  <a href="https://apple.com"><img src="https://img.shields.io/badge/UI_Standard-Apple_iOS_27_Dynamic_Island-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Apple iOS 27" /></a>
+  <a href="https://vercel.com"><img src="https://img.shields.io/badge/UI_Standard-Vercel_Clean_Design-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel Clean Design" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-green?style=for-the-badge" alt="License" /></a>
 </p>
 
@@ -25,21 +25,21 @@
 
 ---
 
-Didesain dengan standar kriya antarmuka tinggi (*high craft & design engineering*), sistem ini mengadopsi filosofi visual modern: tata letak monokromatik berpresisi piksel, notifikasi mengambang **Apple iPhone iOS 27 Dynamic Island** berfisika pegas (*spring physics*), **Spotlight Command Palette** instan dengan tombol shortcut keyboard (`/`), komponen layar sentuh POS kasir responsif bebas lag, serta kepatuhan mutlak standar toleransi industri sangrai kopi Specialty Coffee Association (SCA).
+Didesain dengan standar kriya antarmuka tinggi (*high craft & design engineering*), sistem ini mengadopsi filosofi visual modern: tata letak monokromatik berpresisi piksel, notifikasi mengambang (*Modern Floating Toast Notification Engine*) berfisika pegas (*spring physics*), **Spotlight Command Palette** instan dengan tombol shortcut keyboard (`/`), komponen layar sentuh POS kasir responsif bebas lag, serta kepatuhan mutlak standar toleransi industri sangrai kopi Specialty Coffee Association (SCA).
 
 ---
 
-## 🏛️ Arsitektur Aplikasi & Infrastruktur
+## <img src="docs/icons/layers.svg" width="22" height="22" align="center" /> Arsitektur Aplikasi & Infrastruktur
 
 Sistem **KAFEINA** dibangun dengan arsitektur modular berorientasi domain (*Domain-Driven Decoupled Architecture*) pada fondasi **Laravel 12 (PHP 8.3)** dan antarmuka reaktif **Alpine.js**:
 
 ```mermaid
 graph TB
-    subgraph "Presentation & Interaction Layer (Vercel & Apple Standards)"
+    subgraph "Presentation & Interaction Layer (Vercel Clean Design System)"
         A["Executive Analytics Dashboard"]
         B["Touchscreen POS Cashier Terminal"]
         C["Spotlight Command Palette Engine"]
-        D["iOS 27 Dynamic Island Notification Engine"]
+        D["Modern Floating Toast Notification Engine"]
         E["Roastery & QC Sensory Workspace"]
     end
 
@@ -90,16 +90,16 @@ graph TB
     Q --> S
 ```
 
-### ⚙️ Pola Arsitektur Utama
+### <img src="docs/icons/cpu.svg" width="18" height="18" align="center" /> Pola Arsitektur Utama
 - **Zero-Latency In-Memory Spotlight Search**: Kotak pencarian dasbor memanfaatkan pemindaian terindeks pada koleksi batch, peringatan stok ROP, dan entitas gerai tanpa memicu beban query berulang ke server basis data.
 - **Single-Flight PO Emergency Consolidation**: Mekanisme penggabungan seluruh item di bawah ambang batas aman (*Reorder Point*) menjadi satu dokumen Purchase Order bernomor unik (`PO-KONS-YYYYMMDD-XXX`) secara transaksional aman (*ACID compliant*).
 - **FIFO Recipe Deduction Matrix**: Setiap transaksi yang diselesaikan pada terminal kasir secara otomatis memotong stok bahan baku (roasted beans, fresh milk, sirup, pouch, paper cup) sesuai gramatur resep presisi pada cabang yang bersangkutan.
-- **Apple iOS 27 Dynamic Island Notification Engine**: Seluruh dialog peringatan dan flash message digantikan oleh notifikasi kapsul mengambang berbasis CSS blur, squircle adaptif, tema terang (*Light Glass*), dan penutupan otomatis (*auto-dismiss timer*).
+- **Modern Floating Toast Notification Engine**: Seluruh dialog peringatan dan pesan konfirmasi bawaan peramban digantikan oleh notifikasi mengambang berbasis CSS blur, squircle adaptif, tema terang (*Light Glass*), dan penutupan otomatis (*auto-dismiss timer*).
 - **Vercel-Style Fast Role Switcher**: Kemudahan pergantian identitas pengguna simulasi (*Super Admin, Head Roaster, Barista, QC Inspector*) untuk mempermudah demonstrasi dan audit lintas departemen.
 
 ---
 
-## 🔄 Alur Kerja Ekosistem (End-to-End Pipeline)
+## <img src="docs/icons/workflow.svg" width="22" height="22" align="center" /> Alur Kerja Ekosistem (End-to-End Pipeline)
 
 Diagram sekuens berikut menggambarkan siklus pergerakan biji kopi dari hulu pengadaan hingga transaksi kasir ritel:
 
@@ -140,58 +140,58 @@ sequenceDiagram
 
 ---
 
-## ⚡ Fitur Unggulan KAFEINA
+## <img src="docs/icons/zap.svg" width="22" height="22" align="center" /> Fitur Unggulan KAFEINA
 
-### 1. 🔍 Dasbor Eksekutif & Spotlight Command Palette (`/`)
-- **Pencarian Cepat Instan**: Menekan tombol shortcut keyboard `/` atau mengklik search bar langsung menampilkan panel pencarian cerdas *Spotlight* bergaya macOS.
+### 1. <img src="docs/icons/search.svg" width="18" height="18" align="center" /> Dasbor Eksekutif & Spotlight Command Palette (<code>/</code>)
+- **Pencarian Cepat Instan**: Menekan tombol shortcut keyboard `/` atau mengklik search bar langsung menampilkan panel pencarian cerdas *Spotlight* bergaya modern.
 - **Filter Fuzzy Terintegrasi**: Secara langsung mencocokkan kode batch sangrai (`WO-202611-001`), stok bahan baku kritis, navigasi modul, serta tombol filter cabang instan.
 - **Grafik Tren Interaktif**: Visualisasi omzet 7 hari / 30 hari, volume struk POS, dan jam sibuk (*rush hour*) dengan tooltip analitik dinamis.
 
-### 2. 📱 Apple iOS 27 Dynamic Island Notification Engine (Light Theme)
-- **Kapsul Mengambang Elegan**: Menggantikan pesan konfirmasi jadul (`window.alert`) dengan kapsul Dynamic Island berestetika *Light Glass* (`bg-white/95 backdrop-blur-2xl border border-neutral-200/90`).
+### 2. <img src="docs/icons/bell.svg" width="18" height="18" align="center" /> Modern Floating Toast Notification Engine (Light Theme)
+- **Kapsul Mengambang Elegan**: Menggantikan pesan konfirmasi jadul (`window.alert`) dengan kapsul notifikasi mengambang berestetika *Light Glass* (`bg-white/95 backdrop-blur-2xl border border-neutral-200/90`).
 - **Ikon Squircle & Animasi Pegas**: Dilengkapi ikon status berbasis squircle (emerald untuk PO berhasil, rose untuk error, amber untuk peringatan) dengan animasi masuk berfisika pegas (*spring physics*).
 
-### 3. 🚨 1-Click Buat PO Konsolidasi Darurat (Safety Stock ROP)
+### 3. <img src="docs/icons/alert-triangle.svg" width="18" height="18" align="center" /> 1-Click Buat PO Konsolidasi Darurat (Safety Stock ROP)
 - **Deteksi Otomatis Item Kritis**: Memantau 5 bahan baku krusial (Green Beans Aceh Gayo, Cold Cup PET 12oz, Susu Greenfields, Oatly Barista, Degassing Valve Pouch) yang menyentuh batas aman *Reorder Point*.
 - **Penerbitan PO Real-Time**: Tombol `+ Buat PO Konsolidasi` terhubung ke API backend riil yang menerbitkan dokumen PO ke vendor secara instan, mengubah status tombol menjadi `✓ PO Berhasil Diterbitkan ✓`.
 
-### 4. ☕ Terminal Kasir Touchscreen POS (Multi-Cabang)
+### 4. <img src="docs/icons/coffee.svg" width="18" height="18" align="center" /> Terminal Kasir Touchscreen POS (Multi-Cabang)
 - **Antarmuka Layar Sentuh Modern**: Desain kartu produk grid dengan kategori terindeks (Espresso Based, Manual Brew Reserve, Beans Retail, Artisan Tea, Pastry).
 - **Shift Drawer Barista**: Manajemen kas awal (*opening float*), pencatatan setoran kasir, rekonsiliasi tunai akhir hari, dan otorisasi supervisor.
 - **Kunci Isolasi Cabang**: Barista gerai (Senopati, Braga, Malioboro) hanya dapat memproses pesanan dan melihat riwayat transaksi cabang masing-masing.
 
-### 5. 💳 Dynamic QRIS Midtrans Payment Simulator
+### 5. <img src="docs/icons/credit-card.svg" width="18" height="18" align="center" /> Dynamic QRIS Midtrans Payment Simulator
 - **Generator QRIS Dinamis**: Menghasilkan kode QR pembayaran unik per transaksi sesuai total tagihan kasir.
 - **Simulasi Pembayaran Real-Time**: Dilengkapi tombol simulasi scan pembeli yang langsung memvalidasi pembayaran ke sistem POS tanpa perlu integrasi bank manual saat pengujian.
 
-### 6. 🔥 Roastery & Work Orders (Mesin Giesen W15A)
+### 6. <img src="docs/icons/flame.svg" width="18" height="18" align="center" /> Roastery & Work Orders (Mesin Giesen W15A)
 - **Pelacakan Siklus Sangrai**: Mengontrol status sangrai (*Planned, In-Progress, Roasting, Cooling, Completed*).
 - **Bill of Materials (BOM)**: Integrasi lot biji hijau dengan target profil (Light-Medium, Omni-Roast, Dark Espresso).
 
-### 7. ⚖️ Yield Loss Monitor & Audit HPP Riil
+### 7. <img src="docs/icons/scale.svg" width="18" height="18" align="center" /> Yield Loss Monitor & Audit HPP Riil
 - **Formula Otomatis Susut Bobot**: Menghitung susut sangrai dengan rumus baku:
   $$\text{Loss \%} = \frac{\text{Bobot Green} - \text{Bobot Roasted}}{\text{Bobot Green}} \times 100$$
 - **Toleransi Industri (14.0% – 18.0%)**: Indikator visual instan penanda profil optimal atau review evaluasi mutu.
 
-### 8. 🧪 QC Lab & SCA Cupping Sensori (100 Poin)
+### 8. <img src="docs/icons/flask.svg" width="18" height="18" align="center" /> QC Lab & SCA Cupping Sensori (100 Poin)
 - **Formulir Cupping Standar SCA**: Evaluasi 10 atribut sensori (Fragrance/Aroma, Flavor, Aftertaste, Acidity, Body, Balance, Uniformity, Clean Cup, Sweetness, Overall).
 - **Katalog Lot Biji Mentah**: Dokumentasi kadar air (*moisture meter*), kerapatan curah (*bulk density*), proses pasca-panen, dan elevasi kebun.
 
-### 9. 📦 Inventaris Multi-Cabang & Saldo FIFO Gudang
+### 9. <img src="docs/icons/package.svg" width="18" height="18" align="center" /> Inventaris Multi-Cabang & Saldo FIFO Gudang
 - **Visibilitas Stok Multi-Lokasi**: Pelacakan saldo gudang sangrai pusat (*Central Hub Cilandak*) dan gudang gerai ritel.
 - **Surat Jalan & Transfer**: Alokasi perpindahan barang terkontrol dengan dokumen nomor transfer resmi.
 
-### 10. 🏷️ Voucher Promosi & Manajemen Kuota
+### 10. <img src="docs/icons/tag.svg" width="18" height="18" align="center" /> Voucher Promosi & Manajemen Kuota
 - **Diskon Nominal & Persentase**: Validasi batas minimal pembelian, tanggal kedaluwarsa, dan kuota pemakaian kupon.
 
 ---
 
-## 📸 Galeri Antarmuka Sistem (2-Column Grid)
+## <img src="docs/icons/camera.svg" width="22" height="22" align="center" /> Galeri Antarmuka Sistem (2-Column Grid)
 
-| Halaman & Fitur Sistem | Halaman & Fitur Sistem |
+| <img src="docs/icons/monitor.svg" width="16" height="16" align="center" /> Halaman & Fitur Sistem | <img src="docs/icons/monitor.svg" width="16" height="16" align="center" /> Halaman & Fitur Sistem |
 | :---: | :---: |
 | <img src="docs/screenshots/01_login_screen.png" width="100%" alt="Halaman Masuk Sistem" /><br /><b>01. Masuk ke Sistem (Compact Split View & Circular K Logo)</b> | <img src="docs/screenshots/02_executive_dashboard.png" width="100%" alt="Executive Analytics Dashboard" /><br /><b>02. Dasbor Eksekutif & Analitik Multi-Cabang</b> |
-| <img src="docs/screenshots/03_spotlight_search.png" width="100%" alt="Spotlight Command Palette" /><br /><b>03. Spotlight Command Palette (Shortcut <code>/</code>)</b> | <img src="docs/screenshots/04_ios27_notification.png" width="100%" alt="iOS 27 Dynamic Island" /><br /><b>04. Notifikasi Apple iOS 27 Dynamic Island (Light Glass)</b> |
+| <img src="docs/screenshots/03_spotlight_search.png" width="100%" alt="Spotlight Command Palette" /><br /><b>03. Spotlight Command Palette (Shortcut <code>/</code>)</b> | <img src="docs/screenshots/04_ios27_notification.png" width="100%" alt="Notifikasi Sistem Mengambang" /><br /><b>04. Notifikasi Sistem Mengambang (Light Glass Toast Engine)</b> |
 | <img src="docs/screenshots/05_touchscreen_pos.png" width="100%" alt="Touchscreen POS Kasir" /><br /><b>05. Terminal Kasir Layar Sentuh POS (Senopati Flagship)</b> | <img src="docs/screenshots/06_qris_midtrans_payment.png" width="100%" alt="Dynamic QRIS Midtrans" /><br /><b>06. Simulasi Pembayaran Dinamis QRIS Midtrans</b> |
 | <img src="docs/screenshots/07_sales_orders_ledger.png" width="100%" alt="Buku Penjualan & Audit Resep" /><br /><b>07. Riwayat Penjualan & Audit Pemotongan Resep POS</b> | <img src="docs/screenshots/08_roastery_work_orders.png" width="100%" alt="Roastery Work Orders" /><br /><b>08. Roastery & Penjadwalan Mesin Sangrai Giesen W15A</b> |
 | <img src="docs/screenshots/09_yield_loss_monitoring.png" width="100%" alt="Yield Loss Monitor" /><br /><b>09. Audit Susut Bobot Sangrai (Yield Loss) & HPP Riil</b> | <img src="docs/screenshots/10_qc_lab_cupping.png" width="100%" alt="QC Lab SCA Cupping" /><br /><b>10. Laboratorium Mutu QC Lab SCA 100-Point Form</b> |
@@ -201,7 +201,7 @@ sequenceDiagram
 
 ---
 
-## 🛠️ Tech Stack & Ketergantungan
+## <img src="docs/icons/settings.svg" width="22" height="22" align="center" /> Tech Stack & Ketergantungan
 
 | Layer | Teknologi & Komponen | Deskripsi & Peran |
 | :--- | :--- | :--- |
@@ -210,12 +210,12 @@ sequenceDiagram
 | **CSS Framework** | Tailwind CSS 3.4 | Utilitas styling modern, responsif, dan layouting grid/flex |
 | **Frontend Reactivity** | Alpine.js 3.x | Manajemen state antarmuka, popover, dan interaktivitas reaktif |
 | **Asset Bundler** | Vite 5.x | Kompilasi kilat aset CSS dan JavaScript |
-| **Design System** | Apple iOS 27 & Vercel UI | Dynamic Island notification capsule, Glassmorphism, dan Typography Instrument Sans |
+| **Design System** | Vercel Clean Design System | Minimalist Light Glassmorphism, Squircle Adaptive Controls, dan Typography Geist & Mono |
 | **Testing Suite** | PHPUnit & Playwright | Pengujian fungsional backend dan otomatisasi verifikasi visual |
 
 ---
 
-## ⌨️ Referensi Shortcut Keyboard
+## <img src="docs/icons/keyboard.svg" width="22" height="22" align="center" /> Referensi Shortcut Keyboard
 
 | Shortcut | Aksi Cepat | Deskripsi |
 | :---: | :--- | :--- |
@@ -233,9 +233,9 @@ sequenceDiagram
 
 ---
 
-## 🚀 Panduan Memulai Cepat (Quick Start)
+## <img src="docs/icons/rocket.svg" width="22" height="22" align="center" /> Panduan Memulai Cepat (Quick Start)
 
-### 📋 Kebutuhan Sistem
+### <img src="docs/icons/clipboard.svg" width="18" height="18" align="center" /> Kebutuhan Sistem
 1. **PHP**: Versi `>= 8.3` dengan ekstensi `pdo_mysql`, `mbstring`, `openssl`, `bcmath`, `curl`.
 2. **Composer**: Versi `>= 2.7`.
 3. **Node.js**: Versi `>= 20.x` dan NPM.
@@ -243,7 +243,7 @@ sequenceDiagram
 
 ---
 
-### 💻 Langkah Instalasi
+### <img src="docs/icons/terminal.svg" width="18" height="18" align="center" /> Langkah Instalasi
 
 ```powershell
 # 1. Kloning repositori GitHub
@@ -279,7 +279,7 @@ Akses sistem melalui peramban web pada alamat: **`http://127.0.0.1:8000`**.
 
 ---
 
-## 🔐 Kredensial Akun Pengujian Default
+## <img src="docs/icons/lock.svg" width="22" height="22" align="center" /> Kredensial Akun Pengujian Default
 
 Semua akun pengujian menggunakan kata sandi seragam: **`password123`** (atau via *Fast Account Switcher*).
 
@@ -297,14 +297,14 @@ Semua akun pengujian menggunakan kata sandi seragam: **`password123`** (atau via
 
 ---
 
-## 👥 Tim Pengembang & Atribusi
+## <img src="docs/icons/users.svg" width="22" height="22" align="center" /> Tim Pengembang & Atribusi
 
 - **Arsitek & Tim Pengembang Sistem**:
-  - **Kelompok 1 ERP** — Perancangan arsitektur ERP kopi spesialti, skema basis data relasional multi-cabang, modul sangrai industri Giesen W15A, terminal kasir layar sentuh (POS), integrasi sistem notifikasi Apple iOS 27 Dynamic Island, serta pengujian perangkat lunak berbasis White-Box testing.
+  - **Kelompok 1 ERP** — Perancangan arsitektur ERP kopi spesialti, skema basis data relasional multi-cabang, modul sangrai industri Giesen W15A, terminal kasir layar sentuh (POS), integrasi sistem notifikasi mengambang (*Floating Toast Notification*), serta pengujian perangkat lunak berbasis White-Box testing.
 
 ---
 
-## 📄 Lisensi
+## <img src="docs/icons/file-text.svg" width="22" height="22" align="center" /> Lisensi
 
 Proyek ini didistribusikan di bawah ketentuan lisensi terbuka **MIT License**. Silakan baca berkas [LICENSE](LICENSE) untuk informasi hak cipta selengkapnya.
 
