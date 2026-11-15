@@ -23,8 +23,15 @@ if [ -n "$DB_HOST" ] && [ "$RUN_MIGRATIONS" = "true" ]; then
     echo "==> Waiting for database at ${DB_HOST}:${DB_PORT:-3306}..."
     for i in $(seq 1 15); do
         if php -r "try { new PDO('mysql:host='.getenv('DB_HOST').';port='.(getenv('DB_PORT')?:3306), getenv('DB_USERNAME'), getenv('DB_PASSWORD')); exit(0); } catch(Exception \$e) { exit(1); }"; then
-            echo "==> Database is reachable! Running migrations & seeders..."
-            php artisan migrate --seed --force || true
+            echo "==> Database is reachable!"
+            if [ "$FRESH_DATABASE" = "true" ]; then
+                echo "==> FRESH_DATABASE requested! Running migrate:fresh --seed..."
+                php artisan migrate:fresh --seed --force || true
+            else
+                echo "==> Running standard migrations & seeders..."
+                php artisan migrate --force || true
+                php artisan db:seed --force || true
+            fi
             break
         fi
         echo "==> Database not ready yet, retrying in 2s ($i/15)..."
