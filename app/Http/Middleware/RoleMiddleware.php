@@ -114,16 +114,12 @@ class RoleMiddleware
             ], Response::HTTP_FORBIDDEN);
         }
 
-        if (view()->exists('errors.403')) {
-            return response()->view('errors.403', [
-                'userRole' => $rawUserRole,
-                'allowedRoles' => $allowedRoles,
-                'currentUser' => $user,
-                'message' => 'Peran ['.($user->role?->display_name ?? $rawUserRole).'] tidak memiliki hak akses ke modul ini.',
-            ], Response::HTTP_FORBIDDEN);
-        }
-
-        return response("Akses ditolak: Peran [{$rawUserRole}] tidak memiliki wewenang untuk mengakses rute ini.", Response::HTTP_FORBIDDEN);
+        return response()->view('errors.403', [
+            'userRole' => $rawUserRole,
+            'allowedRoles' => $allowedRoles,
+            'currentUser' => $user,
+            'message' => 'Peran ['.($user->role?->display_name ?? $rawUserRole).'] tidak memiliki hak akses ke modul ini.',
+        ], Response::HTTP_FORBIDDEN);
     }
 
     /**

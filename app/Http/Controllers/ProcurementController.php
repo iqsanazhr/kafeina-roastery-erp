@@ -98,7 +98,7 @@ class ProcurementController extends Controller
             $user = User::first();
 
             $totalAmount = $validated['weight_kg'] * $validated['price_per_kg'];
-            $poNumber = 'PO-'.date('Ym').'-'.str_pad(PurchaseOrder::count() + 1, 3, '0', STR_PAD_LEFT);
+            $poNumber = 'PO-'.date('Ym').'-'.str_pad((string) (PurchaseOrder::count() + 1), 3, '0', STR_PAD_LEFT);
 
             // Determine Product and Display Name
             $product = null;
@@ -178,7 +178,7 @@ class ProcurementController extends Controller
             // Auto-generate Lot Number: GB-[KODE]-[TAHUN]-[NO]
             $year = $validated['harvest_year'];
             $code = strtoupper($validated['origin_code']);
-            $nextNo = str_pad(GreenBeanLot::count() + 1, 3, '0', STR_PAD_LEFT);
+            $nextNo = str_pad((string) (GreenBeanLot::count() + 1), 3, '0', STR_PAD_LEFT);
             $lotNumber = "GB-{$code}-{$year}-{$nextNo}";
 
             $po = PurchaseOrder::findOrFail($validated['po_id']);

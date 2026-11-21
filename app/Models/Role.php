@@ -53,7 +53,8 @@ class Role extends Model
             return true;
         }
 
-        $perms = $this->permissions ?? [];
+        /** @var list<string> $perms */
+        $perms = is_array($this->permissions) ? $this->permissions : [];
         if (in_array('*', $perms, true) || in_array($permission, $perms, true)) {
             return true;
         }

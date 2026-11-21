@@ -22,10 +22,10 @@ class MidtransQrisService
 
     public function __construct()
     {
-        $this->serverKey = (string) config('services.midtrans.server_key', env('MIDTRANS_SERVER_KEY', ''));
-        $this->clientKey = (string) config('services.midtrans.client_key', env('MIDTRANS_CLIENT_KEY', ''));
-        $this->isProduction = (bool) config('services.midtrans.is_production', env('MIDTRANS_IS_PRODUCTION', false));
-        $this->merchantId = (string) config('services.midtrans.merchant_id', env('MIDTRANS_MERCHANT_ID', ''));
+        $this->serverKey = (string) config('services.midtrans.server_key', '');
+        $this->clientKey = (string) config('services.midtrans.client_key', '');
+        $this->isProduction = (bool) config('services.midtrans.is_production', false);
+        $this->merchantId = (string) config('services.midtrans.merchant_id', '');
 
         $this->baseUrl = $this->isProduction
             ? 'https://api.midtrans.com/v2'

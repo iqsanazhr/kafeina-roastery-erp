@@ -40,7 +40,7 @@ class RoasteryController extends Controller
                 'notes' => 'nullable|string',
             ]);
 
-            $woNumber = 'WO-'.date('Ym').'-'.str_pad(WorkOrder::count() + 1, 3, '0', STR_PAD_LEFT);
+            $woNumber = 'WO-'.date('Ym').'-'.str_pad((string) (WorkOrder::count() + 1), 3, '0', STR_PAD_LEFT);
             $roasterId = auth()->id() ?? (User::where('role_id', function ($q) {
                 $q->select('id')->from('roles')->whereIn('name', ['roaster', 'head_roaster', 'HEAD_ROASTER']);
             })->value('id') ?? User::first()?->id ?? 1);

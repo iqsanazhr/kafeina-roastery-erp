@@ -8,6 +8,7 @@ use App\Models\DeliveryNoteItem;
 use App\Models\InventoryWarehouse;
 use App\Models\MaterialRequest;
 use App\Models\MaterialRequestItem;
+use App\Models\Product;
 use App\Models\StockCard;
 use App\Models\User;
 use App\Models\WarehouseStock;
@@ -115,6 +116,9 @@ class InventoryDispatchService
 
             foreach ($mr->items as $mrItem) {
                 $product = $mrItem->product;
+                if (! $product instanceof Product) {
+                    continue;
+                }
                 $qtyNeeded = (float) $mrItem->quantity_requested;
 
                 // FIFO Allocation from source warehouse

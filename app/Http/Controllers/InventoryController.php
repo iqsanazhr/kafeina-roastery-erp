@@ -28,25 +28,26 @@ class InventoryController extends Controller
         $products = Product::all();
 
         // Safety Stock Alerts dinamis dari saldo stok <= threshold
-        $safetyStockAlerts = WarehouseStock::with(['warehouse.branch', 'product'])
+        $safetyStockAlerts = [];
+        $lowStocks = WarehouseStock::with(['warehouse.branch', 'product'])
             ->whereColumn('quantity', '<=', 'safety_stock_threshold')
-            ->get()
-            ->map(function ($stock) {
-                $current = (float) $stock->quantity;
-                $min = (float) ($stock->safety_stock_threshold ?: 100);
-                $percent = $min > 0 ? round(($current / $min) * 100) : 100;
+            ->get();
 
-                return [
-                    'product_name' => $stock->product?->name ?? 'Item Persediaan',
-                    'branch' => $stock->warehouse?->branch?->name ?? 'Gudang',
-                    'current' => $current,
-                    'min' => $min,
-                    'unit' => $stock->product?->unit ?? 'pcs',
-                    'percent' => $percent,
-                    'level' => $percent <= 30 ? 'CRITICAL' : 'WARNING',
-                ];
-            })
-            ->toArray();
+        foreach ($lowStocks as $stock) {
+            $current = (float) $stock->quantity;
+            $min = (float) ($stock->safety_stock_threshold ?: 100);
+            $percent = $min > 0 ? round(($current / $min) * 100) : 100;
+
+            $safetyStockAlerts[] = [
+                'product_name' => $stock->product?->name ?? 'Item Persediaan',
+                'branch' => $stock->warehouse?->branch?->name ?? 'Gudang',
+                'current' => $current,
+                'min' => $min,
+                'unit' => $stock->product?->unit ?? 'pcs',
+                'percent' => $percent,
+                'level' => $percent <= 30 ? 'CRITICAL' : 'WARNING',
+            ];
+        }
 
         // Total green beans di Central Roastery (dihitung dinamis kg)
         $centralGreenStockKg = round(WarehouseStock::whereHas('warehouse', function ($q) {
@@ -201,7 +202,7 @@ class InventoryController extends Controller
                 'notes' => 'nullable|string',
             ]);
 
-            $mrNumber = 'MR-'.date('Ym').'-'.str_pad(MaterialRequest::count() + 1, 3, '0', STR_PAD_LEFT);
+            $mrNumber = 'MR-'.date('Ym').'-'.str_pad((string) (MaterialRequest::count() + 1), 3, '0', STR_PAD_LEFT);
             $user = User::first();
 
             $mr = MaterialRequest::create([
@@ -246,7 +247,7 @@ class InventoryController extends Controller
                 'notes' => 'nullable|string',
             ]);
 
-            $dnNumber = 'SJ-'.date('Ym').'-'.str_pad(DeliveryNote::count() + 1, 3, '0', STR_PAD_LEFT);
+            $dnNumber = 'SJ-'.date('Ym').'-'.str_pad((string) (DeliveryNote::count() + 1), 3, '0', STR_PAD_LEFT);
             $trackingCode = 'TRK-'.strtoupper(substr(md5(uniqid()), 0, 8));
             $user = User::first();
 
@@ -263,7 +264,7 @@ class InventoryController extends Controller
             ]);
 
             $mr = MaterialRequest::with('items')->find($validated['request_id']);
-            if ($mr) {
+            if ($mr instanceof MaterialRequest) {
                 $mr->update(['status' => 'IN_TRANSIT']);
                 foreach ($mr->items as $item) {
                     DeliveryNoteItem::create([

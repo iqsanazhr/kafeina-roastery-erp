@@ -57,7 +57,7 @@ class QcLabController extends Controller
 
             $year = $validated['harvest_year'];
             $code = strtoupper($validated['origin_code']);
-            $nextNo = str_pad(GreenBeanLot::count() + 1, 3, '0', STR_PAD_LEFT);
+            $nextNo = str_pad((string) (GreenBeanLot::count() + 1), 3, '0', STR_PAD_LEFT);
             $lotNumber = "GB-{$code}-{$year}-{$nextNo}";
 
             $po = PurchaseOrder::findOrFail($validated['po_id']);

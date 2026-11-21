@@ -32,7 +32,7 @@ use Tests\TestCase;
 /**
  * White-Box Testing Suite untuk Logika Bisnis & Rantai Pasok Terpadu
  * KAFEINA Specialty Coffee ERP.
- * 
+ *
  * Pengujian struktural internal mencakup 8 Jalur Kritis:
  * 1. Procurement & Data Invariant Bounds
  * 2. QC Lab Sensory Decision Tree & Branch Coverage
@@ -48,13 +48,21 @@ class WhiteBoxBusinessProcessTest extends TestCase
     use DatabaseTransactions;
 
     protected User $superAdmin;
+
     protected User $roaster;
+
     protected User $cashier;
+
     protected Branch $centralBranch;
+
     protected Branch $senopatiBranch;
+
     protected Branch $bragaBranch;
+
     protected InventoryWarehouse $whRawCentral;
+
     protected InventoryWarehouse $whRoastCentral;
+
     protected InventoryWarehouse $whBarSenopati;
 
     protected function setUp(): void
@@ -368,7 +376,7 @@ class WhiteBoxBusinessProcessTest extends TestCase
         $qtyOrdered = 3; // 3 Cup Flat White
 
         $activeShift = PosShift::where('branch_id', $this->senopatiBranch->id)->where('status', 'OPEN')->first();
-        if (!$activeShift) {
+        if (! $activeShift) {
             $activeShift = PosShift::create([
                 'branch_id' => $this->senopatiBranch->id,
                 'user_id' => $this->cashier->id,
@@ -449,7 +457,7 @@ class WhiteBoxBusinessProcessTest extends TestCase
             ->value('quantity');
 
         $activeShift = PosShift::where('branch_id', $this->senopatiBranch->id)->where('status', 'OPEN')->first();
-        if (!$activeShift) {
+        if (! $activeShift) {
             $activeShift = PosShift::create([
                 'branch_id' => $this->senopatiBranch->id,
                 'user_id' => $this->cashier->id,

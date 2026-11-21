@@ -920,7 +920,7 @@ class PosController extends Controller
             }
         }
 
-        $orderNumber = $request->input('order_number') ?: ('ORD-'.date('Ymd').'-'.str_pad(PosOrder::count() + 1, 4, '0', STR_PAD_LEFT));
+        $orderNumber = $request->input('order_number') ?: ('ORD-'.date('Ymd').'-'.str_pad((string) (PosOrder::count() + 1), 4, '0', STR_PAD_LEFT));
 
         $dbOrder = DB::transaction(function () use (
             $shift, $user, $branch, $orderNumber, $orderType, $customerName, $tableNumber,

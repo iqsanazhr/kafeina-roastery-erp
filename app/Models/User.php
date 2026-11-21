@@ -11,8 +11,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
 
+/**
+ * @property Carbon|null $pin_locked_until
+ * @property Role|null $role
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -62,6 +67,9 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return BelongsTo<Role, $this>
+     */
     public function role(): BelongsTo
     {
         return $this->belongsTo(Role::class, 'role_id');
