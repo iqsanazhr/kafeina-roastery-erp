@@ -7,6 +7,7 @@ use App\Http\Controllers\InventoryController;
 use App\Http\Controllers\LogisticsController;
 use App\Http\Controllers\PosController;
 use App\Http\Controllers\ProcurementController;
+use App\Http\Controllers\ProductController;
 use App\Http\Controllers\QcLabController;
 use App\Http\Controllers\RoasteryController;
 use App\Http\Controllers\SalesOrderController;
@@ -76,6 +77,30 @@ Route::prefix('vouchers')->name('vouchers.')->middleware('role:super_admin,super
     Route::post('/{voucher}/quota', [VoucherController::class, 'updateQuota'])->name('quota');
     Route::post('/{voucher}/toggle', [VoucherController::class, 'toggle'])->name('toggle');
     Route::delete('/{voucher}', [VoucherController::class, 'destroy'])->name('destroy');
+});
+
+// Master Manajemen Produk, Resep Bahan Baku, Varian & Modifiers (RBAC Gate)
+Route::prefix('products')->name('products.')->middleware('role:super_admin,store_manager,supervisor,roaster')->group(function () {
+    Route::get('/', [ProductController::class, 'index'])->name('index');
+    Route::post('/', [ProductController::class, 'store'])->name('store');
+    Route::put('/{product}', [ProductController::class, 'update'])->name('update');
+    Route::post('/{product}/toggle', [ProductController::class, 'toggleActive'])->name('toggle');
+
+    // Resep Bahan Baku (BOM Bar)
+    Route::post('/{product}/recipes', [ProductController::class, 'storeRecipe'])->name('recipes.store');
+    Route::delete('/recipes/{recipe}', [ProductController::class, 'destroyRecipe'])->name('recipes.destroy');
+
+    // Varian Harga (Ukuran & Kemasan)
+    Route::post('/{product}/variants', [ProductController::class, 'storeVariant'])->name('variants.store');
+    Route::delete('/variants/{variant}', [ProductController::class, 'destroyVariant'])->name('variants.destroy');
+
+    // Modifiers & Add-ons Barista
+    Route::post('/modifiers', [ProductController::class, 'storeModifier'])->name('modifiers.store');
+    Route::delete('/modifiers/{modifier}', [ProductController::class, 'destroyModifier'])->name('modifiers.destroy');
+
+    // Kategori Menu
+    Route::post('/categories', [ProductController::class, 'storeCategory'])->name('categories.store');
+    Route::put('/categories/{category}', [ProductController::class, 'updateCategory'])->name('categories.update');
 });
 
 // Executive Dashboard & Roastery Analytics (TICK-050)

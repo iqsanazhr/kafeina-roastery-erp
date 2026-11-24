@@ -14,6 +14,13 @@
     <!-- Alpine.js -->
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
 
+    <!-- Critical Anti-FOUC Style (Instant Hide Before Scripts & CSS Load) -->
+    <style>
+        [x-cloak] {
+            display: none !important;
+        }
+    </style>
+
     <!-- Compiled CSS & Assets -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
@@ -107,7 +114,7 @@
         <div class="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 scrollbar-none">
             
             @php
-                $canSection1 = $currentUser?->canAccessModule('dashboard') || $currentUser?->canAccessModule('pos') || $currentUser?->canAccessModule('vouchers');
+                $canSection1 = $currentUser?->canAccessModule('dashboard') || $currentUser?->canAccessModule('pos') || $currentUser?->canAccessModule('vouchers') || $currentUser?->canAccessModule('products');
                 $canSection2 = $currentUser?->canAccessModule('procurement') || $currentUser?->canAccessModule('qc-lab') || $currentUser?->canAccessModule('roastery') || $currentUser?->canAccessModule('yield-loss') || $currentUser?->canAccessModule('inventory') || $currentUser?->canAccessModule('logistics');
                 $canSection3 = $currentUser?->canAccessModule('finance');
             @endphp
@@ -178,6 +185,21 @@
                         <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘3</span>
                     </a>
                     @endif
+
+                    <!-- Katalog Produk, Resep & Varian -->
+                    @if($currentUser?->canAccessModule('products'))
+                    <a href="{{ route('products.index') }}"
+                       x-show="!sidebarSearch || 'produk resep varian harga katalog menu modifier bom product recipe'.includes(sidebarSearch.toLowerCase())" 
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Katalog & Resep (⌘4 / ⌘P)' : ''" {{ request()->routeIs('products.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                        <div class="flex items-center gap-2.5">
+                            <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('products.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                            </svg>
+                            <span x-show="!sidebarCollapsed">Katalog Produk & Resep</span>
+                        </div>
+                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘4</span>
+                    </a>
+                    @endif
                 </div>
             </div>
             @endif
@@ -193,14 +215,14 @@
                     @if($currentUser?->canAccessModule('procurement'))
                     <a href="{{ route('procurement.index') }}"
                        x-show="!sidebarSearch || 'pengadaan procurement mitra petani kopi purchase order po'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Pengadaan (Procurement) (⌘4)' : ''" {{ request()->routeIs('procurement.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Pengadaan (Procurement) (⌘5)' : ''" {{ request()->routeIs('procurement.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('procurement.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
                             </svg>
                             <span x-show="!sidebarCollapsed">Pengadaan (Procurement)</span>
                         </div>
-                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘4</span>
+                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘5</span>
                     </a>
                     @endif
 
@@ -208,14 +230,14 @@
                     @if($currentUser?->canAccessModule('qc-lab'))
                     <a href="{{ route('qc-lab.index') }}"
                        x-show="!sidebarSearch || 'qc lab laboratorium mutu fisik green beans cupping score'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'QC Lab & Laboratorium (⌘5)' : ''" {{ request()->routeIs('qc-lab.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'QC Lab & Laboratorium (⌘6)' : ''" {{ request()->routeIs('qc-lab.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('qc-lab.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
                             </svg>
                             <span x-show="!sidebarCollapsed">QC Lab & Laboratorium</span>
                         </div>
-                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘5</span>
+                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘6</span>
                     </a>
                     @endif
 
@@ -223,7 +245,7 @@
                     @if($currentUser?->canAccessModule('roastery'))
                     <a href="{{ route('roastery.index') }}"
                        x-show="!sidebarSearch || 'roastery work orders bom sangrai giesen diedrich produksi'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Roastery & Work Orders (⌘6)' : ''" {{ request()->routeIs('roastery.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Roastery & Work Orders (⌘7)' : ''" {{ request()->routeIs('roastery.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('roastery.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
@@ -231,7 +253,7 @@
                             </svg>
                             <span x-show="!sidebarCollapsed">Roastery & Work Orders</span>
                         </div>
-                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘6</span>
+                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘7</span>
                     </a>
                     @endif
 
@@ -239,14 +261,14 @@
                     @if($currentUser?->canAccessModule('yield-loss'))
                     <a href="{{ route('yield-loss.index') }}"
                        x-show="!sidebarSearch || 'yield loss monitor susut sangrai hpp riil profil suhu agtron'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Yield Loss (Monitor Susut) (⌘7)' : ''" {{ request()->routeIs('yield-loss.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Yield Loss (Monitor Susut) (⌘8)' : ''" {{ request()->routeIs('yield-loss.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('yield-loss.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
                             </svg>
                             <span x-show="!sidebarCollapsed">Yield Loss (Monitor Susut)</span>
                         </div>
-                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘7</span>
+                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘8</span>
                     </a>
                     @endif
 
@@ -254,14 +276,14 @@
                     @if($currentUser?->canAccessModule('inventory'))
                     <a href="{{ route('inventory.index') }}"
                        x-show="!sidebarSearch || 'inventori multi-cabang stok saldo rop safety stock gudang warehouse'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Inventori Multi-Cabang (⌘8)' : ''" {{ request()->routeIs('inventory.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Inventori Multi-Cabang (⌘9)' : ''" {{ request()->routeIs('inventory.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('inventory.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
                             </svg>
                             <span x-show="!sidebarCollapsed">Inventori Multi-Cabang</span>
                         </div>
-                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘8</span>
+                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘9</span>
                     </a>
                     @endif
 
@@ -269,14 +291,14 @@
                     @if($currentUser?->canAccessModule('logistics'))
                     <a href="{{ route('logistics.index') }}"
                        x-show="!sidebarSearch || 'logistik distribusi surat jalan delivery notes mr qr transit armada'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Logistik & Distribusi (⌘9)' : ''" {{ request()->routeIs('logistics.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Logistik & Distribusi (⌘D)' : ''" {{ request()->routeIs('logistics.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('logistics.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                             </svg>
                             <span x-show="!sidebarCollapsed">Logistik & Distribusi</span>
                         </div>
-                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘9</span>
+                        <span x-show="!sidebarCollapsed" class="text-[10px] px-1.5 py-0.5 rounded bg-white border border-neutral-200 text-neutral-400 group-hover:text-neutral-600 tabular-nums shrink-0 ml-auto">⌘D</span>
                     </a>
                     @endif
                 </div>
@@ -781,6 +803,7 @@
                     <!-- Dropdown Popover Menu -->
                     <div x-show="branchDropdownOpen"
                          x-cloak
+                         style="display: none;"
                          @click.away="branchDropdownOpen = false"
                          x-transition:enter="transition ease-out duration-100 motion-reduce:transition-none"
                          x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
@@ -897,6 +920,8 @@
                     Dasbor Eksekutif
                 @elseif(request()->routeIs('pos.*'))
                     Kasir POS Touchscreen
+                @elseif(request()->routeIs('products.*'))
+                    Katalog Produk, Resep & Varian
                 @elseif(request()->routeIs('vouchers.*'))
                     Kelola Voucher & Kuota Diskon
                 @elseif(request()->routeIs('roastery.*'))
@@ -917,6 +942,13 @@
                 <!-- + Create New Dropdown (Role-Based Adaptive Popover) -->
                 @php
                     $createMenuItems = [
+                        [
+                            'title' => 'Produk & Resep',
+                            'route' => route('products.index'),
+                            'can' => $currentUser?->canAccessModule('products'),
+                            'keywords' => 'produk resep varian harga katalog menu modifier bom product recipe',
+                            'icon' => '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />',
+                        ],
                         [
                             'title' => 'Transaksi POS',
                             'route' => route('pos.index'),
@@ -997,6 +1029,7 @@
                     <!-- Exact 2-Column / Adaptive Flyout Menu Card from Reference -->
                     <div x-show="createNewOpen"
                          x-cloak
+                         style="display: none;"
                          @click.away="createNewOpen = false"
                          x-transition:enter="transition ease-out duration-150 motion-reduce:transition-none"
                          x-transition:enter-start="opacity-0 scale-95 -translate-y-1"
@@ -1063,6 +1096,7 @@
             <!-- Kafeina AI Agent Modal (Vercel Style) -->
             <div x-show="agentModalOpen"
                  x-cloak
+                 style="display: none;"
                  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs"
                  x-transition:enter="transition ease-out duration-150"
                  x-transition:enter-start="opacity-0"
@@ -1302,12 +1336,12 @@ function kafeinaApp() {
                         '1': "{{ route('pos.index') }}",
                         '2': "{{ route('sales.index') }}",
                         '3': "{{ route('vouchers.index') }}",
-                        '4': "{{ route('procurement.index') }}",
-                        '5': "{{ route('qc-lab.index') }}",
-                        '6': "{{ route('roastery.index') }}",
-                        '7': "{{ route('yield-loss.index') }}",
-                        '8': "{{ route('inventory.index') }}",
-                        '9': "{{ route('logistics.index') }}"
+                        '4': "{{ route('products.index') }}",
+                        '5': "{{ route('procurement.index') }}",
+                        '6': "{{ route('qc-lab.index') }}",
+                        '7': "{{ route('roastery.index') }}",
+                        '8': "{{ route('yield-loss.index') }}",
+                        '9': "{{ route('inventory.index') }}"
                     };
 
                     if (routeMap[e.key]) {
@@ -1316,8 +1350,22 @@ function kafeinaApp() {
                         return;
                     }
 
-                    // Ctrl/Cmd + L / P: Laba Rugi Riil (P&L) (⌘L)
-                    if ((e.key.toLowerCase() === 'l' || e.key.toLowerCase() === 'p') && !isInput) {
+                                        // Ctrl/Cmd + D: Logistik & Distribusi (⌘D)
+                    if (e.key.toLowerCase() === 'd' && !isInput) {
+                        e.preventDefault();
+                        window.location.href = "{{ route('logistics.index') }}";
+                        return;
+                    }
+
+                    // Ctrl/Cmd + P: Katalog Produk & Resep (⌘P alias ⌘4)
+                    if (e.key.toLowerCase() === 'p' && !isInput) {
+                        e.preventDefault();
+                        window.location.href = "{{ route('products.index') }}";
+                        return;
+                    }
+
+                    // Ctrl/Cmd + L: Laba Rugi Riil (P&L) (⌘L)
+                    if (e.key.toLowerCase() === 'l' && !isInput) {
                         e.preventDefault();
                         window.location.href = "{{ route('finance.index') }}";
                         return;
@@ -1576,9 +1624,12 @@ function kafeinaApp() {
     <!-- ============================================================== -->
     <div x-data="iosNotificationEngine()" 
          x-cloak
+         style="display: none;"
          class="fixed top-4 sm:top-5 inset-x-0 z-[9999999] flex justify-center pointer-events-none px-4 select-none">
         
         <div x-show="visible"
+             x-cloak
+             style="display: none;"
              x-transition:enter="transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
              x-transition:enter-start="opacity-0 -translate-y-6 scale-90"
              x-transition:enter-end="opacity-100 translate-y-0 scale-100"

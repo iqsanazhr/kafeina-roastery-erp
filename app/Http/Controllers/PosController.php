@@ -8,6 +8,7 @@ use App\Models\PosOrder;
 use App\Models\PosOrderItem;
 use App\Models\PosShift;
 use App\Models\Product;
+use App\Models\ProductModifier;
 use App\Models\ProductRecipe;
 use App\Models\RecipeDeduction;
 use App\Models\RedeemCode;
@@ -1024,7 +1025,54 @@ class PosController extends Controller
                                     ]);
                                 }
                             }
-                        } else {
+                        }
+
+                        // Auto-deduct bahan baku untuk selected extras/modifiers
+                        $extras = $item['selectedExtras'] ?? $item['extras'] ?? [];
+                        if (! empty($extras) && is_array($extras)) {
+                            foreach ($extras as $extra) {
+                                $extraName = is_array($extra) ? ($extra['name'] ?? '') : (string) $extra;
+                                $mod = ProductModifier::where('name', $extraName)
+                                    ->orWhere('name', 'LIKE', "%{$extraName}%")
+                                    ->first();
+
+                                if ($mod && $mod->ingredient_product_id && (float) $mod->quantity_deducted > 0) {
+                                    $modDeductQty = (float) $mod->quantity_deducted * ($item['qty'] ?? 1);
+                                    $modStock = WarehouseStock::where('warehouse_id', $barWarehouse->id)
+                                        ->where('product_id', $mod->ingredient_product_id)
+                                        ->first();
+
+                                    if ($modStock) {
+                                        $modStock->quantity = max(0, $modStock->quantity - $modDeductQty);
+                                        $modStock->save();
+
+                                        RecipeDeduction::create([
+                                            'pos_order_item_id' => $orderItem->id,
+                                            'ingredient_product_id' => $mod->ingredient_product_id,
+                                            'warehouse_id' => $barWarehouse->id,
+                                            'quantity_deducted' => $modDeductQty,
+                                            'unit' => $mod->unit ?? 'ml',
+                                            'deduction_timestamp' => now(),
+                                        ]);
+
+                                        StockCard::create([
+                                            'warehouse_id' => $barWarehouse->id,
+                                            'product_id' => $mod->ingredient_product_id,
+                                            'lot_id' => null,
+                                            'reference_type' => 'POS_SALE',
+                                            'reference_id' => $order->id,
+                                            'quantity_in' => 0,
+                                            'quantity_out' => $modDeductQty,
+                                            'balance_after' => $modStock->quantity,
+                                            'cost_per_unit' => (float) ($mod->ingredientProduct?->cost_price ?? 0),
+                                            'notes' => "Auto-deduct POS Ekstra [{$mod->name}] Order [{$order->order_number}]",
+                                        ]);
+                                    }
+                                }
+                            }
+                        }
+
+                        if ($recipes->isEmpty()) {
                             // Retail standalone product
                             $stock = WarehouseStock::where('warehouse_id', $barWarehouse->id)
                                 ->where('product_id', $product->id)

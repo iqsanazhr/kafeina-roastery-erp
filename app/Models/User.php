@@ -182,6 +182,7 @@ class User extends Authenticatable
             'pos' => in_array($roleName, ['super_admin', 'cashier', 'branch_cashier', 'barista', 'supervisor', 'store_manager'], true),
             'sales' => in_array($roleName, ['super_admin', 'cashier', 'branch_cashier', 'barista', 'supervisor', 'store_manager', 'procurement', 'procurement_officer', 'owner', 'admin'], true),
             'vouchers' => in_array($roleName, ['super_admin', 'supervisor', 'store_manager', 'owner', 'admin'], true),
+            'products', 'catalog' => in_array($roleName, ['super_admin', 'store_manager', 'supervisor', 'head_roaster', 'roaster', 'admin', 'owner'], true),
             'procurement' => in_array($roleName, ['super_admin', 'procurement', 'procurement_officer'], true),
             'qc-lab' => in_array($roleName, ['super_admin', 'qc_inspector', 'procurement', 'procurement_officer'], true),
             'roastery' => in_array($roleName, ['super_admin', 'roaster', 'head_roaster'], true),
@@ -206,6 +207,34 @@ class User extends Authenticatable
         $roleName = strtolower(trim((string) ($this->role?->name ?? '')));
 
         return in_array($roleName, ['super_admin', 'super-admin', 'owner', 'admin', 'procurement', 'procurement_officer'], true);
+    }
+
+    /**
+     * Check if user is allowed to edit product pricing and price variants.
+     */
+    public function canManagePricing(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $roleName = strtolower(trim((string) ($this->role?->name ?? '')));
+
+        return in_array($roleName, ['super_admin', 'store_manager', 'supervisor', 'admin', 'owner'], true);
+    }
+
+    /**
+     * Check if user is allowed to edit recipe formulas and BOM bar deductions.
+     */
+    public function canManageRecipes(): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        $roleName = strtolower(trim((string) ($this->role?->name ?? '')));
+
+        return in_array($roleName, ['super_admin', 'store_manager', 'supervisor', 'head_roaster', 'roaster', 'admin', 'owner'], true);
     }
 
     /**

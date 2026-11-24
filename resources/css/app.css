@@ -1,5 +1,10 @@
 @import 'tailwindcss';
 
+/* Anti-FOUC / Anti-Leak for Alpine.js across all modals and dropdowns */
+[x-cloak] {
+    display: none !important;
+}
+
 @theme {
     --font-sans: 'Geist', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     --font-mono: 'Geist', 'Plus Jakarta Sans', 'Geist Mono', -apple-system, BlinkMacSystemFont, sans-serif;

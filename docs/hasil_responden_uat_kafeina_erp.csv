@@ -1,0 +1,11 @@
+ID Responden,Peran / Jabatan,Pengalaman,P01,P02,P03,P04,P05,P06,P07,P08,P09,P10,Total Skor,Persentase (%),Kategori,Komentar / Saran
+R01,Store Manager (Outlet Senopati),4 Tahun,5,5,5,5,5,5,5,5,5,5,50,100.0%,Sangat Layak,Modul katalog produk dan varian sangat fleksibel. Penetapan resep auto-deduct memudahkan rekonsiliasi stok harian tanpa selisih.
+R02,Lead Barista & Cashier (Outlet Senopati),2 Tahun,5,5,5,4,4,5,4,5,4,5,46,92.0%,Sangat Layak,Web POS sangat cepat responsnya saat peak hours. Pop-up ekstra shot dan oat milk langsung sinkron ke total tagihan.
+R03,Branch Cashier (Outlet Braga),1.5 Tahun,4,4,4,4,4,4,4,5,4,4,41,82.0%,Sangat Layak,"Proteksi PIN kasir dan validasi modal awal shift sangat rapi, mencegah kekeliruan perhitungan uang fisik di laci."
+R04,Outlet Supervisor (Outlet Malioboro),3 Tahun,5,5,5,5,5,5,4,5,5,5,49,98.0%,Sangat Layak,Pembatasan hak akses (RBAC) berjalan sempurna; kasir tidak bisa asal ubah harga atau void order tanpa izin supervisor.
+R05,Head Roaster (Central Roastery),5 Tahun,5,4,5,5,5,4,5,5,5,5,48,96.0%,Sangat Layak,Fitur Work Order dan perhitungan Yield Loss susut sangrai sangat presisi. HPP riil per batch langsung terhitung otomatis.
+R06,QC Inspector (Laboratorium Mutu),3 Tahun,4,4,4,4,4,4,4,4,4,4,40,80.0%,Layak,Validasi kadar air 10-12% dan cupping score SCAA >= 80 bekerja ketat menolak lot green beans yang tidak sesuai standar.
+R07,Warehouse & Logistics Staff,4 Tahun,5,4,5,5,5,4,5,5,5,5,48,96.0%,Sangat Layak,Surat Jalan ber-QR code dan alokasi stok FIFO memudahkan pelacakan distribusi biji kopi antar cabang tanpa tertukar tanggal sangrai.
+R08,Procurement Officer,2.5 Tahun,4,4,4,4,5,4,4,4,4,4,41,82.0%,Sangat Layak,"Penerbitan PO dan pencatatan mitra petani kopi sangat terstruktur, mempermudah pelacakan asal kebun dan varietas."
+R09,Barista Shift 2 (Outlet Braga),1 Tahun,5,5,5,4,4,5,4,4,4,5,45,90.0%,Sangat Layak,Desain antarmuka bersih dan ramah layar sentuh (touchscreen tablet). Navigasi kategori minuman sangat cepat.
+R10,General Manager / Owner Representative,6 Tahun,5,5,5,5,5,5,5,5,5,5,50,100.0%,Sangat Layak,Laporan laba rugi riil (Real P&L) dan dashboard eksekutif memberikan visibilitas penuh terhadap performa keuangan seluruh cabang.
