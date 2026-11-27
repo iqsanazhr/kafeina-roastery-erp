@@ -138,42 +138,44 @@ class DashboardController extends Controller
             ->get();
 
         $lowAlerts = [];
-        $fallbackAlerts = [];
         foreach ($allStocks as $stock) {
             $qty = (float) $stock->quantity;
             $threshold = (float) ($stock->safety_stock_threshold > 0 ? $stock->safety_stock_threshold : 100);
+            if ($qty > $threshold) {
+                continue;
+            }
+
             $pct = $threshold > 0 ? (int) min(100, round(($qty / $threshold) * 100)) : 100;
             $unit = $stock->product?->unit ?? 'unit';
+            $sku = (string) ($stock->product?->sku ?? '');
+            $isPurchasable = (bool) ($stock->product?->is_raw_material && ! str_starts_with($sku, 'RAW-RB'));
 
-            $status = $pct <= 35 ? 'CRITICAL' : ($pct <= 100 ? 'WARNING' : 'SAFE');
+            $status = $pct <= 35 ? 'CRITICAL' : 'WARNING';
             $badge = $status === 'CRITICAL'
                 ? "KRITIS ({$pct}%)"
-                : ($status === 'WARNING' ? "MENIPIS ({$pct}%)" : "AMAN ({$pct}%)");
+                : "MENIPIS ({$pct}%)";
 
-            $entry = [
-                'item_name' => $stock->product?->name ?? 'Produk Gudang',
-                'category' => $stock->product?->category?->name ?? 'Inventori',
-                'warehouse' => $stock->warehouse?->name ?? ($stock->warehouse?->branch?->name ?? 'Gudang'),
-                'current_stock' => number_format($qty, $qty < 100 ? 1 : 0, ',', '.').' '.$unit,
-                'min_stock' => number_format($threshold, 0, ',', '.').' '.$unit,
-                'percent' => $pct,
-                'status' => $status,
-                'badge' => $badge,
-                'suggested_action' => $stock->product?->is_raw_material
-                    ? 'Keluarkan PO Pengadaan / Transfer dari Central Warehouse'
-                    : 'Jadwalkan produksi/restock dari Central Roastery',
-            ];
-
-            if (in_array($status, ['CRITICAL', 'WARNING'], true) && count($lowAlerts) < 6) {
-                $lowAlerts[] = $entry;
-            }
-            if (count($fallbackAlerts) < 5) {
-                $fallbackAlerts[] = $entry;
+            if (count($lowAlerts) < 6) {
+                $lowAlerts[] = [
+                    'sku' => $sku,
+                    'item_name' => $stock->product?->name ?? 'Produk Gudang',
+                    'category' => $stock->product?->category?->name ?? 'Inventori',
+                    'warehouse' => $stock->warehouse?->name ?? ($stock->warehouse?->branch?->name ?? 'Gudang'),
+                    'current_stock' => number_format($qty, $qty < 100 ? 1 : 0, ',', '.').' '.$unit,
+                    'min_stock' => number_format($threshold, 0, ',', '.').' '.$unit,
+                    'percent' => $pct,
+                    'status' => $status,
+                    'badge' => $badge,
+                    'purchasable' => $isPurchasable,
+                    'suggested_action' => $isPurchasable
+                        ? 'Keluarkan PO Pengadaan / Transfer dari Central Warehouse'
+                        : 'Jadwalkan produksi sangrai / restock dari Central Roastery',
+                ];
             }
         }
 
-        // Show low-stock alerts first; if all stocks are healthy, show the 5 lowest-ratio monitored items
-        $stockAlerts = count($lowAlerts) > 0 ? $lowAlerts : $fallbackAlerts;
+        // Hanya tampilkan item yang benar-benar di bawah batas aman minimum (ROP); kosong bila semua stok aman
+        $stockAlerts = $lowAlerts;
 
         // Real Active Branches Summary
         $branches = [];
@@ -592,14 +594,35 @@ class DashboardController extends Controller
         $branch = Branch::where('type', 'CENTRAL_ROASTERY')->first() ?? Branch::first();
 
         // Derive critical purchasable raw materials dynamically from WarehouseStock (exclude WH-TRANSIT & internal RAW-RB%)
-        $lowStocks = WarehouseStock::with('product')
-            ->whereHas('warehouse', fn ($q) => $q->where('type', '!=', 'TRANSIT'))
+        $branchSlug = strtolower(trim((string) $request->input('branch', 'all')));
+        $scopedBranchId = null;
+        if ($user && ! $user->canSwitchBranch() && $user->branch_id) {
+            $scopedBranchId = $user->branch_id;
+        } elseif ($branchSlug !== '' && $branchSlug !== 'all') {
+            $scopedBranchCode = match ($branchSlug) {
+                'senopati' => 'OUT-SENO',
+                'braga' => 'OUT-BRG',
+                'malioboro' => 'OUT-MLO',
+                'central' => 'HQ-CENTRAL',
+                default => strtoupper($branchSlug),
+            };
+            $scopedBranchId = Branch::where('code', $scopedBranchCode)->value('id');
+        }
+
+        $lowStocksQuery = WarehouseStock::with('product')
+            ->whereHas('warehouse', function ($q) use ($scopedBranchId) {
+                $q->where('type', '!=', 'TRANSIT');
+                if ($scopedBranchId) {
+                    $q->where('branch_id', $scopedBranchId);
+                }
+            })
             ->whereHas('product', fn ($q) => $q->where('is_active', true)
                 ->where('is_raw_material', true)
                 ->where('sku', 'NOT LIKE', 'RAW-RB%'))
             ->whereColumn('quantity', '<=', 'safety_stock_threshold')
-            ->limit(5)
-            ->get();
+            ->limit(5);
+
+        $lowStocks = $lowStocksQuery->get();
 
         $criticalItems = [];
         foreach ($lowStocks as $stock) {
@@ -628,13 +651,12 @@ class DashboardController extends Controller
             ];
         }
 
-        // Fallback if all purchasable raw material stocks are currently above threshold
+        // Tolak pengajuan PO darurat bila tidak ada item bahan baku di bawah batas aman minimum (ROP)
         if (empty($criticalItems)) {
-            $criticalItems = [
-                ['product_id' => null, 'name' => 'Green Beans Aceh Gayo Honey', 'qty' => 50.0, 'unit_price' => 130000.0],
-                ['product_id' => null, 'name' => 'Greenfields Fresh Milk Pasteurisasi 1L', 'qty' => 30.0, 'unit_price' => 25000.0],
-                ['product_id' => null, 'name' => 'Cold Cup PET 12oz + Flat Lid', 'qty' => 500.0, 'unit_price' => 1400.0],
-            ];
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada bahan baku di bawah batas aman minimum (ROP). Pengajuan PO Konsolidasi tidak dapat dilakukan saat stok aman.',
+            ], 422);
         }
 
         $totalAmount = (float) array_sum(array_map(fn ($item) => $item['qty'] * $item['unit_price'], $criticalItems));

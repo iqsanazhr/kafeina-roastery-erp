@@ -243,4 +243,22 @@ class CrossModuleSynergyTest extends TestCase
         ]);
         $unknownProduct->assertStatus(422)->assertJson(['success' => false]);
     }
+
+    public function test_dashboard_blocks_consolidated_po_when_no_stock_is_below_safety_threshold(): void
+    {
+        // Naikkan seluruh stok di atas ambang batas safety stock
+        WarehouseStock::query()->update(['quantity' => 999999]);
+
+        $dashRes = $this->actingAs($this->superAdmin)->get(route('dashboard.index'));
+        $dashRes->assertOk();
+        $this->assertCount(0, $dashRes->viewData('stockAlerts'));
+        $dashRes->assertDontSee('5 Item Kritis');
+
+        $poCountBefore = PurchaseOrder::count();
+
+        $poRes = $this->actingAs($this->superAdmin)->postJson(route('dashboard.consolidated-po'));
+        $poRes->assertStatus(422)->assertJson(['success' => false]);
+
+        $this->assertEquals($poCountBefore, PurchaseOrder::count());
+    }
 }

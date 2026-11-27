@@ -579,25 +579,37 @@
             <div>
                 <div class="flex items-center justify-between mb-2.5">
                     <h2 class="text-sm font-semibold text-neutral-900 font-sans">Safety Stock Alerts</h2>
-                    <span class="text-xs text-neutral-400 font-sans">5 Item Kritis</span>
+                    <span class="text-xs font-sans font-medium"
+                          :class="stockAlerts.length > 0 ? 'text-rose-600' : 'text-emerald-600'"
+                          x-text="stockAlerts.length > 0 ? (stockAlerts.length + ' Item Kritis') : '0 Item Kritis'"></span>
                 </div>
 
                 <div class="bg-white border border-[#eaeaea] rounded-xl p-5 shadow-none hover:border-[#ccc] transition-colors font-sans">
                     <div class="flex items-center gap-3 pb-3 border-b border-[#f0f0f0]">
-                        <div class="w-8 h-8 rounded-full border border-neutral-200 bg-neutral-50 flex items-center justify-center text-neutral-700 shrink-0">
+                        <div class="w-8 h-8 rounded-full border flex items-center justify-center shrink-0"
+                             :class="stockAlerts.length > 0 ? 'border-neutral-200 bg-neutral-50 text-neutral-700' : 'border-emerald-200 bg-emerald-50 text-emerald-600'">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                <path x-show="stockAlerts.length > 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                                <path x-show="stockAlerts.length === 0" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                             </svg>
                         </div>
                         <div class="min-w-0">
-                            <div class="text-xs font-semibold text-neutral-900 font-sans">Peringatan Reorder Point (ROP)</div>
-                            <div class="text-[11px] text-neutral-500 font-sans">Stok bahan baku di bawah batas aman minimum</div>
+                            <div class="text-xs font-semibold text-neutral-900 font-sans"
+                                 x-text="stockAlerts.length > 0 ? 'Peringatan Reorder Point (ROP)' : 'Seluruh Stok Aman (Di Atas ROP)'"></div>
+                            <div class="text-[11px] text-neutral-500 font-sans"
+                                 x-text="stockAlerts.length > 0 ? 'Stok bahan baku di bawah batas aman minimum' : 'Tidak ada bahan baku di bawah ambang batas minimum saat ini'"></div>
                         </div>
                     </div>
 
-                    <!-- List of 5 Critical Stock Items (Simple Clean Rows) -->
-                    <div class="mt-2 divide-y divide-neutral-100 font-sans">
-                        <template x-for="item in stockAlerts" :key="item.item_name">
+                    <!-- Empty State bila tidak ada stok kritis -->
+                    <div x-show="stockAlerts.length === 0" class="mt-3 py-4 px-3 rounded-xl bg-neutral-50 border border-dashed border-neutral-200 text-center">
+                        <div class="text-xs font-medium text-neutral-700">Semua stok gudang berada pada level aman</div>
+                        <div class="text-[11px] text-neutral-400 mt-0.5">Tombol PO Konsolidasi otomatis aktif saat ada bahan baku di bawah batas ROP.</div>
+                    </div>
+
+                    <!-- List of Critical Stock Items (Simple Clean Rows) -->
+                    <div x-show="stockAlerts.length > 0" class="mt-2 divide-y divide-neutral-100 font-sans">
+                        <template x-for="(item, sIdx) in stockAlerts" :key="(item.sku || item.item_name) + '-' + item.warehouse + '-' + sIdx">
                             <div class="py-2.5 first:pt-1 last:pb-1 group/item">
                                 <div class="flex items-center justify-between gap-3">
                                     <div class="min-w-0 flex-1">
@@ -617,7 +629,7 @@
                                 </div>
                                 <!-- Minimal Outlined Capsule Depletion Track (Full Height, Edge-to-Edge) -->
                                 <div class="w-full h-2.5 bg-neutral-100 rounded-full border border-neutral-200/90 overflow-hidden flex mt-1.5 shadow-2xs">
-                                    <div class="h-full rounded-full transition-all duration-300"
+                                    <div class="h-full rounded-full transition-[width] duration-300 ease-out"
                                          :class="item.percent <= 30 ? 'bg-rose-500' : 'bg-amber-500'"
                                          :style="'width: ' + item.percent + '%;'"></div>
                                 </div>
@@ -625,17 +637,18 @@
                         </template>
                     </div>
 
-                    <!-- TOMBOL RESMI BUAT PO KONSOLIDASI (DENGAN REAL API & NOTIFIKASI SISTEM) -->
+                    <!-- TOMBOL RESMI BUAT PO KONSOLIDASI (DINONAKTIFKAN BILA TIDAK ADA ITEM KRITIS) -->
                     <button @click="createConsolidatedPo()" 
-                            :disabled="poLoading"
-                            class="mt-3.5 w-full py-2.5 px-3 rounded-xl bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-400 text-xs font-semibold text-white transition-all flex items-center justify-center gap-2 text-center font-sans cursor-pointer shadow-xs active:scale-[0.99]">
+                            :disabled="poLoading || purchasableCriticalCount === 0"
+                            class="mt-3.5 w-full py-2.5 px-3 rounded-xl text-xs font-semibold transition-[background-color,color,transform] duration-150 ease-out flex items-center justify-center gap-2 text-center font-sans shadow-xs"
+                            :class="purchasableCriticalCount > 0 ? 'bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-400 text-white cursor-pointer active:scale-[0.99]' : 'bg-neutral-100 text-neutral-400 border border-neutral-200 cursor-not-allowed shadow-none'">
                         <template x-if="poLoading">
                             <svg class="animate-spin h-3.5 w-3.5 text-white shrink-0" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
                         </template>
-                        <template x-if="!poLoading && !poCreated">
+                        <template x-if="!poLoading && !poCreated && purchasableCriticalCount > 0">
                             <svg class="w-3.5 h-3.5 text-white shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                             </svg>
@@ -645,7 +658,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
                             </svg>
                         </template>
-                        <span x-text="poLoading ? 'Menerbitkan PO ke Vendor...' : (poCreated ? 'PO Berhasil Diterbitkan ✓' : 'Buat PO Konsolidasi')"></span>
+                        <span x-text="poLoading ? 'Menerbitkan PO ke Vendor...' : (poCreated ? 'PO Berhasil Diterbitkan ✓' : (purchasableCriticalCount > 0 ? ('Buat PO Konsolidasi (' + purchasableCriticalCount + ' Item)') : (stockAlerts.length > 0 ? 'Item Kritis Internal — Jadwalkan Roastery' : 'Semua Stok Aman — PO Tidak Diperlukan')))"></span>
                     </button>
                 </div>
             </div>
@@ -1472,8 +1485,12 @@ function dashboardApp() {
             }
         },
 
+        get purchasableCriticalCount() {
+            return (this.stockAlerts || []).filter(item => item && item.purchasable === true).length;
+        },
+
         async createConsolidatedPo() {
-            if (this.poLoading) return;
+            if (this.poLoading || this.purchasableCriticalCount === 0) return;
             this.poLoading = true;
             try {
                 const response = await fetch('{{ route('dashboard.consolidated-po') }}', {
@@ -1483,6 +1500,9 @@ function dashboardApp() {
                         'Accept': 'application/json',
                         'Content-Type': 'application/json',
                     },
+                    body: JSON.stringify({
+                        branch: this.selectedBranch || 'all',
+                    }),
                 });
 
                 const data = await response.json();
