@@ -251,13 +251,13 @@
                                     <span class="text-[10px] text-neutral-400 uppercase" x-text="stock.product ? stock.product.unit : 'pcs'"></span>
                                 </td>
                                 <td class="py-3 px-5 text-center">
-                                    <template x-if="stock.quantity <= (stock.safety_stock_threshold || 50)">
+                                    <template x-if="Number(stock.quantity || 0) <= Number(stock.safety_stock_threshold || 50)">
                                         <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 font-medium text-[11px]">
                                             <span class="w-1.5 h-1.5 rounded-full bg-rose-500 animate-pulse"></span>
                                             Perlu Restock
                                         </span>
                                     </template>
-                                    <template x-if="stock.quantity > (stock.safety_stock_threshold || 50)">
+                                    <template x-if="Number(stock.quantity || 0) > Number(stock.safety_stock_threshold || 50)">
                                         <span class="inline-flex items-center gap-1.5 text-neutral-600 font-medium text-xs">
                                             <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                             Tercukupi
