@@ -154,12 +154,23 @@ class QcLabController extends Controller
 
             $weightGrams = round((float) $validated['weight_kg'] * 1000, 4);
 
+            // Normalisasi process_type ke ENUM resmi green_bean_lots: WASHED, NATURAL, HONEY, ANAEROBIC, EXPERIMENTAL
+            $rawProcess = strtoupper(trim((string) $validated['process_type']));
+            $normalizedProcessType = match (true) {
+                str_contains($rawProcess, 'ANAEROBIC'), str_contains($rawProcess, 'CARBONIC') => 'ANAEROBIC',
+                str_contains($rawProcess, 'HONEY') => 'HONEY',
+                str_contains($rawProcess, 'NATURAL') => 'NATURAL',
+                str_contains($rawProcess, 'WASHED'), str_contains($rawProcess, 'WET') => 'WASHED',
+                in_array($rawProcess, ['WASHED', 'NATURAL', 'HONEY', 'ANAEROBIC', 'EXPERIMENTAL'], true) => $rawProcess,
+                default => 'EXPERIMENTAL',
+            };
+
             $lot = GreenBeanLot::create([
                 'lot_number' => $lotNumber,
                 'purchase_order_id' => $po->id,
                 'variety' => (string) $validated['variety'],
                 'origin_region' => (string) $validated['origin_code'],
-                'process_type' => (string) $validated['process_type'],
+                'process_type' => $normalizedProcessType,
                 'harvest_year' => $year,
                 'initial_weight_grams' => $weightGrams,
                 'current_weight_grams' => $status === 'REJECTED' ? 0 : $weightGrams,
