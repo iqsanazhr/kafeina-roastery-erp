@@ -128,12 +128,13 @@ Route::prefix('dashboard')->name('dashboard.')->middleware('role:super_admin,sup
 // 6 OPERASIONAL ROASTERY PORTALS (SEPARATED)
 // ==========================================
 
-// 1. Procurement / Pengadaan Biji Mentah & Mitra Petani
+// 1. Procurement / Pengadaan Bahan Baku & Mitra Pemasok
 Route::prefix('procurement')->name('procurement.')->middleware('role:super_admin,procurement')->group(function () {
     Route::get('/', [ProcurementController::class, 'index'])->name('index');
     Route::post('/suppliers', [ProcurementController::class, 'storeSupplier'])->name('suppliers.store');
     Route::post('/supplier', [ProcurementController::class, 'storeSupplier'])->name('supplier.store');
     Route::post('/po', [ProcurementController::class, 'storePo'])->name('po.store');
+    Route::post('/po/{purchaseOrder}/receive', [ProcurementController::class, 'receiveGoods'])->name('po.receive');
     Route::post('/qc', [ProcurementController::class, 'storeQc'])->name('qc.store');
 });
 
@@ -152,6 +153,7 @@ Route::prefix('roastery')->name('roastery.')->middleware('role:super_admin,roast
     Route::post('/execute', [RoasteryController::class, 'executeRoast'])->name('execute');
     Route::post('/work-orders/{id}/start', [RoasteryController::class, 'storeWorkOrder'])->name('work-orders.start');
     Route::post('/work-orders/{id}/complete', [RoasteryController::class, 'executeRoast'])->name('work-orders.complete');
+    Route::post('/boms/{bom}/pack', [RoasteryController::class, 'packRetail'])->name('boms.pack');
 });
 
 // 4. Yield Loss / Monitoring Susut Sangrai & HPP Riil

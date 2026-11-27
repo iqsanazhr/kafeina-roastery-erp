@@ -63,10 +63,13 @@
 
         <!-- CARD 3: Estimasi HPP Riil -->
         <div class="bg-white border border-[#eaeaea] rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-neutral-300 transition-colors">
-            <div class="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase mb-2">HPP Riil Biji Matang</div>
-            <div class="text-2xl font-bold tracking-tight text-neutral-900 font-mono tabular-nums">Rp 158 <span class="text-xs text-neutral-400 font-normal">/ g</span></div>
+            <div class="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase mb-2">Rata-rata HPP Riil Matang</div>
+            <div class="text-2xl font-bold tracking-tight text-neutral-900 font-mono tabular-nums">
+                <span x-text="'Rp ' + formatNumber(getAverageRealHpp())"></span>
+                <span class="text-xs text-neutral-400 font-normal">/ g</span>
+            </div>
             <div class="text-[11px] text-neutral-400 mt-1 flex items-center gap-1 font-sans">
-                Biji mentah + overhead Rp 15/g
+                Modal riil lot + overhead Rp 15/g
             </div>
         </div>
 
@@ -96,11 +99,25 @@
 
                 <div class="mt-4 space-y-3.5 text-xs font-sans">
                     <div>
-                        <label class="block text-neutral-700 font-medium mb-1">Pilih Work Order Aktif:</label>
-                        <select x-model="execForm.wo_id" 
-                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all">
-                            <template x-for="wo in workOrders" :key="wo.id">
-                                <option :value="wo.id" x-text="wo.wo_number + ' • ' + (wo.lot ? wo.lot.variety : '') + ' (' + wo.status + ')'"></option>
+                        <label class="block text-neutral-700 font-medium mb-1">Pilih Work Order Aktif (Belum Selesai):</label>
+                        <select x-model="execForm.wo_id" @change="onWoChange()"
+                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
+                            <option value="">-- Pilih Antrean Work Order --</option>
+                            <template x-for="wo in activeWorkOrders" :key="wo.id">
+                                <option :value="wo.id" x-text="wo.wo_number + ' • ' + (wo.lot ? wo.lot.variety : '') + ' (' + (wo.green_weight_grams/1000).toFixed(1) + ' kg)'"></option>
+                            </template>
+                        </select>
+                        <p x-show="activeWorkOrders.length === 0" class="text-[11px] text-amber-700 mt-1">
+                            Semua Work Order sudah selesai. Jadwalkan batch baru di halaman Roastery.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label class="block text-neutral-700 font-medium mb-1">Output Produk Biji Sangrai (WH-ROAST-HQ):</label>
+                        <select x-model="execForm.target_product_id"
+                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
+                            <template x-for="rp in roastedProducts" :key="rp.id">
+                                <option :value="rp.id" x-text="'[' + rp.sku + '] ' + rp.name"></option>
                             </template>
                         </select>
                     </div>
@@ -198,7 +215,7 @@
                                     <td class="py-3.5 px-4 text-center font-bold font-mono tabular-nums" 
                                         :class="wo.yield_loss_percentage >= 14 && wo.yield_loss_percentage <= 18 ? 'text-emerald-700' : 'text-amber-700'" 
                                         x-text="wo.yield_loss_percentage ? wo.yield_loss_percentage + '%' : '15.2%'"></td>
-                                    <td class="py-3.5 px-4 text-center font-bold text-neutral-900 font-mono tabular-nums">Rp 158</td>
+                                    <td class="py-3.5 px-4 text-center font-bold text-neutral-900 font-mono tabular-nums" x-text="'Rp ' + formatNumber(getBatchHpp(wo))"></td>
                                     <td class="py-3.5 px-4 text-center">
                                         <div class="inline-flex items-center gap-1.5 text-xs">
                                             <span class="w-1.5 h-1.5 rounded-full" :class="wo.yield_loss_percentage >= 14 && wo.yield_loss_percentage <= 18 ? 'bg-emerald-500' : 'bg-amber-500'"></span>
@@ -235,18 +252,68 @@
 
 <script>
 function yieldLossApp() {
+    const activeWos = @json($activeWorkOrders);
+    const roastedProds = @json($roastedProducts);
+    const firstWo = activeWos.length > 0 ? activeWos[0] : null;
+    const defaultTargetProd = roastedProds.find(p => p.sku === 'RAW-RB-HOUSE') || roastedProds[0] || null;
+
     return {
         alertMessage: '',
         alertType: 'success',
 
-        workOrders: @json($workOrders),
+        activeWorkOrders: activeWos,
         completedBatches: @json($completedBatches),
+        roastedProducts: roastedProds,
+        initialAvgHpp: @json($avgRealHppPerGram),
 
         execForm: {
-            wo_id: @json($workOrders->first() ? $workOrders->first()->id : ''),
-            green_weight_kg: 12.0,
-            roasted_weight_kg: 10.15,
+            wo_id: firstWo ? firstWo.id : '',
+            target_product_id: defaultTargetProd ? defaultTargetProd.id : '',
+            green_weight_kg: firstWo ? Number((firstWo.green_weight_grams / 1000).toFixed(2)) : 12.0,
+            roasted_weight_kg: firstWo ? Number(((firstWo.green_weight_grams / 1000) * 0.845).toFixed(2)) : 10.15,
             roast_duration_minutes: 11.5
+        },
+
+        init() {
+            if (this.execForm.wo_id) {
+                this.onWoChange();
+            }
+        },
+
+        onWoChange() {
+            const wo = this.activeWorkOrders.find(w => w.id == this.execForm.wo_id);
+            if (!wo) return;
+            const kg = Number((wo.green_weight_grams / 1000).toFixed(2));
+            this.execForm.green_weight_kg = kg;
+            this.execForm.roasted_weight_kg = Number((kg * 0.845).toFixed(2));
+
+            const label = ((wo.lot?.origin_region || '') + ' ' + (wo.lot?.variety || '') + ' ' + (wo.roasting_profile?.name || '')).toLowerCase();
+            let targetSku = 'RAW-RB-HOUSE';
+            if (label.includes('gayo') && !label.includes('house') && !label.includes('blend')) {
+                targetSku = 'RAW-RB-GAYO';
+            } else if (label.includes('ijen') && !label.includes('house') && !label.includes('blend')) {
+                targetSku = 'RAW-RB-IJEN';
+            }
+            const matched = this.roastedProducts.find(p => p.sku === targetSku);
+            if (matched) {
+                this.execForm.target_product_id = matched.id;
+            }
+        },
+
+        getBatchHpp(wo) {
+            const green = Number(wo.green_weight_grams || 0);
+            const roasted = Number(wo.roasted_weight_grams || 0);
+            const base = Number(wo.lot?.price_per_gram || 130);
+            if (green <= 0 || roasted <= 0) return Math.round(base + 15);
+            return Math.round((base * (green / roasted)) + 15);
+        },
+
+        getAverageRealHpp() {
+            if (!this.completedBatches || this.completedBatches.length === 0) {
+                return this.initialAvgHpp || 158;
+            }
+            const sum = this.completedBatches.reduce((acc, wo) => acc + this.getBatchHpp(wo), 0);
+            return Math.round(sum / this.completedBatches.length);
         },
 
         getOptimalCount() {
@@ -275,10 +342,12 @@ function yieldLossApp() {
         },
 
         calculateEstimatedHpp() {
+            const selectedWo = this.activeWorkOrders.find(w => w.id == this.execForm.wo_id);
+            const basePricePerGram = Number(selectedWo?.lot?.price_per_gram || 130);
             const green = this.execForm.green_weight_kg || 1;
             const roasted = this.execForm.roasted_weight_kg || 0.85;
             const ratio = green / Math.max(0.1, roasted);
-            return Math.round((120 * ratio) + 15);
+            return Math.round((basePricePerGram * ratio) + 15);
         },
 
         formatNumber(num) {
@@ -286,6 +355,11 @@ function yieldLossApp() {
         },
 
         async submitExecuteRoast() {
+            if (!this.execForm.wo_id) {
+                this.alertType = 'error';
+                this.alertMessage = 'Silakan pilih Work Order aktif terlebih dahulu.';
+                return;
+            }
             try {
                 const res = await fetch("{{ route('yield-loss.execute') }}", {
                     method: 'POST',
@@ -301,6 +375,11 @@ function yieldLossApp() {
                     this.alertMessage = data.message;
                     if (data.work_order) {
                         this.completedBatches.unshift(data.work_order);
+                        this.activeWorkOrders = this.activeWorkOrders.filter(w => w.id !== data.work_order.id);
+                        this.execForm.wo_id = this.activeWorkOrders.length > 0 ? this.activeWorkOrders[0].id : '';
+                        if (this.execForm.wo_id) {
+                            this.onWoChange();
+                        }
                     }
                 } else {
                     this.alertType = 'error';

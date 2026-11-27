@@ -75,7 +75,7 @@
         <!-- CARD 3: Pengiriman Tuntas -->
         <div class="bg-white border border-[#eaeaea] rounded-2xl p-4 sm:p-5 shadow-2xs hover:border-neutral-300 transition-colors">
             <div class="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase mb-2">Pengiriman Tuntas</div>
-            <div class="text-2xl font-bold tracking-tight text-emerald-700 tabular-nums" x-text="deliveryNotes.filter(d => d.status === 'RECEIVED').length"></div>
+            <div class="text-2xl font-bold tracking-tight text-emerald-700 tabular-nums" x-text="deliveryNotes.filter(d => d.status === 'DELIVERED' || d.status === 'RECONCILED').length"></div>
             <div class="text-[11px] text-neutral-400 mt-1 flex items-center gap-1.5 font-sans">
                 <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                 <span>Verifikasi fisik outlet</span>
@@ -180,27 +180,50 @@
                                         <span class="text-neutral-400">Bahan Baku Multi-Item</span>
                                     </template>
                                 </td>
-                                <td class="py-3.5 px-4 text-center">
+                                <td class="py-3.5 px-4 text-center whitespace-nowrap">
                                     <div class="inline-flex items-center gap-1.5 text-xs">
                                         <span class="w-1.5 h-1.5 rounded-full"
                                               :class="{
                                                   'bg-amber-500': mr.status === 'PENDING',
                                                   'bg-sky-500': mr.status === 'APPROVED',
-                                                  'bg-emerald-500': mr.status === 'DISPATCHED'
+                                                  'bg-indigo-500': mr.status === 'IN_TRANSIT',
+                                                  'bg-emerald-500': mr.status === 'RECEIVED'
                                               }"></span>
                                         <span class="font-medium"
                                               :class="{
                                                   'text-amber-800': mr.status === 'PENDING',
                                                   'text-sky-700': mr.status === 'APPROVED',
-                                                  'text-neutral-700': mr.status === 'DISPATCHED'
+                                                  'text-indigo-700': mr.status === 'IN_TRANSIT',
+                                                  'text-emerald-700': mr.status === 'RECEIVED'
                                               }"
-                                              x-text="mr.status === 'PENDING' ? 'Menunggu' : (mr.status === 'APPROVED' ? 'Disetujui' : 'Dikirim')"></span>
+                                              x-text="mr.status === 'PENDING' ? 'Menunggu' : (mr.status === 'APPROVED' ? 'Disetujui' : (mr.status === 'IN_TRANSIT' ? 'Dalam Perjalanan' : (mr.status === 'RECEIVED' ? 'Diterima' : mr.status)))"></span>
                                     </div>
                                 </td>
-                                <td class="py-3.5 px-4 text-right">
-                                    <button type="button" class="px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[11px] font-medium cursor-pointer transition-colors whitespace-nowrap">
-                                        Detail →
-                                    </button>
+                                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                                    <template x-if="mr.status === 'PENDING'">
+                                        <button type="button"
+                                                @click="approveMr(mr)"
+                                                class="px-2.5 py-1.5 rounded-lg bg-sky-50 hover:bg-sky-100 border border-sky-200 text-sky-800 text-[11px] font-semibold cursor-pointer transition-colors active:scale-[0.97]">
+                                            Setujui MR
+                                        </button>
+                                    </template>
+                                    <template x-if="mr.status === 'APPROVED'">
+                                        <button type="button"
+                                                @click="openDispatchForMr(mr)"
+                                                class="px-2.5 py-1.5 rounded-lg bg-neutral-950 hover:bg-neutral-800 text-white text-[11px] font-semibold cursor-pointer transition-colors active:scale-[0.97]">
+                                            Terbitkan SJ →
+                                        </button>
+                                    </template>
+                                    <template x-if="mr.status === 'IN_TRANSIT'">
+                                        <button type="button"
+                                                @click="activeTab = 'dn'"
+                                                class="px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-[11px] font-medium cursor-pointer transition-colors">
+                                            Lacak SJ →
+                                        </button>
+                                    </template>
+                                    <template x-if="mr.status === 'RECEIVED'">
+                                        <span class="text-[11px] text-emerald-700 font-mono">✓ Selesai</span>
+                                    </template>
                                 </td>
                             </tr>
                         </template>
@@ -236,45 +259,58 @@
                             <th class="py-3 px-4">Rujukan MR</th>
                             <th class="py-3 px-4">Asal → Tujuan</th>
                             <th class="py-3 px-4">Driver / Armada</th>
-                            <th class="py-3 px-4">Segel QR Transit</th>
+                            <th class="py-3 px-4">Kode Tracking QR</th>
                             <th class="py-3 px-4 text-center">Status</th>
+                            <th class="py-3 px-4 text-right">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-[#f5f5f5]">
                         <template x-for="dn in filteredDn" :key="dn.id">
                             <tr class="hover:bg-neutral-50/80 transition-colors">
-                                <td class="py-3.5 px-4 font-mono font-bold text-neutral-900" x-text="dn.dn_number"></td>
-                                <td class="py-3.5 px-4 font-mono text-neutral-500" x-text="dn.material_request ? dn.material_request.request_number : '-'"></td>
+                                <td class="py-3.5 px-4 font-mono font-bold text-neutral-900 whitespace-nowrap" x-text="dn.delivery_number"></td>
+                                <td class="py-3.5 px-4 font-mono text-neutral-500 whitespace-nowrap" x-text="dn.material_request ? dn.material_request.request_number : '-'"></td>
                                 <td class="py-3.5 px-4 font-sans">
                                     <span class="text-neutral-500" x-text="dn.source_warehouse ? dn.source_warehouse.name : 'Sentral'"></span>
                                     <span class="text-neutral-300 mx-1">→</span>
                                     <strong class="text-neutral-900 font-semibold" x-text="dn.dest_warehouse ? dn.dest_warehouse.name : 'Bar Outlet'"></strong>
                                 </td>
-                                <td class="py-3.5 px-4 text-neutral-700" x-text="dn.driver_name || 'Armada Logistik 01'"></td>
-                                <td class="py-3.5 px-4 font-mono text-neutral-600">
+                                <td class="py-3.5 px-4 text-neutral-700" x-text="dn.courier_name || 'Armada Logistik 01'"></td>
+                                <td class="py-3.5 px-4 font-mono text-neutral-600 whitespace-nowrap">
                                     <span class="px-2 py-0.5 rounded-md bg-neutral-100 border border-neutral-200 text-[11px]" 
-                                          x-text="dn.qr_transit_token ? dn.qr_transit_token.substring(0, 14) + '...' : 'QR-TRN-2026-X8'"></span>
+                                          x-text="dn.tracking_code || '-'"></span>
                                 </td>
-                                <td class="py-3.5 px-4 text-center">
+                                <td class="py-3.5 px-4 text-center whitespace-nowrap">
                                     <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold border font-sans"
                                           :class="{
                                               'bg-blue-50 text-blue-800 border-blue-200': dn.status === 'DISPATCHED',
-                                              'bg-emerald-50 text-emerald-800 border-emerald-200': dn.status === 'RECEIVED',
-                                              'bg-neutral-100 text-neutral-700 border-neutral-200': dn.status === 'PREPARED'
+                                              'bg-emerald-50 text-emerald-800 border-emerald-200': dn.status === 'DELIVERED',
+                                              'bg-amber-50 text-amber-800 border-amber-200': dn.status === 'RECONCILED'
                                           }">
                                         <span class="w-1.5 h-1.5 rounded-full"
                                               :class="{
                                                   'bg-blue-500': dn.status === 'DISPATCHED',
-                                                  'bg-emerald-500': dn.status === 'RECEIVED',
-                                                  'bg-neutral-400': dn.status === 'PREPARED'
+                                                  'bg-emerald-500': dn.status === 'DELIVERED',
+                                                  'bg-amber-500': dn.status === 'RECONCILED'
                                               }"></span>
-                                        <span x-text="dn.status"></span>
+                                        <span x-text="dn.status === 'DISPATCHED' ? 'In-Transit' : (dn.status === 'DELIVERED' ? 'Diterima Utuh' : 'Rekonsiliasi')"></span>
                                     </span>
+                                </td>
+                                <td class="py-3.5 px-4 text-right whitespace-nowrap">
+                                    <template x-if="dn.status === 'DISPATCHED'">
+                                        <button type="button"
+                                                @click="openReceiptModalFor(dn)"
+                                                class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-semibold cursor-pointer transition-colors active:scale-[0.97]">
+                                            Konfirmasi Terima
+                                        </button>
+                                    </template>
+                                    <template x-if="dn.status !== 'DISPATCHED'">
+                                        <span class="text-[11px] text-emerald-700 font-mono">✓ Stok Masuk</span>
+                                    </template>
                                 </td>
                             </tr>
                         </template>
                         <tr x-show="filteredDn.length === 0">
-                            <td colspan="6" class="py-12 text-center text-neutral-400 text-xs">
+                            <td colspan="7" class="py-12 text-center text-neutral-400 text-xs">
                                 Tidak ada data Surat Jalan yang cocok.
                             </td>
                         </tr>
@@ -351,29 +387,33 @@
                 </div>
 
                 <div>
-                    <label class="block text-neutral-700 font-medium mb-1">Nama Produk / Bahan:</label>
-                    <input type="text" x-model="mrForm.product_name" required 
-                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all" 
-                           placeholder="Cth: Espresso Blend Roasted 1kg / Oatly Barista" />
+                    <label class="block text-neutral-700 font-medium mb-1">Pilih Produk / Bahan Baku (Master SKU):</label>
+                    <select x-model="mrForm.product_id" required
+                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
+                        <option value="">-- Pilih Produk / Bahan Baku --</option>
+                        <template x-for="p in products" :key="p.id">
+                            <option :value="p.id" x-text="'[' + p.sku + '] ' + p.name + ' (' + p.unit + ')'"></option>
+                        </template>
+                    </select>
                 </div>
 
                 <div>
-                    <label class="block text-neutral-700 font-medium mb-1">Jumlah Kuantitas:</label>
-                    <input type="number" step="1" x-model.number="mrForm.quantity" required 
-                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all font-mono font-bold" 
-                           placeholder="10" />
+                    <label class="block text-neutral-700 font-medium mb-1" x-text="'Jumlah Kuantitas (' + getSelectedMrProductUnit() + '):'"></label>
+                    <input type="number" step="1" min="1" x-model.number="mrForm.quantity" required 
+                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors font-mono font-bold" 
+                           placeholder="5000" />
                 </div>
 
                 <div>
                     <label class="block text-neutral-700 font-medium mb-1">Catatan / Alasan Permintaan:</label>
                     <textarea x-model="mrForm.notes" rows="2" 
-                              class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all" 
+                              class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors" 
                               placeholder="Kebutuhan weekend rush hour"></textarea>
                 </div>
 
                 <div class="pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">
                     <button type="button" @click="openMrModal = false" class="px-3.5 py-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50 font-medium cursor-pointer transition-colors">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.98]">Kirim Pengajuan MR</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.97]">Kirim Pengajuan MR</button>
                 </div>
             </form>
         </div>
@@ -385,19 +425,19 @@
             <div class="flex items-center justify-between pb-3 border-b border-neutral-100">
                 <div>
                     <h3 class="text-sm font-bold text-neutral-950 font-sans">Terbitkan Surat Jalan (Delivery Note)</h3>
-                    <p class="text-[11px] text-neutral-400 mt-0.5">Manifest resmi pengiriman barang dari Roastery Sentral.</p>
+                    <p class="text-[11px] text-neutral-400 mt-0.5">Stok dipotong dari gudang asal & diisolasi di WH-TRANSIT.</p>
                 </div>
                 <button type="button" @click="openDnModal = false" class="text-neutral-400 hover:text-neutral-800 p-1 cursor-pointer">✕</button>
             </div>
 
             <form @submit.prevent="submitDn()" class="mt-4 space-y-3.5 text-xs font-sans">
                 <div>
-                    <label class="block text-neutral-700 font-medium mb-1">Rujukan Material Request (MR):</label>
-                    <select x-model="dnForm.mr_id" required 
-                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all">
+                    <label class="block text-neutral-700 font-medium mb-1">Rujukan Material Request (MR Terbuka):</label>
+                    <select x-model="dnForm.request_id" required 
+                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
                         <option value="">-- Pilih MR Terbuka --</option>
-                        <template x-for="m in materialRequests" :key="m.id">
-                            <option :value="m.id" x-text="m.request_number + ' • ' + (m.from_branch ? m.from_branch.name : '-')"></option>
+                        <template x-for="m in openMaterialRequests" :key="m.id">
+                            <option :value="m.id" x-text="m.request_number + ' • ' + (m.from_branch ? m.from_branch.name : '-') + ' [' + m.status + ']'"></option>
                         </template>
                     </select>
                 </div>
@@ -406,7 +446,7 @@
                     <div>
                         <label class="block text-neutral-700 font-medium mb-1">Gudang Asal (Sentral):</label>
                         <select x-model="dnForm.source_warehouse_id" required 
-                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all">
+                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
                             <template x-for="w in warehouses.filter(wh => wh.type === 'CENTRAL_ROASTED' || wh.type === 'CENTRAL_RAW')" :key="w.id">
                                 <option :value="w.id" x-text="w.name"></option>
                             </template>
@@ -415,7 +455,7 @@
                     <div>
                         <label class="block text-neutral-700 font-medium mb-1">Gudang Tujuan (Bar Outlet):</label>
                         <select x-model="dnForm.dest_warehouse_id" required 
-                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all">
+                                class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
                             <template x-for="w in warehouses.filter(wh => wh.type === 'RETAIL_BAR')" :key="w.id">
                                 <option :value="w.id" x-text="w.name"></option>
                             </template>
@@ -425,22 +465,59 @@
 
                 <div class="grid grid-cols-2 gap-2.5">
                     <div>
-                        <label class="block text-neutral-700 font-medium mb-1">Nama Driver:</label>
-                        <input type="text" x-model="dnForm.driver_name" required 
-                               class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all" 
-                               placeholder="Budi Santoso" />
+                        <label class="block text-neutral-700 font-medium mb-1">Nama Driver / Kurir:</label>
+                        <input type="text" x-model="dnForm.courier_name" required 
+                               class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors" 
+                               placeholder="Dedi Kurniawan" />
                     </div>
                     <div>
                         <label class="block text-neutral-700 font-medium mb-1">Plat Nomor Armada:</label>
-                        <input type="text" x-model="dnForm.vehicle_number" required 
-                               class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all font-mono uppercase" 
-                               placeholder="B 1234 ROA" />
+                        <input type="text" x-model="dnForm.vehicle_number"
+                               class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors font-mono uppercase" 
+                               placeholder="B 9281 KAF" />
                     </div>
                 </div>
 
                 <div class="pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">
                     <button type="button" @click="openDnModal = false" class="px-3.5 py-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50 font-medium cursor-pointer transition-colors">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.98]">Terbitkan Surat Jalan</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.97]">Terbitkan Surat Jalan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Konfirmasi Serah Terima Surat Jalan -->
+    <div x-show="openReceiptModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs font-sans">
+        <div class="bg-white border border-[#eaeaea] rounded-2xl w-full max-w-md p-6 shadow-2xl" @click.away="openReceiptModal = false">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100">
+                <div>
+                    <h3 class="text-sm font-bold text-neutral-950 font-sans">Konfirmasi Terima Barang Outlet</h3>
+                    <p class="text-[11px] text-neutral-400 mt-0.5" x-text="receiptTargetDn ? (receiptTargetDn.delivery_number + ' → ' + (receiptTargetDn.dest_warehouse?.name || '')) : ''"></p>
+                </div>
+                <button type="button" @click="openReceiptModal = false" class="text-neutral-400 hover:text-neutral-800 p-1 cursor-pointer">✕</button>
+            </div>
+
+            <form @submit.prevent="submitConfirmReceipt()" class="mt-4 space-y-3.5 text-xs font-sans">
+                <div>
+                    <label class="block text-neutral-700 font-medium mb-1">Jumlah Unit Rusak / Selisih (0 jika utuh 100%):</label>
+                    <input type="number" step="0.1" min="0" x-model.number="receiptForm.damaged_items" required
+                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors font-mono font-bold" />
+                </div>
+
+                <div>
+                    <label class="block text-neutral-700 font-medium mb-1">Catatan Berita Acara / Verifikasi Fisik:</label>
+                    <textarea x-model="receiptForm.discrepancy_notes" rows="2"
+                              class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors"
+                              placeholder="Opsional: segel QR utuh, suhu chiller normal"></textarea>
+                </div>
+
+                <div class="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl text-[11px] text-emerald-900">
+                    Stok akan dilepas dari <code>WH-TRANSIT</code> dan langsung ditambahkan ke saldo gudang tujuan serta tercatat di Kartu Stok (<code>TRANSFER_RECEIVE</code>).
+                </div>
+
+                <div class="pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">
+                    <button type="button" @click="openReceiptModal = false" class="px-3.5 py-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50 font-medium cursor-pointer transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.97]">Selesaikan Penerimaan</button>
                 </div>
             </form>
         </div>
@@ -450,33 +527,79 @@
 
 <script>
 function logisticsApp() {
+    const allBranches = @json($branches);
+    const allWarehouses = @json($warehouses);
+    const allProducts = @json($products);
+    const firstRetailBranch = allBranches.find(b => b.type === 'RETAIL_BRANCH') || allBranches[0];
+    const centralBranch = allBranches.find(b => b.type === 'CENTRAL_ROASTERY') || allBranches[0];
+    const centralRoastWh = allWarehouses.find(w => w.type === 'CENTRAL_ROASTED') || allWarehouses[0];
+    const firstBarWh = allWarehouses.find(w => w.type === 'RETAIL_BAR') || allWarehouses[0];
+
     return {
         activeTab: 'mr',
         searchQuery: '',
         openMrModal: false,
         openDnModal: false,
+        openReceiptModal: false,
         alertMessage: '',
         alertType: 'success',
 
         materialRequests: @json($materialRequests),
         deliveryNotes: @json($deliveryNotes),
-        branches: @json($branches),
-        warehouses: @json($warehouses),
+        branches: allBranches,
+        warehouses: allWarehouses,
+        products: allProducts,
+        receiptTargetDn: null,
 
         mrForm: {
-            from_branch_id: @json($branches->first() ? $branches->first()->id : 1),
-            to_branch_id: @json($branches->count() > 1 ? $branches[1]->id : 1),
-            product_name: 'Espresso Velvet Blend Roasted 1kg',
-            quantity: 15,
+            from_branch_id: firstRetailBranch ? firstRetailBranch.id : 1,
+            to_branch_id: centralBranch ? centralBranch.id : 1,
+            product_id: allProducts.length > 0 ? allProducts[0].id : '',
+            quantity: 5000,
             notes: 'Restock mingguan bar utama'
         },
 
         dnForm: {
-            mr_id: '',
-            source_warehouse_id: @json($warehouses->first() ? $warehouses->first()->id : 1),
-            dest_warehouse_id: @json($warehouses->count() > 1 ? $warehouses[1]->id : 1),
-            driver_name: 'Dedi Kurniawan',
-            vehicle_number: 'B 9281 KAF'
+            request_id: '',
+            source_warehouse_id: centralRoastWh ? centralRoastWh.id : 1,
+            dest_warehouse_id: firstBarWh ? firstBarWh.id : 1,
+            courier_name: 'Dedi Kurniawan',
+            vehicle_number: 'B 9281 KAF',
+            notes: ''
+        },
+
+        receiptForm: {
+            delivery_note_id: null,
+            damaged_items: 0,
+            discrepancy_notes: ''
+        },
+
+        get openMaterialRequests() {
+            return this.materialRequests.filter(m => m.status === 'PENDING' || m.status === 'APPROVED');
+        },
+
+        getSelectedMrProductUnit() {
+            const p = this.products.find(item => item.id == this.mrForm.product_id);
+            return p ? p.unit : 'unit';
+        },
+
+        openDispatchForMr(mr) {
+            this.dnForm.request_id = mr.id;
+            const destWh = this.warehouses.find(w => w.type === 'RETAIL_BAR' && w.branch_id == mr.from_branch_id);
+            if (destWh) {
+                this.dnForm.dest_warehouse_id = destWh.id;
+            }
+            this.openDnModal = true;
+        },
+
+        openReceiptModalFor(dn) {
+            this.receiptTargetDn = dn;
+            this.receiptForm = {
+                delivery_note_id: dn.id,
+                damaged_items: 0,
+                discrepancy_notes: ''
+            };
+            this.openReceiptModal = true;
         },
 
         get filteredMr() {
@@ -494,9 +617,9 @@ function logisticsApp() {
             if (!this.searchQuery.trim()) return this.deliveryNotes;
             const q = this.searchQuery.toLowerCase();
             return this.deliveryNotes.filter(d => 
-                (d.dn_number && d.dn_number.toLowerCase().includes(q)) ||
-                (d.driver_name && d.driver_name.toLowerCase().includes(q)) ||
-                (d.vehicle_number && d.vehicle_number.toLowerCase().includes(q)) ||
+                (d.delivery_number && d.delivery_number.toLowerCase().includes(q)) ||
+                (d.courier_name && d.courier_name.toLowerCase().includes(q)) ||
+                (d.tracking_code && d.tracking_code.toLowerCase().includes(q)) ||
                 (d.status && d.status.toLowerCase().includes(q))
             );
         },
@@ -529,6 +652,33 @@ function logisticsApp() {
             }
         },
 
+        async approveMr(mr) {
+            try {
+                const res = await fetch(`/logistics/material-requests/${mr.id}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.alertType = 'success';
+                    this.alertMessage = data.message;
+                    const idx = this.materialRequests.findIndex(m => m.id === mr.id);
+                    if (idx !== -1 && data.material_request) {
+                        this.materialRequests[idx] = data.material_request;
+                    }
+                } else {
+                    this.alertType = 'error';
+                    this.alertMessage = data.message;
+                }
+            } catch (e) {
+                this.alertType = 'error';
+                this.alertMessage = 'Terjadi kesalahan saat menyetujui Material Request.';
+            }
+        },
+
         async submitDn() {
             try {
                 const res = await fetch("{{ route('logistics.dn.store') }}", {
@@ -546,7 +696,15 @@ function logisticsApp() {
                     if (data.delivery_note) {
                         this.deliveryNotes.unshift(data.delivery_note);
                     }
+                    if (data.mr_id) {
+                        const mrIdx = this.materialRequests.findIndex(m => m.id === data.mr_id);
+                        if (mrIdx !== -1) {
+                            this.materialRequests[mrIdx].status = 'IN_TRANSIT';
+                        }
+                    }
+                    this.activeTab = 'dn';
                     this.openDnModal = false;
+                    this.dnForm.request_id = '';
                 } else {
                     this.alertType = 'error';
                     this.alertMessage = data.message;
@@ -554,6 +712,44 @@ function logisticsApp() {
             } catch (e) {
                 this.alertType = 'error';
                 this.alertMessage = 'Terjadi kesalahan saat menerbitkan Surat Jalan.';
+            }
+        },
+
+        async submitConfirmReceipt() {
+            try {
+                const res = await fetch("{{ route('logistics.receipt.confirm') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(this.receiptForm)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.alertType = 'success';
+                    this.alertMessage = data.message;
+                    if (data.delivery_note) {
+                        const idx = this.deliveryNotes.findIndex(d => d.id === data.delivery_note.id);
+                        if (idx !== -1) {
+                            this.deliveryNotes[idx] = data.delivery_note;
+                        }
+                    }
+                    if (data.mr_id) {
+                        const mrIdx = this.materialRequests.findIndex(m => m.id === data.mr_id);
+                        if (mrIdx !== -1) {
+                            this.materialRequests[mrIdx].status = 'RECEIVED';
+                        }
+                    }
+                    this.openReceiptModal = false;
+                    this.receiptTargetDn = null;
+                } else {
+                    this.alertType = 'error';
+                    this.alertMessage = data.message;
+                }
+            } catch (e) {
+                this.alertType = 'error';
+                this.alertMessage = 'Terjadi kesalahan saat mengonfirmasi penerimaan barang.';
             }
         }
     };

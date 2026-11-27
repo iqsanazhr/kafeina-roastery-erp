@@ -293,12 +293,12 @@
 
             <form @submit.prevent="submitQc()" class="mt-4 space-y-3.5 text-xs font-sans">
                 <div>
-                    <label class="block text-neutral-700 font-medium mb-1">Pilih Purchase Order Masuk:</label>
-                    <select x-model="qcForm.po_id" required 
-                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all">
-                        <option value="">-- Pilih Kontrak PO --</option>
+                    <label class="block text-neutral-700 font-medium mb-1">Pilih Purchase Order Masuk (Green Beans Aktif):</label>
+                    <select x-model="qcForm.po_id" @change="onPoChange()" required 
+                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
+                        <option value="">-- Pilih Kontrak PO Aktif --</option>
                         <template x-for="p in purchaseOrders" :key="p.id">
-                            <option :value="p.id" x-text="p.po_number + ' • ' + (p.supplier ? p.supplier.name : '-')"></option>
+                            <option :value="p.id" x-text="p.po_number + ' • ' + (p.supplier ? p.supplier.name : '-') + (p.items && p.items[0] ? (' (' + Number(p.items[0].quantity_kg) + ' kg)') : '')"></option>
                         </template>
                     </select>
                 </div>
@@ -434,6 +434,24 @@ function qcLabApp() {
             return new Intl.NumberFormat('id-ID').format(Math.round(num || 0));
         },
 
+        onPoChange() {
+            const po = this.purchaseOrders.find(p => p.id == this.qcForm.po_id);
+            if (!po || !po.items || po.items.length === 0) return;
+            const item = po.items[0];
+            if (item.quantity_kg) {
+                this.qcForm.weight_kg = Number(item.quantity_kg);
+            }
+            const label = (item.product?.name || item.product_name || '').toLowerCase();
+            if (item.product?.name) {
+                this.qcForm.variety = item.product.name;
+            }
+            if (label.includes('gayo')) this.qcForm.origin_code = 'GYO';
+            else if (label.includes('ijen')) this.qcForm.origin_code = 'IJN';
+            else if (label.includes('flores') || label.includes('bajawa')) this.qcForm.origin_code = 'FLR';
+            else if (label.includes('kintamani')) this.qcForm.origin_code = 'KNT';
+            else if (label.includes('toraja')) this.qcForm.origin_code = 'TRJ';
+        },
+
         async submitQc() {
             try {
                 const res = await fetch("{{ route('qc-lab.store') }}", {
@@ -451,6 +469,10 @@ function qcLabApp() {
                     this.qualityControls.unshift(data.qc);
                     if (data.qc.lot) {
                         this.lots.unshift(data.qc.lot);
+                    }
+                    if (data.po_id) {
+                        this.purchaseOrders = this.purchaseOrders.filter(p => p.id !== data.po_id);
+                        this.qcForm.po_id = '';
                     }
                     this.openQcModal = false;
                 } else {

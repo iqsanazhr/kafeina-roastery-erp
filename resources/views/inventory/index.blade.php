@@ -490,6 +490,51 @@
         </div>
     </div>
 
+    <!-- MODAL: Audit Safety Stock & Reorder Point (ROP) -->
+    <div x-show="openSafetyModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs font-sans">
+        <div class="bg-white border border-[#eaeaea] rounded-2xl w-full max-w-2xl p-6 shadow-2xl max-h-[85vh] overflow-y-auto" @click.away="openSafetyModal = false">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100">
+                <div>
+                    <h3 class="text-sm font-bold text-neutral-950 font-sans">Audit Safety Stock & Batas Reorder Point (ROP)</h3>
+                    <p class="text-[11px] text-neutral-400 mt-0.5">Daftar item persediaan di bawah batas minimum operasional yang memerlukan pengadaan atau transfer cabang.</p>
+                </div>
+                <button type="button" @click="openSafetyModal = false" class="text-neutral-400 hover:text-neutral-800 p-1 cursor-pointer">✕</button>
+            </div>
+
+            <div class="mt-4 space-y-2.5 text-xs">
+                <template x-if="safetyAlerts.length === 0">
+                    <div class="p-6 text-center rounded-xl bg-emerald-50/70 border border-emerald-200/80 text-emerald-900">
+                        Seluruh saldo gudang saat ini berada di atas ambang batas Safety Stock (100% aman).
+                    </div>
+                </template>
+                <template x-for="(alert, idx) in safetyAlerts" :key="'modal-' + idx">
+                    <div class="p-3 rounded-xl border border-neutral-200/80 bg-neutral-50/60 flex items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            <div class="font-semibold text-neutral-900 truncate" x-text="alert.product_name"></div>
+                            <div class="text-[11px] text-neutral-500 font-mono mt-0.5" x-text="(alert.sku || '-') + ' • ' + (alert.warehouse || alert.branch)"></div>
+                        </div>
+                        <div class="text-right shrink-0 font-mono">
+                            <div class="font-bold" :class="alert.level === 'CRITICAL' ? 'text-rose-600' : 'text-amber-700'" x-text="formatNumber(alert.current) + ' / ' + formatNumber(alert.min) + ' ' + alert.unit"></div>
+                            <div class="text-[10px] uppercase" :class="alert.level === 'CRITICAL' ? 'text-rose-500' : 'text-amber-600'" x-text="alert.level === 'CRITICAL' ? 'KRITIS' : 'MENIPIS'"></div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div class="mt-5 pt-3 border-t border-neutral-100 flex items-center justify-between gap-2 flex-wrap">
+                <div class="flex items-center gap-2">
+                    <a href="{{ route('procurement.index') }}" class="px-3.5 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold transition-colors">
+                        Buat PO Pengadaan →
+                    </a>
+                    <a href="{{ route('logistics.index') }}" class="px-3.5 py-2 rounded-xl bg-white hover:bg-neutral-50 border border-neutral-200 text-neutral-800 text-xs font-semibold transition-colors">
+                        Ajukan MR Cabang →
+                    </a>
+                </div>
+                <button type="button" @click="openSafetyModal = false" class="px-3.5 py-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50 text-xs font-medium cursor-pointer transition-colors">Tutup</button>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>

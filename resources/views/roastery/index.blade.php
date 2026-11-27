@@ -218,41 +218,33 @@
                     <div>
                         <div class="flex items-start justify-between gap-2">
                             <div>
-                                <span class="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider">Formula Kemasan Retail</span>
-                                <h4 class="text-sm font-bold text-neutral-950 mt-0.5 leading-snug" x-text="bom.product ? bom.product.name : 'Roasted Beans Retail 250g'"></h4>
+                                <span class="text-[10px] font-mono font-bold text-neutral-400 uppercase tracking-wider" x-text="bom.product ? bom.product.sku : 'BOM-RETAIL'"></span>
+                                <h4 class="text-sm font-bold text-neutral-950 mt-0.5 leading-snug" x-text="bom.product ? bom.product.name : bom.name"></h4>
                             </div>
-                            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 border border-neutral-200 text-neutral-800 shrink-0">
-                                250g Pouch
-                            </span>
+                            <span class="text-xs font-mono font-bold px-2 py-0.5 rounded-md bg-neutral-100 border border-neutral-200 text-neutral-800 shrink-0" x-text="bom.product ? bom.product.unit : 'pouch'"></span>
                         </div>
 
                         <div class="mt-4 pt-3 border-t border-neutral-100 space-y-2 text-xs font-sans">
-                            <div class="text-neutral-400 font-medium text-[11px]">Material Yang Diperlukan:</div>
-                            <div class="flex items-center justify-between text-neutral-700">
-                                <span>• Roasted Single Origin</span>
-                                <span class="font-mono font-semibold text-neutral-900">250 gram</span>
-                            </div>
-                            <div class="flex items-center justify-between text-neutral-700">
-                                <span>• Matte Valve Pouch Degassing</span>
-                                <span class="font-mono font-semibold text-neutral-900">1 pcs</span>
-                            </div>
-                            <div class="flex items-center justify-between text-neutral-700">
-                                <span>• Label Tasting Notes Sticker</span>
-                                <span class="font-mono font-semibold text-neutral-900">1 pcs</span>
-                            </div>
-                            <div class="flex items-center justify-between text-neutral-700">
-                                <span>• Tin Tie Sealer Strip</span>
-                                <span class="font-mono font-semibold text-neutral-900">1 pcs</span>
+                            <div class="text-neutral-400 font-medium text-[11px]">Komposisi Material Aktual (BOM):</div>
+                            <template x-for="item in (bom.items || [])" :key="item.id">
+                                <div class="flex items-center justify-between gap-2 text-neutral-700">
+                                    <span class="truncate" x-text="'• ' + (item.material_product ? item.material_product.name : 'Bahan Baku')"></span>
+                                    <span class="font-mono font-semibold text-neutral-900 shrink-0 whitespace-nowrap" x-text="Number(item.quantity_required) + ' ' + (item.unit || item.material_product?.unit || 'unit')"></span>
+                                </div>
+                            </template>
+                            <div x-show="!bom.items || bom.items.length === 0" class="text-[11px] text-neutral-400 italic">
+                                Belum ada komponen material BOM terdaftar.
                             </div>
                         </div>
                     </div>
 
-                    <div class="mt-4 pt-3 border-t border-[#f5f5f5] flex items-center justify-between text-xs">
-                        <span class="text-neutral-400 font-mono text-[11px]">ID BOM: #BOM-00<span x-text="bom.id"></span></span>
-                        <div class="inline-flex items-center gap-1.5 text-[11px] text-neutral-600">
-                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                            <span>Aktif Produksi</span>
-                        </div>
+                    <div class="mt-4 pt-3 border-t border-[#f5f5f5] flex items-center justify-between gap-2 text-xs">
+                        <span class="text-neutral-400 font-mono text-[11px]">#BOM-<span x-text="String(bom.id).padStart(3, '0')"></span></span>
+                        <button type="button"
+                                @click="openPackModalFor(bom)"
+                                class="px-3 py-1.5 rounded-lg bg-neutral-950 hover:bg-neutral-800 text-white text-[11px] font-semibold transition-colors cursor-pointer active:scale-[0.97]">
+                            Kemas Retail
+                        </button>
                     </div>
                 </div>
             </template>
@@ -330,10 +322,10 @@
                 <div>
                     <label class="block text-neutral-700 font-medium mb-1">Profil Sangrai (Roast Profile):</label>
                     <select x-model="woForm.profile_id" required 
-                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all">
+                            class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors">
                         <option value="">-- Pilih Profil Sangrai --</option>
                         <template x-for="p in roastingProfiles" :key="p.id">
-                            <option :value="p.id" x-text="p.name + ' (' + p.target_roast_level + ')'"></option>
+                            <option :value="p.id" x-text="p.name + ' (' + (p.roast_level || 'MEDIUM') + ')'"></option>
                         </template>
                     </select>
                 </div>
@@ -354,7 +346,50 @@
 
                 <div class="pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">
                     <button type="button" @click="openWoModal = false" class="px-3.5 py-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50 font-medium cursor-pointer transition-colors">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.98]">Terbitkan Work Order</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.97]">Terbitkan Work Order</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: Kemas Produk Retail (Eksekusi BOM) -->
+    <div x-show="openPackModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs font-sans">
+        <div class="bg-white border border-[#eaeaea] rounded-2xl w-full max-w-md p-6 shadow-2xl" @click.away="openPackModal = false">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100">
+                <div>
+                    <h3 class="text-sm font-bold text-neutral-950 font-sans">Produksi Kemasan Retail 250g</h3>
+                    <p class="text-[11px] text-neutral-400 mt-0.5" x-text="packTargetBom && packTargetBom.product ? ('[' + packTargetBom.product.sku + '] ' + packTargetBom.product.name) : ''"></p>
+                </div>
+                <button type="button" @click="openPackModal = false" class="text-neutral-400 hover:text-neutral-800 p-1 cursor-pointer">✕</button>
+            </div>
+
+            <form @submit.prevent="submitPackRetail()" class="mt-4 space-y-3.5 text-xs font-sans">
+                <div>
+                    <label class="block text-neutral-700 font-medium mb-1">Jumlah Kemasan (Pouch 250g):</label>
+                    <input type="number" min="1" max="5000" step="1" x-model.number="packForm.quantity_packs" required
+                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors font-mono font-bold" />
+                </div>
+
+                <div class="p-3 bg-neutral-50 rounded-xl border border-neutral-200/80 space-y-1.5">
+                    <div class="text-[11px] font-semibold text-neutral-700">Bahan Baku yang Akan Dipotong (WH-ROAST-HQ):</div>
+                    <template x-for="item in (packTargetBom?.items || [])" :key="item.id">
+                        <div class="flex justify-between text-[11px] text-neutral-600">
+                            <span x-text="item.material_product ? item.material_product.name : 'Material'"></span>
+                            <span class="font-mono font-semibold text-neutral-900" x-text="formatNumber(Number(item.quantity_required) * (packForm.quantity_packs || 0)) + ' ' + (item.unit || item.material_product?.unit || 'unit')"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <div>
+                    <label class="block text-neutral-700 font-medium mb-1">Catatan Batch Kemas:</label>
+                    <input type="text" x-model="packForm.notes"
+                           class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors"
+                           placeholder="Cth: Nitrogen flush OK, roast date hari ini" />
+                </div>
+
+                <div class="pt-3 border-t border-neutral-100 flex items-center justify-end gap-2">
+                    <button type="button" @click="openPackModal = false" class="px-3.5 py-2 rounded-xl border border-neutral-200 text-neutral-700 hover:bg-neutral-50 font-medium cursor-pointer transition-colors">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white font-semibold cursor-pointer shadow-xs transition-colors active:scale-[0.97]">Eksekusi Kemas</button>
                 </div>
             </form>
         </div>
@@ -368,6 +403,7 @@ function roasteryApp() {
         activeTab: 'wo',
         searchQuery: '',
         openWoModal: false,
+        openPackModal: false,
         alertMessage: '',
         alertType: 'success',
 
@@ -375,12 +411,24 @@ function roasteryApp() {
         roastingProfiles: @json($roastingProfiles),
         lots: @json($lots),
         boms: @json($boms),
+        packTargetBom: null,
 
         woForm: {
             lot_id: '',
             profile_id: '',
             green_weight_kg: 12.0,
             notes: 'Batch sangrai standar filter coffee single origin'
+        },
+
+        packForm: {
+            quantity_packs: 10,
+            notes: ''
+        },
+
+        openPackModalFor(bom) {
+            this.packTargetBom = bom;
+            this.packForm = { quantity_packs: 10, notes: '' };
+            this.openPackModal = true;
         },
 
         get filteredWorkOrders() {
@@ -422,6 +470,33 @@ function roasteryApp() {
             } catch (e) {
                 this.alertType = 'error';
                 this.alertMessage = 'Terjadi kesalahan saat membuat Work Order.';
+            }
+        },
+
+        async submitPackRetail() {
+            if (!this.packTargetBom) return;
+            try {
+                const res = await fetch(`/roastery/boms/${this.packTargetBom.id}/pack`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(this.packForm)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    this.alertType = 'success';
+                    this.alertMessage = data.message;
+                    this.openPackModal = false;
+                    this.packTargetBom = null;
+                } else {
+                    this.alertType = 'error';
+                    this.alertMessage = data.message;
+                }
+            } catch (e) {
+                this.alertType = 'error';
+                this.alertMessage = 'Terjadi kesalahan saat memproses pengemasan retail.';
             }
         }
     };
