@@ -15,13 +15,17 @@ class ProductModifierSeeder extends Seeder
     public function run(): void
     {
         $oatMilk = Product::where('sku', 'RAW-MILK-OAT')->first();
+        $almondMilk = Product::where('sku', 'RAW-MILK-ALMOND')->first();
         $vanillaSyrup = Product::where('sku', 'RAW-SYRUP-VANILLA')->first();
         $caramelSyrup = Product::where('sku', 'RAW-SYRUP-CARAMEL')->first();
+        $organicHoney = Product::where('sku', 'RAW-HONEY-ORG')->first();
+        $iceCream = Product::where('sku', 'RAW-TOP-ICECREAM')->first();
+        $whipCream = Product::where('sku', 'RAW-TOP-WHIPCREAM')->first();
         $houseBeans = Product::where('sku', 'RAW-RB-HOUSE')->first();
 
         $bevCategory = ProductCategory::where('name', 'LIKE', '%Espresso%')->first();
 
-        // 1. Master Modifiers & Ekstra Barista
+        // 1. Master Modifiers & Ekstra Barista (100% terhubung Auto-Deduct Bahan Baku)
         $modifiers = [
             [
                 'name' => 'Oat Milk (Oatly Barista)',
@@ -35,7 +39,7 @@ class ProductModifierSeeder extends Seeder
                 'name' => 'Almond Milk (Unsweetened)',
                 'group_name' => 'Susu Alternatif',
                 'price' => 10000.00,
-                'ingredient_product_id' => null,
+                'ingredient_product_id' => $almondMilk?->id,
                 'quantity_deducted' => 180.00,
                 'unit' => 'ml',
             ],
@@ -67,7 +71,7 @@ class ProductModifierSeeder extends Seeder
                 'name' => 'Vanilla Ice Cream Scoop (Affogato)',
                 'group_name' => 'Topping & Float',
                 'price' => 8000.00,
-                'ingredient_product_id' => null,
+                'ingredient_product_id' => $iceCream?->id,
                 'quantity_deducted' => 1.00,
                 'unit' => 'pcs',
             ],
@@ -75,7 +79,7 @@ class ProductModifierSeeder extends Seeder
                 'name' => 'Organic Blossom Honey',
                 'group_name' => 'Pemanis Alami',
                 'price' => 4000.00,
-                'ingredient_product_id' => null,
+                'ingredient_product_id' => $organicHoney?->id,
                 'quantity_deducted' => 15.00,
                 'unit' => 'ml',
             ],
@@ -83,7 +87,7 @@ class ProductModifierSeeder extends Seeder
                 'name' => 'Artisan Whipped Cream',
                 'group_name' => 'Topping & Float',
                 'price' => 5000.00,
-                'ingredient_product_id' => null,
+                'ingredient_product_id' => $whipCream?->id,
                 'quantity_deducted' => 30.00,
                 'unit' => 'gram',
             ],

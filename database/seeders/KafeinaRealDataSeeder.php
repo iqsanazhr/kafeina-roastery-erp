@@ -341,11 +341,15 @@ class KafeinaRealDataSeeder extends Seeder
             'RAW-RB-IJEN' => ['category_id' => $catModels['CAT-ROAST-BULK']->id, 'name' => 'Bulk Roasted Arabika Ijen Anaerobic', 'unit' => 'gram', 'cost_price' => 188.00, 'selling_price' => 0.00, 'is_raw_material' => true],
             'RAW-RB-HOUSE' => ['category_id' => $catModels['CAT-ROAST-BULK']->id, 'name' => 'Bulk Roasted Kafeina House Blend (60% Gayo 40% Ijen)', 'unit' => 'gram', 'cost_price' => 190.00, 'selling_price' => 0.00, 'is_raw_material' => true],
 
-            // Dairy & Syrups
+            // Dairy, Syrups & Toppings
             'RAW-MILK-FRESH' => ['category_id' => $catModels['CAT-DAIRY']->id, 'name' => 'Greenfields Fresh Milk Pasteurisasi', 'unit' => 'ml', 'cost_price' => 25.00, 'selling_price' => 0.00, 'is_raw_material' => true],
             'RAW-MILK-OAT' => ['category_id' => $catModels['CAT-DAIRY']->id, 'name' => 'Oatly Barista Edition Oat Milk', 'unit' => 'ml', 'cost_price' => 50.00, 'selling_price' => 0.00, 'is_raw_material' => true],
+            'RAW-MILK-ALMOND' => ['category_id' => $catModels['CAT-DAIRY']->id, 'name' => 'Almond Breeze Unsweetened Almond Milk', 'unit' => 'ml', 'cost_price' => 58.00, 'selling_price' => 0.00, 'is_raw_material' => true],
             'RAW-SYRUP-VANILLA' => ['category_id' => $catModels['CAT-SYRUP']->id, 'name' => 'Monin Vanilla Syrup Gourmet', 'unit' => 'ml', 'cost_price' => 180.00, 'selling_price' => 0.00, 'is_raw_material' => true],
             'RAW-SYRUP-CARAMEL' => ['category_id' => $catModels['CAT-SYRUP']->id, 'name' => 'Monin Salted Caramel Syrup Gourmet', 'unit' => 'ml', 'cost_price' => 185.00, 'selling_price' => 0.00, 'is_raw_material' => true],
+            'RAW-HONEY-ORG' => ['category_id' => $catModels['CAT-SYRUP']->id, 'name' => 'Madu Hutan Organik (Organic Blossom Honey)', 'unit' => 'ml', 'cost_price' => 140.00, 'selling_price' => 0.00, 'is_raw_material' => true],
+            'RAW-TOP-ICECREAM' => ['category_id' => $catModels['CAT-DAIRY']->id, 'name' => 'Artisan Madagascar Vanilla Ice Cream Scoop', 'unit' => 'pcs', 'cost_price' => 3500.00, 'selling_price' => 0.00, 'is_raw_material' => true],
+            'RAW-TOP-WHIPCREAM' => ['category_id' => $catModels['CAT-DAIRY']->id, 'name' => 'Anchor Whipping Cream Dairy Foam', 'unit' => 'gram', 'cost_price' => 75.00, 'selling_price' => 0.00, 'is_raw_material' => true],
 
             // Packaging
             'PKG-CUP-HOT8' => ['category_id' => $catModels['CAT-PKG']->id, 'name' => 'Paper Cup Hot 8oz Double Wall + Eco Lid', 'unit' => 'pcs', 'cost_price' => 1200.00, 'selling_price' => 0.00, 'is_raw_material' => true],
@@ -608,7 +612,13 @@ class KafeinaRealDataSeeder extends Seeder
                     'RAW-RB-HOUSE' => ['qty' => 8500.00, 'rop' => 3000.00], // 8.5kg
                     'RAW-RB-GAYO' => ['qty' => 4500.00, 'rop' => 2000.00],  // 4.5kg
                     'RAW-MILK-FRESH' => ['qty' => 48000.00, 'rop' => 15000.00], // 48L
+                    'RAW-MILK-OAT' => ['qty' => 18000.00, 'rop' => 6000.00], // 18L
+                    'RAW-MILK-ALMOND' => ['qty' => 12000.00, 'rop' => 4000.00], // 12L
                     'RAW-SYRUP-VANILLA' => ['qty' => 5000.00, 'rop' => 1500.00], // 5L
+                    'RAW-SYRUP-CARAMEL' => ['qty' => 4500.00, 'rop' => 1500.00], // 4.5L
+                    'RAW-HONEY-ORG' => ['qty' => 2500.00, 'rop' => 800.00], // 2.5L
+                    'RAW-TOP-ICECREAM' => ['qty' => 80.00, 'rop' => 25.00], // 80 scoop
+                    'RAW-TOP-WHIPCREAM' => ['qty' => 3000.00, 'rop' => 1000.00], // 3kg
                     'PKG-CUP-COLD12' => ['qty' => 450.00, 'rop' => 150.00],
                     'PKG-CUP-HOT8' => ['qty' => 320.00, 'rop' => 100.00],
                     'PRD-RET-01' => ['qty' => 15.00, 'rop' => 5.00],
@@ -621,7 +631,13 @@ class KafeinaRealDataSeeder extends Seeder
                     'RAW-RB-HOUSE' => ['qty' => 6500.00, 'rop' => 3000.00], // 6.5kg
                     'RAW-RB-GAYO' => ['qty' => 3500.00, 'rop' => 2000.00],  // 3.5kg
                     'RAW-MILK-FRESH' => ['qty' => 35000.00, 'rop' => 15000.00], // 35L
+                    'RAW-MILK-OAT' => ['qty' => 12000.00, 'rop' => 5000.00], // 12L
+                    'RAW-MILK-ALMOND' => ['qty' => 9000.00, 'rop' => 3000.00], // 9L
                     'RAW-SYRUP-VANILLA' => ['qty' => 4000.00, 'rop' => 1500.00], // 4L
+                    'RAW-SYRUP-CARAMEL' => ['qty' => 3500.00, 'rop' => 1200.00], // 3.5L
+                    'RAW-HONEY-ORG' => ['qty' => 2000.00, 'rop' => 700.00], // 2L
+                    'RAW-TOP-ICECREAM' => ['qty' => 60.00, 'rop' => 20.00], // 60 scoop
+                    'RAW-TOP-WHIPCREAM' => ['qty' => 2500.00, 'rop' => 800.00], // 2.5kg
                     'PKG-CUP-COLD12' => ['qty' => 350.00, 'rop' => 150.00],
                     'PKG-CUP-HOT8' => ['qty' => 280.00, 'rop' => 100.00],
                     'PRD-RET-01' => ['qty' => 12.00, 'rop' => 5.00],
@@ -634,7 +650,13 @@ class KafeinaRealDataSeeder extends Seeder
                     'RAW-RB-HOUSE' => ['qty' => 5500.00, 'rop' => 3000.00], // 5.5kg
                     'RAW-RB-GAYO' => ['qty' => 3000.00, 'rop' => 2000.00],  // 3.0kg
                     'RAW-MILK-FRESH' => ['qty' => 30000.00, 'rop' => 15000.00], // 30L
+                    'RAW-MILK-OAT' => ['qty' => 10000.00, 'rop' => 4000.00], // 10L
+                    'RAW-MILK-ALMOND' => ['qty' => 8000.00, 'rop' => 3000.00], // 8L
                     'RAW-SYRUP-VANILLA' => ['qty' => 3000.00, 'rop' => 1500.00], // 3L
+                    'RAW-SYRUP-CARAMEL' => ['qty' => 3000.00, 'rop' => 1000.00], // 3L
+                    'RAW-HONEY-ORG' => ['qty' => 1800.00, 'rop' => 600.00], // 1.8L
+                    'RAW-TOP-ICECREAM' => ['qty' => 50.00, 'rop' => 15.00], // 50 scoop
+                    'RAW-TOP-WHIPCREAM' => ['qty' => 2000.00, 'rop' => 700.00], // 2kg
                     'PKG-CUP-COLD12' => ['qty' => 300.00, 'rop' => 150.00],
                     'PKG-CUP-HOT8' => ['qty' => 250.00, 'rop' => 100.00],
                     'PRD-RET-01' => ['qty' => 10.00, 'rop' => 5.00],
