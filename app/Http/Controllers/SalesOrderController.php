@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Branch;
 use App\Models\PosOrder;
+use App\Models\SystemSetting;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -79,11 +80,13 @@ class SalesOrderController extends Controller
         // Aggregate Metrics for Selected Filter
         $metricsQuery = clone $query;
         $totalOrdersCount = $metricsQuery->count();
+        $commercialOrdersCount = (clone $query)->where('order_type', '!=', 'NON_REVENUE')->count();
         $totalGrossRevenue = (float) $metricsQuery->sum('subtotal');
         $totalDiscount = (float) $metricsQuery->sum('discount_amount');
         $totalTaxPb1 = (float) $metricsQuery->sum('tax_amount');
         $totalNetCollected = (float) $metricsQuery->sum('total_amount');
-        $averageOrderValue = $totalOrdersCount > 0 ? round($totalNetCollected / $totalOrdersCount) : 0;
+        $averageOrderValue = $commercialOrdersCount > 0 ? round($totalNetCollected / $commercialOrdersCount) : 0;
+        $pb1RateLabel = rtrim(rtrim(number_format((float) SystemSetting::get('tax_pb1_rate', 11.0), 1, '.', ''), '0'), '.');
 
         // Breakdown per Payment Method
         $paymentBreakdown = (clone $query)
@@ -120,7 +123,8 @@ class SalesOrderController extends Controller
             'totalNetCollected',
             'averageOrderValue',
             'paymentBreakdown',
-            'branchBreakdown'
+            'branchBreakdown',
+            'pb1RateLabel'
         ));
     }
 
@@ -214,7 +218,9 @@ class SalesOrderController extends Controller
             'Expires' => '0',
         ];
 
-        return response()->stream(function () use ($query, $startDate, $endDate) {
+        $pb1RateLabel = rtrim(rtrim(number_format((float) SystemSetting::get('tax_pb1_rate', 11.0), 1, '.', ''), '0'), '.');
+
+        return response()->stream(function () use ($query, $startDate, $endDate, $pb1RateLabel) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM
 
@@ -238,7 +244,7 @@ class SalesOrderController extends Controller
                 'Ref / Midtrans ID',
                 'Subtotal (IDR)',
                 'Diskon (IDR)',
-                'PB1 11% (IDR)',
+                "PB1 {$pb1RateLabel}% (IDR)",
                 'Total Bersih (IDR)',
                 'Rincian Menu Item',
             ]);

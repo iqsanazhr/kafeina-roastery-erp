@@ -48,7 +48,7 @@
             <div class="text-[11px] font-semibold text-neutral-400 tracking-wider uppercase mb-2">Rata-rata Susut Sangrai</div>
             <div class="text-2xl font-bold tracking-tight text-neutral-900 font-mono tabular-nums">{{ $avgYieldLoss }}%</div>
             <div class="text-[11px] text-neutral-400 mt-1 flex items-center gap-1 font-sans">
-                Rentang ideal SCAA: 14.0% – 18.0%
+                Rentang ideal sistem: {{ number_format($minYieldLoss ?? 14, 1) }}% – {{ number_format($maxYieldLoss ?? 18, 1) }}%
             </div>
         </div>
 
@@ -151,7 +151,7 @@
 
                         <div class="text-[11px] flex items-center justify-between font-mono mt-1">
                             <span class="text-neutral-700">Status: <strong :class="getYieldColor()" x-text="getYieldStatus()"></strong></span>
-                            <span class="text-neutral-400">Target: 14% – 18%</span>
+                            <span class="text-neutral-400">Target: <span x-text="minYieldLoss + '% – ' + maxYieldLoss + '%'"></span></span>
                         </div>
                     </div>
 
@@ -265,6 +265,8 @@ function yieldLossApp() {
         completedBatches: @json($completedBatches),
         roastedProducts: roastedProds,
         initialAvgHpp: @json($avgRealHppPerGram),
+        minYieldLoss: @json($minYieldLoss ?? 14.0),
+        maxYieldLoss: @json($maxYieldLoss ?? 18.0),
 
         execForm: {
             wo_id: firstWo ? firstWo.id : '',
@@ -317,7 +319,7 @@ function yieldLossApp() {
         },
 
         getOptimalCount() {
-            return this.completedBatches.filter(w => (w.yield_loss_percentage || 15) >= 14 && (w.yield_loss_percentage || 15) <= 18).length;
+            return this.completedBatches.filter(w => (w.yield_loss_percentage || 15) >= this.minYieldLoss && (w.yield_loss_percentage || 15) <= this.maxYieldLoss).length;
         },
 
         getYieldLoss() {
@@ -330,14 +332,14 @@ function yieldLossApp() {
 
         getYieldStatus() {
             const loss = parseFloat(this.getYieldLoss());
-            if (loss >= 14.0 && loss <= 18.0) return 'OPTIMAL (14% - 18%)';
-            if (loss < 14.0) return 'UNDER-DEVELOPED (<14%)';
-            return 'OVER-ROASTED (>18%)';
+            if (loss >= this.minYieldLoss && loss <= this.maxYieldLoss) return `OPTIMAL (${this.minYieldLoss}% - ${this.maxYieldLoss}%)`;
+            if (loss < this.minYieldLoss) return `UNDER-DEVELOPED (<${this.minYieldLoss}%)`;
+            return `OVER-ROASTED (>${this.maxYieldLoss}%)`;
         },
 
         getYieldColor() {
             const loss = parseFloat(this.getYieldLoss());
-            if (loss >= 14.0 && loss <= 18.0) return 'text-emerald-700';
+            if (loss >= this.minYieldLoss && loss <= this.maxYieldLoss) return 'text-emerald-700';
             return 'text-amber-700';
         },
 

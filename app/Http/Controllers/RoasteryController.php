@@ -10,6 +10,7 @@ use App\Models\InventoryWarehouse;
 use App\Models\Product;
 use App\Models\RoastingProfile;
 use App\Models\StockCard;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\WarehouseStock;
 use App\Models\WorkOrder;
@@ -145,11 +146,14 @@ class RoasteryController extends Controller
                 $lossPct = (($greenGrams - $roastedGrams) / $greenGrams) * 100;
                 $yieldLossRounded = round($lossPct, 2);
 
-                $statusNote = 'OPTIMAL (14-18%)';
-                if ($yieldLossRounded < 14.0) {
-                    $statusNote = 'WARNING: Under-developed (<14%)';
-                } elseif ($yieldLossRounded > 18.0) {
-                    $statusNote = 'WARNING: Over-roasted (>18%)';
+                $minLoss = (float) SystemSetting::get('roastery_min_yield_loss', 14.0);
+                $maxLoss = (float) SystemSetting::get('roastery_max_yield_loss', 18.0);
+
+                $statusNote = "OPTIMAL ({$minLoss}-{$maxLoss}%)";
+                if ($yieldLossRounded < $minLoss) {
+                    $statusNote = "WARNING: Under-developed (<{$minLoss}%)";
+                } elseif ($yieldLossRounded > $maxLoss) {
+                    $statusNote = "WARNING: Over-roasted (>{$maxLoss}%)";
                 }
 
                 // Real Cost per Gram (HPP Riil Sangrai)

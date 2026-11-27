@@ -68,10 +68,10 @@
             </div>
         </div>
 
-        <!-- CARD 3: Pajak Daerah PB1 11% -->
+        <!-- CARD 3: Pajak Daerah PB1 -->
         <div class="bg-white border border-[#eaeaea] rounded-xl p-4 sm:p-5 hover:border-neutral-300 transition-colors">
             <div class="flex items-center justify-between text-neutral-500 mb-1.5">
-                <span class="text-[11px] font-medium uppercase tracking-wider text-amber-700">Pajak Restoran PB1 (11%)</span>
+                <span class="text-[11px] font-medium uppercase tracking-wider text-amber-700">Pajak Restoran PB1 ({{ $pb1RateLabel ?? '11' }}%)</span>
                 <span class="text-[10px] font-mono text-amber-600 font-semibold">Fiskal Pemda</span>
             </div>
             <div class="text-2xl font-bold font-sans tabular-nums text-neutral-950 tracking-tight">

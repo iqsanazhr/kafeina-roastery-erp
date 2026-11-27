@@ -8,6 +8,7 @@ use App\Models\Bom;
 use App\Models\GreenBeanLot;
 use App\Models\Product;
 use App\Models\RoastingProfile;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\WorkOrder;
 
@@ -28,6 +29,9 @@ class YieldLossController extends Controller
             ->orderBy('sku')
             ->get();
 
+        $minYieldLoss = (float) SystemSetting::get('roastery_min_yield_loss', 14.0);
+        $maxYieldLoss = (float) SystemSetting::get('roastery_max_yield_loss', 18.0);
+
         $activeWorkOrders = $workOrders->where('status', '!=', 'COMPLETED')->values();
         $completedBatches = $workOrders->where('status', 'COMPLETED')->values();
 
@@ -35,10 +39,10 @@ class YieldLossController extends Controller
             ? round((float) $completedBatches->avg('yield_loss_percentage'), 1)
             : 15.7;
 
-        $optimalBatchesCount = $completedBatches->filter(function (WorkOrder $wo): bool {
+        $optimalBatchesCount = $completedBatches->filter(function (WorkOrder $wo) use ($minYieldLoss, $maxYieldLoss): bool {
             $loss = (float) ($wo->yield_loss_percentage ?? 0);
 
-            return $loss >= 14.0 && $loss <= 18.0;
+            return $loss >= $minYieldLoss && $loss <= $maxYieldLoss;
         })->count();
 
         // Hitung HPP Riil aktual rata-rata dari seluruh batch selesai
@@ -69,7 +73,9 @@ class YieldLossController extends Controller
             'completedBatches',
             'avgYieldLoss',
             'optimalBatchesCount',
-            'avgRealHppPerGram'
+            'avgRealHppPerGram',
+            'minYieldLoss',
+            'maxYieldLoss'
         ));
     }
 }

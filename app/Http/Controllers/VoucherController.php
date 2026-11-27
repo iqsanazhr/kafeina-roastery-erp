@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\RedeemCode;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -56,9 +57,21 @@ class VoucherController extends Controller
         // Summary KPI statistics
         $allVouchers = RedeemCode::all();
         $totalCount = $allVouchers->count();
-        $activeCount = $allVouchers->where('is_active', true)->count();
+        $activeCount = $allVouchers->filter(function (RedeemCode $v): bool {
+            if (! $v->is_active) {
+                return false;
+            }
+            if ($v->max_redemptions !== null && $v->times_redeemed >= $v->max_redemptions) {
+                return false;
+            }
+            if ($v->expires_at !== null && Carbon::parse($v->expires_at)->isPast()) {
+                return false;
+            }
+
+            return true;
+        })->count();
         $totalRedeemed = $allVouchers->sum('times_redeemed');
-        $depletedCount = $allVouchers->filter(function ($v) {
+        $depletedCount = $allVouchers->filter(function (RedeemCode $v): bool {
             return $v->max_redemptions !== null && $v->times_redeemed >= $v->max_redemptions;
         })->count();
         $totalQuotaIssued = $allVouchers->whereNotNull('max_redemptions')->sum('max_redemptions');
@@ -164,7 +177,7 @@ class VoucherController extends Controller
     {
         $request->validate([
             'action_type' => ['required', 'in:add,set,unlimited'],
-            'quota_value' => ['nullable', 'integer', 'min:1'],
+            'quota_value' => ['required_if:action_type,add,set', 'nullable', 'integer', 'min:1'],
         ]);
 
         $action = $request->input('action_type');

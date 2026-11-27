@@ -7,10 +7,13 @@ namespace Tests\Feature;
 use App\Models\Branch;
 use App\Models\SystemSetting;
 use App\Models\User;
+use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
 class SettingsManagementTest extends TestCase
 {
+    use DatabaseTransactions;
+
     /**
      * Test that Super Admin can access settings dashboard and tabs.
      */

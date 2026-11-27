@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use App\Models\SystemSetting;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -22,9 +23,24 @@ class MidtransQrisService
 
     public function __construct()
     {
-        $this->serverKey = (string) config('services.midtrans.server_key', '');
-        $this->clientKey = (string) config('services.midtrans.client_key', '');
-        $this->isProduction = (bool) config('services.midtrans.is_production', false);
+        $dbServerKey = '';
+        $dbClientKey = '';
+        $dbIsProduction = null;
+
+        try {
+            $dbServerKey = trim((string) SystemSetting::get('midtrans_server_key', ''));
+            $dbClientKey = trim((string) SystemSetting::get('midtrans_client_key', ''));
+            $rawProd = SystemSetting::get('midtrans_is_production', null);
+            if ($rawProd !== null) {
+                $dbIsProduction = (bool) $rawProd;
+            }
+        } catch (\Throwable) {
+            // Fallback ke config/env jika database belum siap (misal saat unit test murni)
+        }
+
+        $this->serverKey = $dbServerKey !== '' ? $dbServerKey : (string) config('services.midtrans.server_key', '');
+        $this->clientKey = $dbClientKey !== '' ? $dbClientKey : (string) config('services.midtrans.client_key', '');
+        $this->isProduction = $dbIsProduction !== null ? $dbIsProduction : (bool) config('services.midtrans.is_production', false);
         $this->merchantId = (string) config('services.midtrans.merchant_id', '');
 
         $this->baseUrl = $this->isProduction

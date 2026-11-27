@@ -1,8 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Branch;
+use App\Models\SystemSetting;
 use App\Services\FinancialReportService;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -18,12 +21,13 @@ class FinancialReportController extends Controller
      */
     public function index(Request $request)
     {
-        $startDate = $request->query('start_date', now()->subDays(30)->toDateString());
-        $endDate = $request->query('end_date', now()->toDateString());
+        $startDate = (string) $request->query('start_date', now()->subDays(30)->toDateString());
+        $endDate = (string) $request->query('end_date', now()->toDateString());
         $branchId = $request->query('branch_id');
+        $branchIdInt = $branchId ? (int) $branchId : null;
 
-        $pnl = $this->financialService->calculateProfitAndLoss($startDate, $endDate, $branchId ? (int) $branchId : null);
-        $leakage = $this->financialService->analyzeMaterialLeakage($branchId ? (int) $branchId : null);
+        $pnl = $this->financialService->calculateProfitAndLoss($startDate, $endDate, $branchIdInt);
+        $leakage = $this->financialService->analyzeMaterialLeakage($branchIdInt, null, $startDate, $endDate);
         $branches = Branch::where('is_active', true)->get();
 
         return view('finance.index', compact('pnl', 'leakage', 'branches', 'startDate', 'endDate', 'branchId'));
@@ -34,12 +38,15 @@ class FinancialReportController extends Controller
      */
     public function exportCsv(Request $request): StreamedResponse
     {
-        $startDate = $request->query('start_date', now()->subDays(30)->toDateString());
-        $endDate = $request->query('end_date', now()->toDateString());
+        $startDate = (string) $request->query('start_date', now()->subDays(30)->toDateString());
+        $endDate = (string) $request->query('end_date', now()->toDateString());
         $branchId = $request->query('branch_id');
+        $branchIdInt = $branchId ? (int) $branchId : null;
 
-        $pnl = $this->financialService->calculateProfitAndLoss($startDate, $endDate, $branchId ? (int) $branchId : null);
-        $leakage = $this->financialService->analyzeMaterialLeakage($branchId ? (int) $branchId : null);
+        $pnl = $this->financialService->calculateProfitAndLoss($startDate, $endDate, $branchIdInt);
+        $leakage = $this->financialService->analyzeMaterialLeakage($branchIdInt, null, $startDate, $endDate);
+        $pb1RateLabel = rtrim(rtrim(number_format((float) SystemSetting::get('tax_pb1_rate', 11.0), 1, '.', ''), '0'), '.');
+        $companyName = (string) SystemSetting::get('company_name', 'PT Kafeina Roastery Indonesia');
 
         $filename = 'kafeina_laporan_keuangan_pnl_'.date('Ymd_His').'.csv';
 
@@ -51,12 +58,12 @@ class FinancialReportController extends Controller
             'Expires' => '0',
         ];
 
-        return response()->stream(function () use ($pnl, $leakage) {
+        return response()->stream(function () use ($pnl, $leakage, $pb1RateLabel, $companyName) {
             $handle = fopen('php://output', 'w');
             fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for Excel compatibility
 
             // 1. Title Block
-            fputcsv($handle, ['KAFEINA ROASTERY ERP - LAPORAN LABA RUGI RIIL & AUDIT KEBOCORAN']);
+            fputcsv($handle, [strtoupper($companyName).' - LAPORAN LABA RUGI RIIL & AUDIT KEBOCORAN']);
             fputcsv($handle, ['Periode', $pnl['period']['start_date'].' s/d '.$pnl['period']['end_date']]);
             fputcsv($handle, ['Tanggal Unduh', now()->format('Y-m-d H:i:s').' WIB']);
             fputcsv($handle, []);
@@ -67,7 +74,7 @@ class FinancialReportController extends Controller
             fputcsv($handle, ['Total Omzet Kotor (Gross Sales)', $pnl['metrics']['gross_sales'], 'Sebelum diskon & pajak']);
             fputcsv($handle, ['Total Potongan & Diskon', $pnl['metrics']['discounts'], 'Voucher promo']);
             fputcsv($handle, ['Pendapatan Bersih (Net Sales)', $pnl['metrics']['net_sales'], 'Omzet kotor dikurangi diskon']);
-            fputcsv($handle, ['Pajak Restoran PB1 (11%)', $pnl['metrics']['tax_pb1'], 'Kewajiban fiskal pemda']);
+            fputcsv($handle, ["Pajak Restoran PB1 ({$pb1RateLabel}%)", $pnl['metrics']['tax_pb1'], 'Kewajiban fiskal pemda']);
             fputcsv($handle, ['Total Kas Terkumpul (Net + PB1)', $pnl['metrics']['total_revenue_collected'], 'Total kas masuk']);
             fputcsv($handle, ['HPP Riil Sangrai & Resep (COGS)', $pnl['metrics']['real_cogs'], 'Memperhitungkan susut sangrai riil & auto-deduct']);
             fputcsv($handle, ['Laba Kotor (Gross Profit)', $pnl['metrics']['gross_profit'], 'Net Sales dikurangi HPP Riil']);
@@ -126,14 +133,24 @@ class FinancialReportController extends Controller
      */
     public function exportPdf(Request $request)
     {
-        $startDate = $request->query('start_date', now()->subDays(30)->toDateString());
-        $endDate = $request->query('end_date', now()->toDateString());
+        $startDate = (string) $request->query('start_date', now()->subDays(30)->toDateString());
+        $endDate = (string) $request->query('end_date', now()->toDateString());
         $branchId = $request->query('branch_id');
+        $branchIdInt = $branchId ? (int) $branchId : null;
 
-        $pnl = $this->financialService->calculateProfitAndLoss($startDate, $endDate, $branchId ? (int) $branchId : null);
-        $leakage = $this->financialService->analyzeMaterialLeakage($branchId ? (int) $branchId : null);
-        $branch = $branchId ? Branch::find($branchId) : null;
+        $pnl = $this->financialService->calculateProfitAndLoss($startDate, $endDate, $branchIdInt);
+        $leakage = $this->financialService->analyzeMaterialLeakage($branchIdInt, null, $startDate, $endDate);
+        $branch = $branchIdInt ? Branch::find($branchIdInt) : null;
 
-        return view('finance.pdf_report', compact('pnl', 'leakage', 'branch', 'startDate', 'endDate'));
+        $company = [
+            'name' => (string) SystemSetting::get('company_name', 'PT Kafeina Roastery Indonesia'),
+            'address' => (string) SystemSetting::get('company_address', 'Kawasan Industri Cilandak Commercial Estate Kav. 12, Jakarta Selatan'),
+            'phone' => (string) SystemSetting::get('company_phone', '021-7890123'),
+            'email' => (string) SystemSetting::get('company_email', 'management@kafeina.id'),
+            'npwp' => (string) SystemSetting::get('company_npwp', '01.234.567.8-012.000'),
+        ];
+        $pb1RateLabel = rtrim(rtrim(number_format((float) SystemSetting::get('tax_pb1_rate', 11.0), 1, '.', ''), '0'), '.');
+
+        return view('finance.pdf_report', compact('pnl', 'leakage', 'branch', 'startDate', 'endDate', 'company', 'pb1RateLabel'));
     }
 }

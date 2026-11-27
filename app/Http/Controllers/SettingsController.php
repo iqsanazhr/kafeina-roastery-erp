@@ -37,12 +37,8 @@ class SettingsController extends Controller
     protected function authorizeSuperAdmin(): User
     {
         $user = Auth::user();
-        if (! $user) {
-            $activeUserId = session('active_user_id', 1);
-            $user = User::with('role')->find($activeUserId) ?? User::with('role')->first();
-        }
 
-        if (! $user || ! $user->isSuperAdmin()) {
+        if (! $user instanceof User || ! $user->isSuperAdmin()) {
             abort(403, 'Akses Ditolak: Modul Pengaturan Sistem hanya dapat diakses oleh peran Super Administrator.');
         }
 
@@ -193,7 +189,16 @@ class SettingsController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        $validated['is_active'] = $request->boolean('is_active');
+        if ($request->has('is_active')) {
+            $wantActive = $request->boolean('is_active');
+            if ($branch->code === 'HQ-CENTRAL' && ! $wantActive) {
+                return back()->with('error', 'Pusat Roastery Sentral (HQ-CENTRAL) tidak dapat dinonaktifkan.');
+            }
+            $validated['is_active'] = $wantActive;
+        } else {
+            unset($validated['is_active']);
+        }
+
         $branch->update($validated);
 
         return redirect()->route('settings.index', ['tab' => 'branches'])
@@ -293,7 +298,7 @@ class SettingsController extends Controller
      */
     public function updateUser(Request $request, User $user): RedirectResponse
     {
-        $this->authorizeSuperAdmin();
+        $superAdmin = $this->authorizeSuperAdmin();
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -304,7 +309,15 @@ class SettingsController extends Controller
         ]);
 
         $validated['email'] = strtolower(trim($validated['email']));
-        $validated['is_active'] = $request->boolean('is_active');
+        if ($request->has('is_active')) {
+            $wantActive = $request->boolean('is_active');
+            if ($user->id === $superAdmin->id && ! $wantActive) {
+                return back()->with('error', 'Anda tidak dapat menonaktifkan akun sendiri.');
+            }
+            $validated['is_active'] = $wantActive;
+        } else {
+            unset($validated['is_active']);
+        }
 
         $user->update($validated);
 
@@ -384,7 +397,7 @@ class SettingsController extends Controller
             'tax_pb1_rate' => ['required', 'numeric', 'min:0', 'max:50'],
             'service_charge_rate' => ['required', 'numeric', 'min:0', 'max:30'],
             'roastery_min_yield_loss' => ['required', 'numeric', 'min:5', 'max:30'],
-            'roastery_max_yield_loss' => ['required', 'numeric', 'min:5', 'max:40'],
+            'roastery_max_yield_loss' => ['required', 'numeric', 'min:5', 'max:40', 'gt:roastery_min_yield_loss'],
             'inventory_default_safety_stock' => ['required', 'numeric', 'min:1', 'max:5000'],
         ]);
 
@@ -516,6 +529,7 @@ class SettingsController extends Controller
 
         return response()->streamDownload(function () use ($type) {
             $handle = fopen('php://output', 'w');
+            fprintf($handle, chr(0xEF).chr(0xBB).chr(0xBF)); // UTF-8 BOM for Excel compatibility
 
             if ($type === 'branches') {
                 fputcsv($handle, ['ID', 'Kode', 'Nama Cabang', 'Tipe', 'Alamat', 'Telepon', 'Status Aktif']);

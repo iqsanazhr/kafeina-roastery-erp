@@ -54,7 +54,7 @@
             </div>
             <div class="min-w-[200px]">
                 <select name="branch_id" 
-                        class="w-full px-3 py-1.5 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-xs text-neutral-900 outline-none transition-all">
+                        class="w-full px-3 py-1.5 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-xs text-neutral-900 outline-none transition-colors">
                     <option value="">Semua Cabang (Konsolidasi)</option>
                     @foreach($branches as $b)
                         <option value="{{ $b->id }}" {{ $branchId == $b->id ? 'selected' : '' }}>{{ $b->name }}</option>
@@ -220,7 +220,7 @@
         <div class="pb-3 border-b border-neutral-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
                 <h3 class="text-sm font-bold text-neutral-950 font-sans">Analisis Kebocoran Bahan Baku Bar (Recipe vs Actual Usage)</h3>
-                <p class="text-xs text-neutral-500 mt-0.5">Membandingkan standar resep teoritis dengan pengeluaran aktual stok di gerai terpilih.</p>
+                <p class="text-xs text-neutral-500 mt-0.5">Membandingkan standar resep teoritis dengan pengeluaran aktual stok bar untuk periode {{ $startDate }} s/d {{ $endDate }}.</p>
             </div>
             <span class="text-xs font-mono font-bold text-rose-800 bg-rose-50 border border-rose-200/80 px-2.5 py-1 rounded-lg">
                 Estimasi Waste: Rp {{ number_format($leakage['total_estimated_loss'] ?? 0, 0, ',', '.') }}

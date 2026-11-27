@@ -21,6 +21,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class PosController extends Controller
 {
@@ -869,8 +870,18 @@ class PosController extends Controller
         ];
 
         $redeemCodes = RedeemCode::orderBy('created_at', 'desc')->get();
+        $taxPb1Rate = (float) SystemSetting::get('tax_pb1_rate', 11.0);
+        $serviceChargeRate = (float) SystemSetting::get('service_charge_rate', 0.0);
 
-        return view('pos.index', compact('categories', 'products', 'shift', 'redeemCodes', 'activeBranchSlug'));
+        return view('pos.index', compact(
+            'categories',
+            'products',
+            'shift',
+            'redeemCodes',
+            'activeBranchSlug',
+            'taxPb1Rate',
+            'serviceChargeRate'
+        ));
     }
 
     /**
@@ -937,9 +948,13 @@ class PosController extends Controller
             }
         }
 
+        $taxPb1Rate = (float) SystemSetting::get('tax_pb1_rate', 11.0);
+        $serviceChargeRate = (float) SystemSetting::get('service_charge_rate', 0.0);
+
         $taxableAmount = max(0, $subtotal - $discountAmount);
-        $pb1Tax = round($taxableAmount * 0.11); // PB1 11% Local Restaurant Tax
-        $totalAmount = $paymentMethod === 'non_revenue' ? 0 : ($taxableAmount + $pb1Tax);
+        $serviceCharge = $paymentMethod === 'non_revenue' ? 0 : round($taxableAmount * ($serviceChargeRate / 100));
+        $pb1Tax = $paymentMethod === 'non_revenue' ? 0 : round(($taxableAmount + $serviceCharge) * ($taxPb1Rate / 100));
+        $totalAmount = $paymentMethod === 'non_revenue' ? 0 : ($taxableAmount + $serviceCharge + $pb1Tax);
         $changeAmount = max(0, $paidAmount - $totalAmount);
 
         // Resolve Cashier & Branch (Retail Bar Enforced)
@@ -1211,49 +1226,114 @@ class PosController extends Controller
     }
 
     /**
-     * API: Open Cashier Shift.
+     * API: Open Cashier Shift (persisted to pos_shifts).
      */
     public function openShift(Request $request): JsonResponse
     {
-        $openingCash = (float) $request->input('opening_cash', 500000);
-        $cashierName = $request->input('cashier_name', 'Rizky Ramadhan');
+        $openingCash = max(0.0, (float) $request->input('opening_cash', 500000));
+        $user = auth()->user() ?? User::first();
+        $branchCode = strtoupper(trim((string) $request->input('branch_code', '')));
+
+        $branch = ($branchCode !== '' ? Branch::where('code', $branchCode)->first() : null)
+            ?? ($user && $user->branch ? $user->branch : null)
+            ?? Branch::where('code', 'OUT-SENO')->first()
+            ?? Branch::first();
+
+        $shift = DB::transaction(function () use ($branch, $user, $openingCash): PosShift {
+            $seq = PosShift::max('id') ? ((int) PosShift::max('id') + 1) : 1;
+            $shiftCode = 'SFT-'.date('Ymd').'-'.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+            while (PosShift::where('shift_code', $shiftCode)->exists()) {
+                $seq++;
+                $shiftCode = 'SFT-'.date('Ymd').'-'.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+            }
+
+            return PosShift::create([
+                'shift_code' => $shiftCode,
+                'branch_id' => $branch ? $branch->id : 1,
+                'cashier_user_id' => $user ? $user->id : 1,
+                'opening_cash' => $openingCash,
+                'opened_at' => now(),
+                'status' => 'OPEN',
+            ]);
+        });
+
+        $cashierName = $user?->name ?? (string) $request->input('cashier_name', 'Kasir Kafeina');
 
         return response()->json([
             'success' => true,
-            'message' => "Sesi shift berhasil dibuka untuk {$cashierName} dengan modal awal Rp ".number_format($openingCash, 0, ',', '.'),
+            'message' => "Sesi shift {$shift->shift_code} berhasil dibuka untuk {$cashierName} dengan modal awal Rp ".number_format($openingCash, 0, ',', '.'),
             'shift' => [
-                'shift_id' => 'SFT-'.date('Ymd').'-01',
+                'id' => $shift->id,
+                'shift_id' => $shift->shift_code,
                 'cashier_name' => $cashierName,
-                'opening_cash' => $openingCash,
-                'opened_at' => date('H:i').' WIB',
+                'opening_cash' => (float) $shift->opening_cash,
+                'opened_at' => Carbon::parse($shift->opened_at)->setTimezone('Asia/Jakarta')->format('H:i').' WIB',
                 'is_open' => true,
             ],
         ]);
     }
 
     /**
-     * API: Close Cashier Shift & Reconciliation.
+     * API: Close Cashier Shift & Reconciliation (persisted to pos_shifts + real Supervisor PIN Hash verification).
      */
     public function closeShift(Request $request): JsonResponse
     {
-        $cashBreakdown = $request->input('cash_breakdown', []);
         $totalPhysicalCash = (float) $request->input('total_physical_cash', 0);
-        $systemCashExpected = (float) $request->input('system_cash_expected', 4350000);
-        $supervisorPin = $request->input('supervisor_pin', '');
-        $notes = $request->input('notes', '');
+        $supervisorPin = trim((string) $request->input('supervisor_pin', ''));
+        $notes = trim((string) $request->input('notes', ''));
+        $branchCode = strtoupper(trim((string) $request->input('branch_code', '')));
+        $user = auth()->user();
+
+        $branch = ($branchCode !== '' ? Branch::where('code', $branchCode)->first() : null)
+            ?? ($user && $user->branch ? $user->branch : null)
+            ?? Branch::where('code', 'OUT-SENO')->first()
+            ?? Branch::first();
+
+        $activeShift = $branch
+            ? PosShift::where('branch_id', $branch->id)->where('status', 'OPEN')->latest('opened_at')->first()
+            : PosShift::where('status', 'OPEN')->latest('opened_at')->first();
+
+        // Hitung kas sistem riil dari shift aktif bila tersedia; fallback ke input klien untuk backward compatibility
+        if ($activeShift && ! $request->has('system_cash_expected')) {
+            $cashSales = (float) PosOrder::where('branch_id', $activeShift->branch_id)
+                ->where('payment_status', 'PAID')
+                ->where('payment_method', 'CASH')
+                ->where('order_type', '!=', 'NON_REVENUE')
+                ->whereDate('created_at', now('Asia/Jakarta')->toDateString())
+                ->sum('total_amount');
+            $systemCashExpected = (float) $activeShift->opening_cash + $cashSales;
+        } else {
+            $systemCashExpected = (float) $request->input('system_cash_expected', $activeShift ? (float) $activeShift->opening_cash : 500000);
+        }
 
         $discrepancy = $totalPhysicalCash - $systemCashExpected;
         $absDiscrepancy = abs($discrepancy);
 
-        // Rule: Discrepancy > Rp 10.000 requires 6-digit Supervisor PIN
+        // Rule: Discrepancy > Rp 10.000 requires valid 6-digit Supervisor / Super Admin PIN from DB
         $requiresSupervisor = $absDiscrepancy > 10000;
         $supervisorVerified = false;
+        $supervisorName = 'Auto-Approved (Toleransi ≤ Rp 10.000)';
 
         if ($requiresSupervisor) {
-            // Master PINs accepted: '889900', '123456', '778899'
-            if (in_array($supervisorPin, ['889900', '123456', '778899'])) {
-                $supervisorVerified = true;
-            } else {
+            if ($supervisorPin !== '') {
+                $supervisors = User::with('role')
+                    ->where('is_active', true)
+                    ->whereNotNull('pin_code')
+                    ->whereHas('role', function ($q) {
+                        $q->whereIn('name', ['super_admin', 'supervisor', 'store_supervisor', 'store_manager', 'owner', 'admin']);
+                    })
+                    ->get();
+
+                foreach ($supervisors as $sup) {
+                    if ($sup->pin_code && Hash::check($supervisorPin, (string) $sup->pin_code)) {
+                        $supervisorVerified = true;
+                        $supervisorName = $sup->name;
+                        break;
+                    }
+                }
+            }
+
+            if (! $supervisorVerified) {
                 return response()->json([
                     'success' => false,
                     'error' => 'SUPERVISOR_PIN_REQUIRED',
@@ -1262,6 +1342,16 @@ class PosController extends Controller
                     'requires_pin' => true,
                 ], 422);
             }
+        }
+
+        if ($activeShift) {
+            $activeShift->update([
+                'closing_cash_actual' => $totalPhysicalCash,
+                'closing_cash_system' => $systemCashExpected,
+                'cash_difference' => $discrepancy,
+                'closed_at' => now(),
+                'status' => 'CLOSED',
+            ]);
         }
 
         $status = 'BALANCED';
@@ -1273,15 +1363,16 @@ class PosController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Sesi shift kasir berhasil ditutup dan rekonsiliasi kas tervalidasi.',
+            'message' => 'Sesi shift kasir berhasil ditutup dan rekonsiliasi kas tersimpan ke database.',
             'reconciliation' => [
+                'shift_code' => $activeShift?->shift_code,
                 'status' => $status,
                 'system_expected' => $systemCashExpected,
                 'physical_counted' => $totalPhysicalCash,
                 'discrepancy' => $discrepancy,
                 'supervisor_authorized' => $supervisorVerified,
-                'supervisor_name' => $supervisorVerified ? 'Dimas Satria (Supervisor On Duty)' : 'Auto-Approved (Toleransi < Rp 10.000)',
-                'closed_at' => date('d M Y, H:i').' WIB',
+                'supervisor_name' => $supervisorName,
+                'closed_at' => now('Asia/Jakarta')->format('d M Y, H:i').' WIB',
                 'notes' => $notes,
             ],
         ]);

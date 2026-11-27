@@ -46,6 +46,17 @@
     </div>
     @endif
 
+    @if($errors->any())
+    <div class="mb-5 p-3.5 rounded-xl bg-rose-50 border border-rose-200/90 text-rose-900 text-xs shadow-2xs">
+        <div class="font-bold mb-1">Periksa kembali input pengaturan:</div>
+        <ul class="list-disc pl-4 space-y-0.5 text-[11px]">
+            @foreach($errors->all() as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+    </div>
+    @endif
+
     <!-- PAGE HEADER -->
     <div class="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -456,21 +467,28 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Midtrans Server Key -->
+                    @php
+                        $storedServerKey = (string) \App\Models\SystemSetting::get('midtrans_server_key', config('services.midtrans.server_key', ''));
+                        $maskedServerKeyHint = $storedServerKey !== ''
+                            ? 'Tersimpan (••••' . substr($storedServerKey, -4) . ') — kosongkan jika tidak diubah'
+                            : 'SB-Mid-server-...';
+                    @endphp
                     <div>
                         <label class="block text-xs font-medium text-neutral-700 mb-1">Midtrans Server Key (Secret)</label>
                         <div class="relative">
                             <input :type="showServerKey ? 'text' : 'password'" 
                                    name="midtrans_server_key" 
-                                   value="{{ \App\Models\SystemSetting::get('midtrans_server_key', env('MIDTRANS_SERVER_KEY', '')) }}" 
-                                   placeholder="SB-Mid-server-..."
-                                   class="w-full px-3 py-2 pr-16 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-all font-mono">
+                                   value=""
+                                   autocomplete="new-password"
+                                   placeholder="{{ $maskedServerKeyHint }}"
+                                   class="w-full px-3 py-2 pr-16 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-colors font-mono">
                             <button type="button" 
                                     @click="showServerKey = !showServerKey" 
                                     class="absolute right-2 top-1/2 -translate-y-1/2 px-2 py-1 text-[11px] text-neutral-500 hover:text-black transition-colors font-mono cursor-pointer">
                                 <span x-text="showServerKey ? 'Sembunyikan' : 'Lihat'"></span>
                             </button>
                         </div>
-                        <p class="text-[11px] text-neutral-400 mt-1">Kunci rahasia untuk memverifikasi callback status dan transaksi server-to-server.</p>
+                        <p class="text-[11px] text-neutral-400 mt-1">Kunci rahasia terenkripsi di server. Biarkan kosong jika tidak ingin mengganti kunci aktif.</p>
                     </div>
 
                     <!-- Midtrans Client Key -->
@@ -478,9 +496,9 @@
                         <label class="block text-xs font-medium text-neutral-700 mb-1">Midtrans Client Key (Public)</label>
                         <input type="text" 
                                name="midtrans_client_key" 
-                               value="{{ \App\Models\SystemSetting::get('midtrans_client_key', env('MIDTRANS_CLIENT_KEY', '')) }}" 
+                               value="{{ \App\Models\SystemSetting::get('midtrans_client_key', config('services.midtrans.client_key', '')) }}" 
                                placeholder="Mid-client-..."
-                               class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-all font-mono">
+                               class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-colors font-mono">
                         <p class="text-[11px] text-neutral-400 mt-1">Kunci publik frontend untuk memuat komponen Snap popup jika diperlukan.</p>
                     </div>
 
@@ -523,11 +541,11 @@
                         <label class="block text-xs font-medium text-neutral-700 mb-1">Tarif Pajak Restoran (PB1 %)</label>
                         <div class="relative">
                             <input type="number" step="0.1" name="tax_pb1_rate" 
-                                   value="{{ \App\Models\SystemSetting::get('tax_pb1_rate', 10.0) }}" 
-                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-all font-mono">
+                                   value="{{ \App\Models\SystemSetting::get('tax_pb1_rate', 11.0) }}" 
+                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-colors font-mono">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 font-mono text-xs">%</span>
                         </div>
-                        <p class="text-[11px] text-neutral-400 mt-1">Tarif pajak restoran standar pemerintah daerah (default: 10%).</p>
+                        <p class="text-[11px] text-neutral-400 mt-1">Tarif pajak restoran standar pemerintah daerah (default: 11%).</p>
                     </div>
 
                     <div>
@@ -535,7 +553,7 @@
                         <div class="relative">
                             <input type="number" step="0.1" name="service_charge_rate" 
                                    value="{{ \App\Models\SystemSetting::get('service_charge_rate', 0.0) }}" 
-                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-all font-mono">
+                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-colors font-mono">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 font-mono text-xs">%</span>
                         </div>
                         <p class="text-[11px] text-neutral-400 mt-1">Biaya pelayanan tambahan untuk pesanan ritel (opsional: 0-5%).</p>
@@ -545,11 +563,11 @@
                         <label class="block text-xs font-medium text-neutral-700 mb-1">Batas Bawah Susut Sangrai (%)</label>
                         <div class="relative">
                             <input type="number" step="0.1" name="roastery_min_yield_loss" 
-                                   value="{{ \App\Models\SystemSetting::get('roastery_min_yield_loss', 12.0) }}" 
-                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-all font-mono">
+                                   value="{{ \App\Models\SystemSetting::get('roastery_min_yield_loss', 14.0) }}" 
+                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-colors font-mono">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 font-mono text-xs">%</span>
                         </div>
-                        <p class="text-[11px] text-neutral-400 mt-1">Toleransi minimum susut green bean ke roasted bean.</p>
+                        <p class="text-[11px] text-neutral-400 mt-1">Toleransi minimum susut green bean ke roasted bean (default: 14%).</p>
                     </div>
 
                     <div>
@@ -557,10 +575,10 @@
                         <div class="relative">
                             <input type="number" step="0.1" name="roastery_max_yield_loss" 
                                    value="{{ \App\Models\SystemSetting::get('roastery_max_yield_loss', 18.0) }}" 
-                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-all font-mono">
+                                   required class="w-full px-3 py-2 pr-8 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 focus:bg-white transition-colors font-mono">
                             <span class="absolute right-3 top-1/2 -translate-y-1/2 text-neutral-400 font-mono text-xs">%</span>
                         </div>
-                        <p class="text-[11px] text-neutral-400 mt-1">Toleransi maksimum susut sangrai sebelum ditandai anomali.</p>
+                        <p class="text-[11px] text-neutral-400 mt-1">Toleransi maksimum susut sangrai sebelum ditandai anomali (default: 18%).</p>
                     </div>
 
                     <div class="sm:col-span-2">
@@ -725,9 +743,16 @@
                                 {{ $log->user?->name ?? 'System Automated' }}
                             </td>
                             <td class="px-4 py-2.5 text-neutral-400">{{ $log->ip_address ?? '127.0.0.1' }}</td>
-                            <td class="px-4 py-2.5 text-neutral-500 max-w-xs truncate" title="{{ json_encode($log->new_values) }}">
+                            @php
+                                $safeLogKeys = array_keys((array) $log->new_values);
+                                $rawLogJson = (string) json_encode($log->new_values);
+                                $isSensitiveLog = class_basename((string) $log->auditable_type) === 'SystemSetting'
+                                    || collect($safeLogKeys)->contains(fn ($k) => preg_match('/key|secret|password|pin|token/i', (string) $k))
+                                    || preg_match('/mid-server|sb-mid|secret/i', $rawLogJson);
+                            @endphp
+                            <td class="px-4 py-2.5 text-neutral-500 max-w-xs truncate" title="{{ $isSensitiveLog ? '[REDACTED]' : $rawLogJson }}">
                                 @if($log->event_type === 'UPDATE' && !empty($log->new_values))
-                                    Diubah: {{ implode(', ', array_keys((array)$log->new_values)) }}
+                                    Diubah: {{ implode(', ', $safeLogKeys) }}
                                 @else
                                     -
                                 @endif
@@ -902,7 +927,50 @@
                 </div>
                 <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
                     <button type="button" @click="warehouseModalOpen = false" class="px-3 py-2 rounded-xl text-xs text-neutral-600 hover:text-black">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold">Simpan Gudang</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer active:scale-[0.97]">Simpan Gudang</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 3B: Edit Gudang -->
+    <div x-show="editWarehouseModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+        <div @click.away="editWarehouseModalOpen = false"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="bg-white border border-[#eaeaea] rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100">
+                <h3 class="text-sm font-bold text-neutral-950">Edit Gudang: <span x-text="selectedWarehouse.code" class="font-mono"></span></h3>
+                <button type="button" @click="editWarehouseModalOpen = false" class="text-neutral-400 hover:text-black font-mono text-base cursor-pointer">&times;</button>
+            </div>
+            <form method="POST" :action="'{{ url('/settings/warehouse') }}/' + selectedWarehouse.id" class="space-y-3">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-xs font-medium text-neutral-700 mb-1">Cabang Pemilik</label>
+                    <select name="branch_id" x-model="selectedWarehouse.branch_id" required class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900">
+                        @foreach($branches as $b)
+                        <option value="{{ $b->id }}">{{ $b->code }} - {{ $b->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-neutral-700 mb-1">Nama Gudang</label>
+                    <input type="text" name="name" x-model="selectedWarehouse.name" required class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-neutral-700 mb-1">Tipe Gudang</label>
+                    <select name="type" x-model="selectedWarehouse.type" required class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900">
+                        <option value="RETAIL_BAR">RETAIL_BAR (Stok Bar Aktif Cabang Ritel)</option>
+                        <option value="CENTRAL_RAW">CENTRAL_RAW (Biji Kopi Mentah Sentral)</option>
+                        <option value="CENTRAL_ROASTED">CENTRAL_ROASTED (Biji Sangrai Sentral)</option>
+                        <option value="TRANSIT">TRANSIT (Akun In-Transit Ekspedisi)</option>
+                    </select>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
+                    <button type="button" @click="editWarehouseModalOpen = false" class="px-3 py-2 rounded-xl text-xs text-neutral-600 hover:text-black cursor-pointer">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer active:scale-[0.97]">Perbarui Gudang</button>
                 </div>
             </form>
         </div>
@@ -959,7 +1027,55 @@
                 </div>
                 <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
                     <button type="button" @click="userModalOpen = false" class="px-3 py-2 rounded-xl text-xs text-neutral-600 hover:text-black">Batal</button>
-                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold">Simpan Akun</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer active:scale-[0.97]">Simpan Akun</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 4B: Edit Staf / User -->
+    <div x-show="editUserModalOpen" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-xs">
+        <div @click.away="editUserModalOpen = false"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             class="bg-white border border-[#eaeaea] rounded-2xl p-6 max-w-lg w-full shadow-2xl space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-neutral-100">
+                <h3 class="text-sm font-bold text-neutral-950">Edit Staf: <span x-text="selectedUser.name"></span></h3>
+                <button type="button" @click="editUserModalOpen = false" class="text-neutral-400 hover:text-black font-mono text-base cursor-pointer">&times;</button>
+            </div>
+            <form method="POST" :action="'{{ url('/settings/user') }}/' + selectedUser.id" class="space-y-3">
+                @csrf
+                @method('PUT')
+                <div>
+                    <label class="block text-xs font-medium text-neutral-700 mb-1">Nama Lengkap</label>
+                    <input type="text" name="name" x-model="selectedUser.name" required class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900">
+                </div>
+                <div>
+                    <label class="block text-xs font-medium text-neutral-700 mb-1">Email Perusahaan</label>
+                    <input type="email" name="email" x-model="selectedUser.email" required class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900 font-mono">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-700 mb-1">Peran (Role)</label>
+                        <select name="role_id" x-model="selectedUser.role_id" required class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900">
+                            @foreach($roles as $r)
+                            <option value="{{ $r->id }}">{{ $r->display_name ?? $r->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-neutral-700 mb-1">Cabang Penempatan</label>
+                        <select name="branch_id" x-model="selectedUser.branch_id" required class="w-full px-3 py-2 bg-neutral-50 border border-neutral-200 rounded-xl text-xs text-neutral-900 outline-none focus:border-neutral-900">
+                            @foreach($branches as $b)
+                            <option value="{{ $b->id }}">{{ $b->code }} - {{ $b->name }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-2 pt-3 border-t border-neutral-100">
+                    <button type="button" @click="editUserModalOpen = false" class="px-3 py-2 rounded-xl text-xs text-neutral-600 hover:text-black cursor-pointer">Batal</button>
+                    <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer active:scale-[0.97]">Perbarui Staf</button>
                 </div>
             </form>
         </div>

@@ -502,8 +502,12 @@
                     <span x-text="'Potongan Promo (' + (appliedPromo?.code || 'Diskon') + ')'"></span>
                     <span class="font-mono" x-text="'- Rp ' + formatNumber(discountAmount)"></span>
                 </div>
+                <div class="flex justify-between text-neutral-500" x-show="serviceChargeRate > 0">
+                    <span x-text="'Service Charge (' + serviceChargeRate + '%)'"></span>
+                    <span class="font-medium text-neutral-800" x-text="'Rp ' + formatNumber(serviceCharge)"></span>
+                </div>
                 <div class="flex justify-between text-neutral-500">
-                    <span>Pajak Restoran (PB1 11%)</span>
+                    <span x-text="'Pajak Restoran (PB1 ' + taxPb1Rate + '%)'"></span>
                     <span class="font-medium text-neutral-800" x-text="'Rp ' + formatNumber(taxPb1)"></span>
                 </div>
             </div>
@@ -512,7 +516,7 @@
             <div class="pt-2 border-t border-neutral-200 flex items-baseline justify-between font-sans">
                 <div>
                     <span class="text-xs text-neutral-600 uppercase tracking-wider font-semibold">Total Tagihan</span>
-                    <p class="text-[10px] text-neutral-400">Termasuk PB1 11%</p>
+                    <p class="text-[10px] text-neutral-400" x-text="'Termasuk PB1 ' + taxPb1Rate + '%' + (serviceChargeRate > 0 ? (' + Service ' + serviceChargeRate + '%') : '')"></p>
                 </div>
                 <div class="text-right">
                     <span class="text-xs text-neutral-400 font-normal">Rp</span>
@@ -2172,16 +2176,23 @@ function posApp() {
             }
         },
 
+        taxPb1Rate: @json($taxPb1Rate ?? 11.0),
+        serviceChargeRate: @json($serviceChargeRate ?? 0.0),
+
         get taxableSubtotal() {
             return Math.max(0, this.subtotal - this.discountAmount);
         },
 
+        get serviceCharge() {
+            return Math.round(this.taxableSubtotal * ((Number(this.serviceChargeRate) || 0) / 100));
+        },
+
         get taxPb1() {
-            return Math.round(this.taxableSubtotal * 0.11);
+            return Math.round((this.taxableSubtotal + this.serviceCharge) * ((Number(this.taxPb1Rate) || 0) / 100));
         },
 
         get grandTotal() {
-            return this.taxableSubtotal + this.taxPb1;
+            return this.taxableSubtotal + this.serviceCharge + this.taxPb1;
         },
 
         formatNumber(val) {
@@ -2813,25 +2824,39 @@ function posApp() {
             this.vaSettled = false;
         },
 
-        processNonRevenueCheckout() {
-            this.receiptData = {
-                order_number: 'KAF-NONREV-' + Date.now().toString().slice(-4),
-                created_at: new Date().toLocaleString('id-ID') + ' WIB',
-                cashier: this.shiftData.cashier_name || 'Rizky Ramadhan',
-                order_type: 'Non-Revenue',
-                table_number: '-',
-                customer_name: this.customerName ? this.customerName.trim() : 'Internal Bar / QC',
-                items: JSON.parse(JSON.stringify(this.cart)),
-                subtotal: this.subtotal,
-                discount: this.subtotal,
-                tax_pb1: 0,
-                total: 0,
+        async processNonRevenueCheckout() {
+            const payload = {
+                items: this.cart,
+                payment_method: 'non_revenue',
                 paid_amount: 0,
-                change_amount: 0
+                order_type: 'Non-Revenue',
+                customer_name: this.customerName ? this.customerName.trim() : 'Internal Bar / QC',
+                table_number: '-',
+                non_revenue_reason: this.nonRevenueReason || 'CALIBRATION',
+                branch_code: this.shiftData.outlet_code || ''
             };
-            this.openNonRevenueModal = false;
-            this.openReceiptModal = true;
-            this.cart = [];
+
+            try {
+                const res = await fetch("{{ route('pos.checkout') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success && data.order) {
+                    this.receiptData = data.order;
+                    this.openNonRevenueModal = false;
+                    this.openReceiptModal = true;
+                    this.cart = [];
+                    return;
+                }
+                alert(data.message || 'Gagal mencatat transaksi Non-Revenue.');
+            } catch (e) {
+                alert('Terjadi kesalahan jaringan saat mencatat transaksi Non-Revenue.');
+            }
         },
 
         async syncOfflineOrders() {
@@ -2878,17 +2903,41 @@ function posApp() {
         },
 
         getDiscrepancy() {
-            return this.calculateTotalPhysicalCash() - 4350000;
+            const expected = Number(this.shiftData.expected_physical_cash || 0);
+            return this.calculateTotalPhysicalCash() - expected;
         },
 
-        submitShiftClosing() {
-            const diff = Math.abs(this.getDiscrepancy());
-            if (diff > 10000 && !['889900', '123456'].includes(this.supervisorPin)) {
-                alert('PIN Supervisor tidak valid!');
-                return;
+        async submitShiftClosing() {
+            const physicalCash = this.calculateTotalPhysicalCash();
+            const expectedCash = Number(this.shiftData.expected_physical_cash || 0);
+
+            try {
+                const res = await fetch("{{ route('pos.shift.close') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content
+                    },
+                    body: JSON.stringify({
+                        branch_code: this.shiftData.outlet_code || '',
+                        total_physical_cash: physicalCash,
+                        system_cash_expected: expectedCash,
+                        supervisor_pin: this.supervisorPin || '',
+                        notes: this.shiftNotes || ''
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(data.message || 'Sesi shift kasir berhasil ditutup.');
+                    this.shiftData.is_open = false;
+                    this.supervisorPin = '';
+                    this.openCloseShiftModal = false;
+                } else {
+                    alert(data.message || 'Gagal menutup sesi shift kasir.');
+                }
+            } catch (e) {
+                alert('Terjadi kesalahan jaringan saat menutup shift kasir.');
             }
-            alert('Sesi shift kasir berhasil ditutup.');
-            this.openCloseShiftModal = false;
         }
     };
 }

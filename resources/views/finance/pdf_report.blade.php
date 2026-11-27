@@ -122,15 +122,18 @@
     <!-- Header -->
     <div class="header">
         <div>
-            <div class="logo-title">KAFEINA ROASTERY ERP</div>
+            <div class="logo-title">{{ strtoupper($company['name'] ?? 'KAFEINA ROASTERY ERP') }}</div>
             <div class="subtitle">Sistem Terintegrasi Roastery Kopi Spesialti & Manajemen Multi-Cabang</div>
-            <div class="subtitle">Alamat: Jl. Senopati No. 88, Jakarta Selatan | Telp: 021-5551234</div>
+            <div class="subtitle">Alamat: {{ $company['address'] ?? '-' }} | Telp: {{ $company['phone'] ?? '-' }}</div>
+            @if(!empty($company['npwp']))
+                <div class="subtitle">NPWP: {{ $company['npwp'] }} | Email: {{ $company['email'] ?? '-' }}</div>
+            @endif
         </div>
         <div class="report-meta">
             <div><strong>LAPORAN LABA RUGI RIIL</strong></div>
             <div>Periode: {{ $startDate }} s/d {{ $endDate }}</div>
             <div>Cabang: {{ $branch ? $branch->name : 'Seluruh Cabang (Konsolidasi)' }}</div>
-            <div>Dicetak: {{ now()->format('d/m/Y H:i') }} WIB</div>
+            <div>Dicetak: {{ now('Asia/Jakarta')->format('d/m/Y H:i') }} WIB</div>
         </div>
     </div>
 
@@ -181,7 +184,7 @@
                 <td class="text-right font-mono">{{ $pnl['metrics']['net_sales'] > 0 ? round(($pnl['metrics']['net_operating_profit'] / $pnl['metrics']['net_sales']) * 100, 2) : 0 }}%</td>
             </tr>
             <tr>
-                <td style="color: #4b5563;">Pajak Restoran PB1 11% Terkumpul (Kewajiban Fiskal Pemda)</td>
+                <td style="color: #4b5563;">Pajak Restoran PB1 {{ $pb1RateLabel ?? '11' }}% Terkumpul (Kewajiban Fiskal Pemda)</td>
                 <td class="text-right font-mono" style="color: #4b5563;">Rp {{ number_format($pnl['metrics']['tax_pb1'], 2, ',', '.') }}</td>
                 <td class="text-right font-mono">-</td>
             </tr>
@@ -229,16 +232,16 @@
     <div class="sign-off-block">
         <div class="sign-box">
             <div>Disiapkan Oleh,</div>
-            <div class="subtitle">Head of Roastery & Bar Operations</div>
-            <div class="sign-line">Rizky Ramadhan</div>
-            <div class="subtitle">ID: KAF-OPS-001</div>
+            <div class="subtitle">{{ auth()->user()?->role?->display_name ?? 'Operasional & Keuangan' }}</div>
+            <div class="sign-line">{{ auth()->user()?->name ?? 'Manajemen Kafeina' }}</div>
+            <div class="subtitle">{{ $company['name'] ?? 'PT Kafeina Roastery Indonesia' }}</div>
         </div>
 
         <div class="sign-box">
             <div>Disetujui Oleh,</div>
-            <div class="subtitle">Financial Controller & Director</div>
-            <div class="sign-line">Ahmad Faris, SE, Ak., CA</div>
-            <div class="subtitle">ID: KAF-FIN-001</div>
+            <div class="subtitle">Direksi / Financial Controller</div>
+            <div class="sign-line">__________________________</div>
+            <div class="subtitle">{{ $company['name'] ?? 'PT Kafeina Roastery Indonesia' }}</div>
         </div>
     </div>
 

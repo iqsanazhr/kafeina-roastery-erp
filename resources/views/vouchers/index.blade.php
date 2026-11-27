@@ -187,7 +187,7 @@
             $isDepleted = ! $isUnlimited && $redeemed >= $maxRedemptions;
         @endphp
 
-        <div class="bg-white border rounded-2xl p-4 sm:p-5 transition-all shadow-2xs hover:shadow-xs {{ $voucher->is_active ? 'border-[#eaeaea]' : 'border-neutral-200/60 opacity-75 bg-neutral-50/50' }}">
+        <div class="bg-white border rounded-2xl p-4 sm:p-5 transition-colors shadow-2xs hover:shadow-xs {{ $voucher->is_active ? 'border-[#eaeaea]' : 'border-neutral-200/60 opacity-75 bg-neutral-50/50' }}">
             <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center">
                 
                 <!-- Left: Code & Promo Details (lg:col-span-5) -->
@@ -374,7 +374,7 @@
          x-transition:enter="transition-opacity ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-150"
+         x-transition:leave="transition-opacity ease-out duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          @keydown.escape.window="openCreateModal = false">

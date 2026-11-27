@@ -1,7 +1,10 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Services;
 
+use App\Models\InventoryWarehouse;
 use App\Models\PosOrder;
 use App\Models\Product;
 use App\Models\RecipeDeduction;
@@ -12,6 +15,8 @@ class FinancialReportService
 {
     /**
      * Calculate Real Profit and Loss (P&L) Report based on real batch HPP and actual recipe consumption.
+     *
+     * @return array<string, mixed>
      */
     public function calculateProfitAndLoss(?string $startDate = null, ?string $endDate = null, ?int $branchId = null): array
     {
@@ -41,7 +46,6 @@ class FinancialReportService
         foreach ($orders as $order) {
             if ($order->order_type === 'NON_REVENUE') {
                 $nonRevenueCount++;
-                // Calculate cost of non-revenue items (calibration/testing/staff)
                 foreach ($order->items as $item) {
                     if ($item->recipeDeductions->isNotEmpty()) {
                         foreach ($item->recipeDeductions as $deduct) {
@@ -64,7 +68,6 @@ class FinancialReportService
                 $totalDiscounts += (float) $order->discount_amount;
                 $totalTaxPb1 += (float) $order->tax_amount;
 
-                // Real COGS calculation from recipe deductions
                 foreach ($order->items as $item) {
                     if ($item->recipeDeductions->isNotEmpty()) {
                         foreach ($item->recipeDeductions as $deduct) {
@@ -111,43 +114,83 @@ class FinancialReportService
     }
 
     /**
-     * Analyze Material Leakage (Recipe Standard vs Actual Stock Outflow).
-     * Identifies waste and discrepancies for key ingredients (beans, fresh milk, syrups).
+     * Analyze Material Leakage (Recipe Standard vs Actual Stock Outflow) scoped by branch, warehouse, and period.
+     *
+     * @return array{total_estimated_loss: float, items: array<int, array<string, mixed>>}
      */
-    public function analyzeMaterialLeakage(?int $branchId = null, ?int $warehouseId = null): array
-    {
-        // Get all raw material / ingredient products
+    public function analyzeMaterialLeakage(
+        ?int $branchId = null,
+        ?int $warehouseId = null,
+        ?string $startDate = null,
+        ?string $endDate = null
+    ): array {
+        $start = $startDate ? Carbon::parse($startDate)->startOfDay() : null;
+        $end = $endDate ? Carbon::parse($endDate)->endOfDay() : null;
+
+        // Tentukan cakupan gudang: gudang spesifik -> gudang cabang terpilih -> seluruh gudang RETAIL_BAR
+        $targetWarehouseIds = null;
+        if ($warehouseId) {
+            $targetWarehouseIds = [$warehouseId];
+        } elseif ($branchId) {
+            $targetWarehouseIds = InventoryWarehouse::where('branch_id', $branchId)
+                ->where('type', '!=', 'TRANSIT')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+        } else {
+            $barIds = InventoryWarehouse::where('type', 'RETAIL_BAR')
+                ->pluck('id')
+                ->map(fn ($id) => (int) $id)
+                ->all();
+            $targetWarehouseIds = count($barIds) > 0 ? $barIds : null;
+        }
+
+        // Ambil bahan baku operasional bar (kecualikan biji mentah RAW-GB% yang hanya disangrai di silo pusat)
         $rawProducts = Product::where('is_raw_material', true)
             ->where('is_active', true)
+            ->where('sku', 'NOT LIKE', 'RAW-GB%')
+            ->orderBy('sku')
             ->get();
 
         $leakageReport = [];
         $totalEstimatedLoss = 0.0;
 
         foreach ($rawProducts as $product) {
-            // 1. Ideal usage according to product recipes
+            // 1. Pemakaian teoritis berdasarkan resep POS
             $recipeQuery = RecipeDeduction::where('ingredient_product_id', $product->id);
-            if ($warehouseId) {
-                $recipeQuery->where('warehouse_id', $warehouseId);
+            if ($targetWarehouseIds !== null) {
+                $recipeQuery->whereIn('warehouse_id', $targetWarehouseIds);
+            }
+            if ($start && $end) {
+                $recipeQuery->whereBetween('deduction_timestamp', [$start, $end]);
             }
             $idealUsage = (float) $recipeQuery->sum('quantity_deducted');
 
-            // 2. Actual physical stock outflow recorded in stock cards
+            // 2. Pengeluaran fisik aktual pada kartu stok bar (kecualikan konversi Kemas Retail BOM)
             $stockCardQuery = StockCard::where('product_id', $product->id)
-                ->whereIn('reference_type', ['POS_SALE', 'ADJUSTMENT']);
-            if ($warehouseId) {
-                $stockCardQuery->where('warehouse_id', $warehouseId);
+                ->whereIn('reference_type', ['POS_SALE', 'ADJUSTMENT'])
+                ->where(function ($q) {
+                    $q->whereNull('notes')
+                        ->orWhere('notes', 'NOT LIKE', 'Kemas Retail BOM%');
+                });
+
+            if ($targetWarehouseIds !== null) {
+                $stockCardQuery->whereIn('warehouse_id', $targetWarehouseIds);
+            }
+            if ($start && $end) {
+                $stockCardQuery->whereBetween('created_at', [$start, $end]);
             }
             $actualUsage = (float) $stockCardQuery->sum('quantity_out');
 
-            // 3. Discrepancy
+            // 3. Hitung selisih & estimasi kerugian
             $discrepancy = $actualUsage - $idealUsage;
-            $leakagePercentage = $idealUsage > 0 ? ($discrepancy / $idealUsage) * 100.0 : ($discrepancy > 0 ? 100.0 : 0.0);
+            $leakagePercentage = $idealUsage > 0
+                ? ($discrepancy / $idealUsage) * 100.0
+                : ($discrepancy > 0 ? 100.0 : 0.0);
             $costPrice = (float) ($product->cost_price ?? 0);
             $estimatedLoss = max(0.0, $discrepancy * $costPrice);
             $totalEstimatedLoss += $estimatedLoss;
 
-            // Status determination
             $status = 'OPTIMAL';
             if ($leakagePercentage > 5.0) {
                 $status = 'CRITICAL_LEAK';
