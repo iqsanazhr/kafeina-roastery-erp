@@ -49,11 +49,8 @@
                 <span class="text-neutral-300">/</span>
                 <span class="text-neutral-400 font-mono text-[11px]">Katalog & Resep</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950 flex items-center gap-2.5">
-                <span>Katalog Produk, Resep & Varian</span>
-                <span class="text-xs px-2.5 py-0.5 rounded-full font-medium bg-neutral-100 text-neutral-700 border border-neutral-200/70">
-                    {{ $currentUser?->role?->display_name ?? 'Staff' }}
-                </span>
+            <h1 class="text-xl sm:text-2xl font-bold tracking-tight text-neutral-950">
+                Katalog Produk, Resep & Varian
             </h1>
             <p class="text-xs text-neutral-500 mt-0.5">Kelola daftar menu POS, takaran formula resep auto-deduct bahan baku, varian harga ukuran cup, dan add-ons barista.</p>
         </div>
@@ -133,28 +130,28 @@
     <div class="flex items-center gap-1.5 p-1 rounded-2xl bg-neutral-200/50 border border-neutral-200/80 mb-6 overflow-x-auto max-w-fit">
         <button type="button" @click="activeTab = 'products'" 
                 :class="activeTab === 'products' ? 'bg-white text-neutral-950 font-semibold shadow-2xs' : 'text-neutral-600 hover:text-neutral-900'"
-                class="px-4 py-2 rounded-xl text-xs font-sans transition-all cursor-pointer flex items-center gap-2 shrink-0">
+                class="px-4 py-2 rounded-xl text-xs font-sans transition-colors duration-150 cursor-pointer flex items-center gap-2 shrink-0">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
             <span>Katalog Produk ({{ $products->count() }})</span>
         </button>
 
         <button type="button" @click="activeTab = 'recipes'" 
                 :class="activeTab === 'recipes' ? 'bg-white text-neutral-950 font-semibold shadow-2xs' : 'text-neutral-600 hover:text-neutral-900'"
-                class="px-4 py-2 rounded-xl text-xs font-sans transition-all cursor-pointer flex items-center gap-2 shrink-0">
+                class="px-4 py-2 rounded-xl text-xs font-sans transition-colors duration-150 cursor-pointer flex items-center gap-2 shrink-0">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
             <span>Formula Resep & HPP Bar</span>
         </button>
 
         <button type="button" @click="activeTab = 'variants'" 
                 :class="activeTab === 'variants' ? 'bg-white text-neutral-950 font-semibold shadow-2xs' : 'text-neutral-600 hover:text-neutral-900'"
-                class="px-4 py-2 rounded-xl text-xs font-sans transition-all cursor-pointer flex items-center gap-2 shrink-0">
+                class="px-4 py-2 rounded-xl text-xs font-sans transition-colors duration-150 cursor-pointer flex items-center gap-2 shrink-0">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
             <span>Varian Harga & Modifiers</span>
         </button>
 
         <button type="button" @click="activeTab = 'categories'" 
                 :class="activeTab === 'categories' ? 'bg-white text-neutral-950 font-semibold shadow-2xs' : 'text-neutral-600 hover:text-neutral-900'"
-                class="px-4 py-2 rounded-xl text-xs font-sans transition-all cursor-pointer flex items-center gap-2 shrink-0">
+                class="px-4 py-2 rounded-xl text-xs font-sans transition-colors duration-150 cursor-pointer flex items-center gap-2 shrink-0">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
             <span>Kategori Menu ({{ $categories->count() }})</span>
         </button>
@@ -219,16 +216,16 @@
                 <table class="w-full text-left border-collapse text-xs font-sans">
                     <thead>
                         <tr class="border-b border-neutral-200 bg-neutral-50/70 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
-                            <th class="py-3 px-4">Produk & SKU</th>
-                            <th class="py-3 px-4">Kategori</th>
-                            <th class="py-3 px-4">Tipe</th>
-                            <th class="py-3 px-4 text-right">Harga Jual</th>
-                            <th class="py-3 px-4 text-right">HPP Resep (Est.)</th>
-                            <th class="py-3 px-4 text-center">Gross Margin</th>
-                            <th class="py-3 px-4 text-center">Resep Bahan</th>
-                            <th class="py-3 px-4 text-center">Varian</th>
-                            <th class="py-3 px-4 text-center">Status</th>
-                            <th class="py-3 px-4 text-right">Aksi</th>
+                            <th class="py-3 px-4 whitespace-nowrap">Produk & SKU</th>
+                            <th class="py-3 px-4 whitespace-nowrap">Kategori</th>
+                            <th class="py-3 px-4 whitespace-nowrap">Tipe</th>
+                            <th class="py-3 px-4 text-right whitespace-nowrap">Harga Jual</th>
+                            <th class="py-3 px-4 text-right whitespace-nowrap">HPP (Est.)</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Gross Margin</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Resep / BOM</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Varian</th>
+                            <th class="py-3 px-4 text-center whitespace-nowrap">Status</th>
+                            <th class="py-3 px-4 text-right whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100">
@@ -238,71 +235,86 @@
                             $selling = (float) $prod->selling_price;
                             $margin = $prod->calculateGrossMargin();
                             $recipesCount = $prod->recipes->count();
+                            $bomItemsCount = $prod->boms->sum(fn ($bom) => $bom->items->count());
                             $variantsCount = $prod->variants->count();
                         @endphp
                         <tr class="hover:bg-neutral-50/70 transition-colors {{ ! $prod->is_active ? 'opacity-60 bg-neutral-50/40' : '' }}">
-                            <td class="py-3 px-4">
+                            <td class="py-3 px-4 min-w-[220px]">
                                 <div class="font-semibold text-neutral-900">{{ $prod->name }}</div>
-                                <div class="text-[11px] font-mono text-neutral-400 mt-0.5">{{ $prod->sku }} • Satuan: {{ $prod->unit }}</div>
+                                <div class="text-[11px] font-mono text-neutral-400 mt-0.5 whitespace-nowrap">{{ $prod->sku }} • Satuan: {{ $prod->unit }}</div>
                             </td>
-                            <td class="py-3 px-4">
-                                <span class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200/60">
+                            <td class="py-3 px-4 whitespace-nowrap">
+                                <span class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200/60">
                                     {{ $prod->category?->name ?? 'Uncategorized' }}
                                 </span>
                             </td>
-                            <td class="py-3 px-4">
+                            <td class="py-3 px-4 whitespace-nowrap">
                                 @if($prod->is_raw_material)
-                                <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">Bahan Mentah</span>
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">Bahan Mentah</span>
                                 @elseif($prod->unit === 'cup')
-                                <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">Minuman Bar</span>
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">Minuman Bar</span>
                                 @else
-                                <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">Barang Jadi</span>
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">Barang Jadi</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-right font-mono font-semibold text-neutral-900">
+                            <td class="py-3 px-4 text-right font-mono font-semibold text-neutral-900 whitespace-nowrap tabular-nums">
                                 @if($prod->is_raw_material)
                                 <span class="text-neutral-400">-</span>
                                 @else
                                 Rp {{ number_format($selling, 0, ',', '.') }}
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-right font-mono text-neutral-600">
+                            <td class="py-3 px-4 text-right font-mono text-neutral-600 whitespace-nowrap tabular-nums">
                                 Rp {{ number_format($hpp, 0, ',', '.') }}
                             </td>
-                            <td class="py-3 px-4 text-center font-mono">
+                            <td class="py-3 px-4 text-center font-mono whitespace-nowrap tabular-nums">
                                 @if(! $prod->is_raw_material && $selling > 0)
-                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold {{ $margin >= 60 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : ($margin >= 40 ? 'bg-amber-50 text-amber-700 border border-amber-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60') }}">
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold {{ $margin >= 60 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : ($margin >= 40 ? 'bg-amber-50 text-amber-700 border border-amber-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60') }}">
                                         {{ $margin }}%
                                     </span>
                                 @else
                                     <span class="text-neutral-400 text-[10px]">-</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-center">
-                                @if($recipesCount > 0)
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                                @if($prod->is_raw_material)
+                                <span class="text-neutral-400 text-[10px]">-</span>
+                                @elseif($recipesCount > 0)
                                 <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
-                                        class="px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200/70 hover:bg-emerald-100 transition-colors cursor-pointer">
+                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200/70 hover:bg-emerald-100 transition-colors cursor-pointer">
                                     {{ $recipesCount }} Bahan
+                                </button>
+                                @elseif($bomItemsCount > 0)
+                                <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
+                                        title="Produk retail siap jual menggunakan BOM Pengemasan Roastery (dipotong per unit saat checkout POS)"
+                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-800 border border-purple-200/70 hover:bg-purple-100 transition-colors cursor-pointer">
+                                    BOM Kemasan ({{ $bomItemsCount }})
+                                </button>
+                                @elseif($prod->unit !== 'cup')
+                                <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
+                                        title="Barang jadi retail dipotong langsung per unit di POS"
+                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200/70 hover:bg-neutral-200 transition-colors cursor-pointer">
+                                    Stok Jadi (POS)
                                 </button>
                                 @else
                                 <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
-                                        class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-500 hover:text-neutral-800 hover:bg-neutral-200 transition-colors cursor-pointer">
+                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200 transition-colors cursor-pointer">
                                     + Atur Resep
                                 </button>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-center">
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
                                 @if($variantsCount > 0)
-                                <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-neutral-100 text-neutral-700">{{ $variantsCount }} varian</span>
+                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono bg-neutral-100 text-neutral-700">{{ $variantsCount }} varian</span>
                                 @else
                                 <span class="text-neutral-400 text-[10px]">Dasar</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-center">
+                            <td class="py-3 px-4 text-center whitespace-nowrap">
                                 <form method="POST" action="{{ route('products.toggle', $prod) }}" class="inline">
                                     @csrf
                                     <button type="submit" title="Klik untuk ubah status aktif" 
-                                            class="px-2 py-0.5 rounded-full text-[10px] font-semibold cursor-pointer transition-colors {{ $prod->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 hover:bg-emerald-100' : 'bg-neutral-100 text-neutral-500 border border-neutral-200/60 hover:bg-neutral-200' }}">
+                                            class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-semibold cursor-pointer transition-colors {{ $prod->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 hover:bg-emerald-100' : 'bg-neutral-100 text-neutral-500 border border-neutral-200/60 hover:bg-neutral-200' }}">
                                         {{ $prod->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </button>
                                 </form>
@@ -333,94 +345,206 @@
     <!-- ========================================== -->
     <!-- TAB 2: FORMULA RESEP & BOM BAR -->
     <!-- ========================================== -->
+    @php
+        $nonRawProducts = $products->where('is_raw_material', false);
+        $barRecipeProducts = $nonRawProducts->filter(fn ($p) => $p->unit === 'cup' || $p->recipes->isNotEmpty());
+        $retailFinishedProducts = $nonRawProducts->filter(fn ($p) => $p->unit !== 'cup' && $p->recipes->isEmpty());
+    @endphp
     <div x-show="activeTab === 'recipes'" class="space-y-6">
         <div class="p-4 rounded-2xl bg-amber-50/60 border border-amber-200/70 text-xs text-amber-900 flex items-start gap-3">
             <span class="w-6 h-6 rounded-lg bg-amber-100 flex items-center justify-center text-amber-800 shrink-0 mt-0.5">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
             </span>
-            <div>
-                <span class="font-bold">Ketentuan Auto-Deduct Kasir:</span> Setiap kali pesanan menu di kasir POS diselesaikan (*checkout*), sistem secara otomatis memotong stok bahan baku berikut dari gudang bar (`RETAIL_BAR`) dan mencatatnya ke kartu stok (*Stock Cards*) untuk audit pemakaian riil vs standar.
+            <div class="space-y-1">
+                <div>
+                    <span class="font-bold">Resep Racikan Bar (Auto-Deduct POS):</span> Setiap pesanan minuman bar diselesaikan (<em>checkout</em>), sistem otomatis memotong bahan baku resep dari gudang bar (<code>RETAIL_BAR</code>) dan mencatatnya ke Kartu Stok.
+                </div>
+                <div class="text-amber-800/90">
+                    <span class="font-semibold">Produk Kemasan Retail (Barang Jadi):</span> Tidak memakai resep racikan bar karena sudah dikemas di Roastery berdasarkan <strong>BOM Kemasan</strong> — saat terjual di POS, sistem langsung memotong stok unit jadi (<code>pouch</code>/<code>pcs</code>).
+                </div>
             </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            @foreach($products->where('is_raw_material', false) as $prod)
-            @php
-                $hpp = $prod->calculateRecipeCost();
-                $margin = $prod->calculateGrossMargin();
-            @endphp
-            <div class="p-4 rounded-2xl bg-white border border-neutral-200/80 shadow-2xs space-y-3">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <h3 class="text-sm font-bold text-neutral-900">{{ $prod->name }}</h3>
-                        <div class="text-[11px] font-mono text-neutral-400 mt-0.5">{{ $prod->sku }} • {{ $prod->category?->name }}</div>
-                    </div>
-                    <div class="text-right">
-                        <div class="text-xs font-mono font-bold text-neutral-900">Rp {{ number_format($prod->selling_price, 0, ',', '.') }}</div>
-                        <div class="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">HPP: Rp {{ number_format($hpp, 0, ',', '.') }} ({{ $margin }}%)</div>
-                    </div>
+        <!-- Seksi 1: Resep Racikan Minuman Bar -->
+        <div class="space-y-3">
+            <div class="flex items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-sm font-bold text-neutral-900">Resep Racikan Minuman Bar</h2>
+                    <p class="text-[11px] text-neutral-500">Formula takaran bahan baku per sajian untuk auto-deduct kasir POS.</p>
                 </div>
-
-                <!-- Daftar Bahan Baku Resep -->
-                <div class="space-y-1.5 pt-2 border-t border-neutral-100">
-                    <div class="text-[11px] font-semibold text-neutral-600 flex items-center justify-between">
-                        <span>Komposisi Bahan Baku:</span>
-                        <span class="text-[10px] text-neutral-400">{{ $prod->recipes->count() }} komponen</span>
-                    </div>
-
-                    @forelse($prod->recipes as $rec)
-                    @php
-                        $subCost = (float) ($rec->ingredientProduct?->cost_price ?? 0) * (float) $rec->quantity_required;
-                    @endphp
-                    <div class="flex items-center justify-between p-2 rounded-xl bg-neutral-50/70 border border-neutral-200/60 text-xs">
-                        <div class="flex items-center gap-2">
-                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span>
-                            <span class="font-medium text-neutral-800">{{ $rec->ingredientProduct?->name ?? 'Bahan Tidak Diketahui' }}</span>
-                        </div>
-                        <div class="flex items-center gap-3 font-mono text-neutral-600 text-[11px]">
-                            <span>{{ (float) $rec->quantity_required }} {{ $rec->unit }}</span>
-                            <span class="text-neutral-400 font-sans">(@ Rp {{ number_format($subCost, 0, ',', '.') }})</span>
-                            @if($currentUser?->canManageRecipes())
-                            <form method="POST" action="{{ route('products.recipes.destroy', $rec) }}" onsubmit="return confirm('Hapus bahan ini dari resep?');" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold ml-1 cursor-pointer">✕</button>
-                            </form>
-                            @endif
-                        </div>
-                    </div>
-                    @empty
-                    <div class="p-3 rounded-xl bg-neutral-50 border border-dashed border-neutral-200 text-center text-neutral-400 text-xs">
-                        Belum ada komposisi bahan baku yang dirumuskan.
-                    </div>
-                    @endforelse
-                </div>
-
-                <!-- Form Tambah Bahan Baku Inline -->
-                @if($currentUser?->canManageRecipes())
-                <form method="POST" action="{{ route('products.recipes.store', $prod) }}" class="pt-2 border-t border-neutral-100 flex items-center gap-2">
-                    @csrf
-                    <select name="ingredient_product_id" required class="flex-1 px-2.5 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-[11px] text-neutral-800 focus:outline-none focus:border-neutral-900">
-                        <option value="">+ Pilih Bahan Baku...</option>
-                        @foreach($rawMaterials as $raw)
-                        <option value="{{ $raw->id }}">{{ $raw->name }} ({{ $raw->unit }})</option>
-                        @endforeach
-                    </select>
-
-                    <input type="number" step="0.01" name="quantity_required" placeholder="Jml" required 
-                           class="w-16 px-2 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-[11px] text-neutral-800 font-mono text-right focus:outline-none focus:border-neutral-900">
-
-                    <input type="text" name="unit" placeholder="Satuan" required 
-                           class="w-16 px-2 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-[11px] text-neutral-800 focus:outline-none focus:border-neutral-900">
-
-                    <button type="submit" class="px-2.5 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-white text-[11px] font-semibold cursor-pointer shrink-0">
-                        Tambah
-                    </button>
-                </form>
-                @endif
+                <span class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-white border border-neutral-200/80 text-neutral-600 shrink-0">
+                    {{ $barRecipeProducts->count() }} menu bar
+                </span>
             </div>
-            @endforeach
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                @foreach($barRecipeProducts as $prod)
+                @php
+                    $hpp = $prod->calculateRecipeCost();
+                    $margin = $prod->calculateGrossMargin();
+                @endphp
+                <div id="recipe-card-{{ $prod->id }}"
+                     :class="highlightedProductId === {{ $prod->id }} ? 'border-neutral-900 ring-2 ring-neutral-900/10' : 'border-neutral-200/80'"
+                     class="min-w-0 overflow-hidden p-4 sm:p-5 rounded-2xl bg-white border shadow-2xs flex flex-col justify-between gap-3.5 transition-colors duration-150">
+                    <div class="space-y-3 min-w-0">
+                        <div class="flex items-start justify-between gap-3 min-w-0">
+                            <div class="min-w-0 flex-1">
+                                <h3 class="text-sm font-bold text-neutral-900 leading-snug">{{ $prod->name }}</h3>
+                                <div class="text-[11px] font-mono text-neutral-400 mt-0.5 truncate">{{ $prod->sku }} • {{ $prod->category?->name }}</div>
+                            </div>
+                            <div class="text-right shrink-0 whitespace-nowrap tabular-nums">
+                                <div class="text-xs font-mono font-bold text-neutral-900">Rp {{ number_format($prod->selling_price, 0, ',', '.') }}</div>
+                                <div class="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">HPP: Rp {{ number_format($hpp, 0, ',', '.') }} ({{ $margin }}%)</div>
+                            </div>
+                        </div>
+
+                        <!-- Daftar Bahan Baku Resep -->
+                        <div class="space-y-1.5 pt-2.5 border-t border-neutral-100">
+                            <div class="text-[11px] font-semibold text-neutral-600 flex items-center justify-between gap-2">
+                                <span>Komposisi Bahan Baku:</span>
+                                <span class="text-[10px] text-neutral-400 shrink-0">{{ $prod->recipes->count() }} komponen</span>
+                            </div>
+
+                            @forelse($prod->recipes as $rec)
+                            @php
+                                $subCost = (float) ($rec->ingredientProduct?->cost_price ?? 0) * (float) $rec->quantity_required;
+                            @endphp
+                            <div class="flex items-center justify-between gap-2.5 p-2 rounded-xl bg-neutral-50/70 border border-neutral-200/60 text-xs min-w-0">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0"></span>
+                                    <span class="font-medium text-neutral-800 truncate" title="{{ $rec->ingredientProduct?->name ?? 'Bahan Tidak Diketahui' }}">{{ $rec->ingredientProduct?->name ?? 'Bahan Tidak Diketahui' }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 font-mono text-neutral-600 text-[11px] shrink-0 whitespace-nowrap tabular-nums">
+                                    <span>{{ (float) $rec->quantity_required }} {{ $rec->unit }}</span>
+                                    <span class="text-neutral-400 font-sans">(@ Rp {{ number_format($subCost, 0, ',', '.') }})</span>
+                                    @if($currentUser?->canManageRecipes())
+                                    <form method="POST" action="{{ route('products.recipes.destroy', $rec) }}" onsubmit="return confirm('Hapus bahan ini dari resep?');" class="inline">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="text-rose-500 hover:text-rose-700 font-bold ml-0.5 px-1 cursor-pointer" title="Hapus bahan">✕</button>
+                                    </form>
+                                    @endif
+                                </div>
+                            </div>
+                            @empty
+                            <div class="p-3 rounded-xl bg-neutral-50 border border-dashed border-neutral-200 text-center text-neutral-400 text-xs">
+                                Belum ada komposisi bahan baku yang dirumuskan.
+                            </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- Form Tambah Bahan Baku (2-Row Anti-Overflow Layout) -->
+                    @if($currentUser?->canManageRecipes())
+                    <form method="POST" action="{{ route('products.recipes.store', $prod) }}"
+                          x-data="{ selectedUnit: '' }"
+                          class="pt-3 border-t border-neutral-100 space-y-2 min-w-0">
+                        @csrf
+                        <select name="ingredient_product_id"
+                                required
+                                @change="selectedUnit = $event.target.selectedOptions[0]?.dataset.unit || ''"
+                                class="w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-800 focus:outline-none focus:border-neutral-900">
+                            <option value="">+ Pilih Bahan Baku...</option>
+                            @foreach($rawMaterials as $raw)
+                            <option value="{{ $raw->id }}" data-unit="{{ $raw->unit }}">{{ $raw->name }} ({{ $raw->unit }})</option>
+                            @endforeach
+                        </select>
+
+                        <div class="grid grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] items-center gap-2">
+                            <input type="number" step="0.01" min="0.01" name="quantity_required" placeholder="Jumlah" required 
+                                   class="w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-800 font-mono text-right focus:outline-none focus:border-neutral-900">
+
+                            <input type="text" name="unit" x-model="selectedUnit" placeholder="Satuan (gram/ml/pcs)" required 
+                                   class="w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-800 focus:outline-none focus:border-neutral-900">
+
+                            <button type="submit" class="px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer shrink-0 whitespace-nowrap transition-craft-btn active:scale-[0.97]">
+                                Tambah
+                            </button>
+                        </div>
+                    </form>
+                    @endif
+                </div>
+                @endforeach
+            </div>
         </div>
+
+        <!-- Seksi 2: BOM Kemasan & Produk Retail Siap Jual -->
+        @if($retailFinishedProducts->isNotEmpty())
+        <div class="space-y-3 pt-2">
+            <div class="flex items-center justify-between gap-2">
+                <div>
+                    <h2 class="text-sm font-bold text-neutral-900">BOM Pengemasan & Produk Retail Siap Jual</h2>
+                    <p class="text-[11px] text-neutral-500">Barang jadi kemasan (pouch/pack) diproduksi di Roastery dan dipotong per unit jadi saat checkout POS.</p>
+                </div>
+                <span class="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-purple-50 border border-purple-200/70 text-purple-800 shrink-0">
+                    {{ $retailFinishedProducts->count() }} produk retail
+                </span>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                @foreach($retailFinishedProducts as $prod)
+                @php
+                    $hpp = $prod->calculateRecipeCost();
+                    $margin = $prod->calculateGrossMargin();
+                    $bomItems = $prod->boms->flatMap(fn ($bom) => $bom->items);
+                @endphp
+                <div id="recipe-card-{{ $prod->id }}"
+                     :class="highlightedProductId === {{ $prod->id }} ? 'border-neutral-900 ring-2 ring-neutral-900/10' : 'border-neutral-200/80'"
+                     class="min-w-0 overflow-hidden p-4 sm:p-5 rounded-2xl bg-white border shadow-2xs flex flex-col justify-between gap-3.5 transition-colors duration-150">
+                    <div class="space-y-3 min-w-0">
+                        <div class="flex items-start justify-between gap-3 min-w-0">
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="text-sm font-bold text-neutral-900 leading-snug">{{ $prod->name }}</h3>
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">
+                                        Barang Jadi • {{ $prod->unit }}
+                                    </span>
+                                </div>
+                                <div class="text-[11px] font-mono text-neutral-400 mt-0.5 truncate">{{ $prod->sku }} • {{ $prod->category?->name }}</div>
+                            </div>
+                            <div class="text-right shrink-0 whitespace-nowrap tabular-nums">
+                                <div class="text-xs font-mono font-bold text-neutral-900">Rp {{ number_format($prod->selling_price, 0, ',', '.') }}</div>
+                                <div class="text-[10px] font-mono text-emerald-700 font-semibold mt-0.5">HPP: Rp {{ number_format($hpp, 0, ',', '.') }} ({{ $margin }}%)</div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-1.5 pt-2.5 border-t border-neutral-100">
+                            <div class="text-[11px] font-semibold text-neutral-600 flex items-center justify-between gap-2">
+                                <span>Komposisi BOM Kemasan Roastery:</span>
+                                <span class="text-[10px] text-neutral-400 shrink-0">{{ $bomItems->count() }} komponen</span>
+                            </div>
+
+                            @forelse($bomItems as $bomItem)
+                            @php
+                                $subCost = (float) ($bomItem->materialProduct?->cost_price ?? 0) * (float) $bomItem->quantity_required;
+                            @endphp
+                            <div class="flex items-center justify-between gap-2.5 p-2 rounded-xl bg-purple-50/40 border border-purple-200/50 text-xs min-w-0">
+                                <div class="flex items-center gap-2 min-w-0 flex-1">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-purple-500 shrink-0"></span>
+                                    <span class="font-medium text-neutral-800 truncate" title="{{ $bomItem->materialProduct?->name ?? 'Material Tidak Diketahui' }}">{{ $bomItem->materialProduct?->name ?? 'Material Tidak Diketahui' }}</span>
+                                </div>
+                                <div class="flex items-center gap-2 font-mono text-neutral-600 text-[11px] shrink-0 whitespace-nowrap tabular-nums">
+                                    <span>{{ (float) $bomItem->quantity_required }} {{ $bomItem->unit }}</span>
+                                    <span class="text-neutral-400 font-sans">(@ Rp {{ number_format($subCost, 0, ',', '.') }})</span>
+                                </div>
+                            </div>
+                            @empty
+                            <div class="p-3 rounded-xl bg-neutral-50 border border-dashed border-neutral-200 text-center text-neutral-500 text-xs">
+                                Produk siap jual tanpa BOM kemasan — stok dipotong langsung per {{ $prod->unit }} di POS.
+                            </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <div class="pt-2.5 border-t border-neutral-100 flex items-center justify-between gap-2 text-[11px] text-neutral-500">
+                        <span>Mode Pemotongan POS: <strong class="text-neutral-700">Langsung per 1 {{ $prod->unit }} jadi</strong></span>
+                        <span class="font-mono text-[10px] text-purple-700 font-semibold shrink-0">Standalone Retail</span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+        @endif
     </div>
 
     <!-- ========================================== -->
@@ -487,9 +611,9 @@
             <!-- Form Tambah Varian Cepat -->
             @if($currentUser?->canManagePricing())
             <div class="pt-3 border-t border-neutral-100">
-                <form method="POST" action="#" id="variantCreateForm" @submit.prevent="submitVariantForm" class="flex flex-col sm:flex-row items-center gap-2.5">
+                <form method="POST" action="#" id="variantCreateForm" @submit.prevent="submitVariantForm" class="grid grid-cols-1 md:grid-cols-12 items-center gap-2.5">
                     @csrf
-                    <select id="variant_product_id" required class="flex-1 px-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
+                    <select id="variant_product_id" required class="md:col-span-5 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
                         <option value="">+ Pilih Produk Induk...</option>
                         @foreach($products->where('is_raw_material', false) as $prod)
                         <option value="{{ $prod->id }}">{{ $prod->name }} (Dasar: Rp {{ number_format($prod->selling_price, 0, ',', '.') }})</option>
@@ -497,12 +621,12 @@
                     </select>
 
                     <input type="text" id="variant_name" placeholder="Nama Varian (misal: Large 12oz)" required 
-                           class="flex-1 px-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
+                           class="md:col-span-3 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
 
                     <input type="number" id="variant_price_adj" step="500" placeholder="Selisih Harga (+/- Rp)" required 
-                           class="w-36 px-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-mono text-neutral-900 text-right focus:outline-none focus:border-neutral-900">
+                           class="md:col-span-2 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-mono text-neutral-900 text-right focus:outline-none focus:border-neutral-900">
 
-                    <button type="submit" class="px-4 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer shrink-0">
+                    <button type="submit" class="md:col-span-2 w-full px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer whitespace-nowrap transition-craft-btn active:scale-[0.97]">
                         Simpan Varian
                     </button>
                 </form>
@@ -582,12 +706,12 @@
             <!-- Form Tambah Modifier -->
             @if($currentUser?->canManagePricing())
             <div class="pt-3 border-t border-neutral-100">
-                <form method="POST" action="{{ route('products.modifiers.store') }}" class="grid grid-cols-1 sm:grid-cols-6 gap-2.5">
+                <form method="POST" action="{{ route('products.modifiers.store') }}" x-data="{ modUnit: '' }" class="grid grid-cols-1 sm:grid-cols-12 gap-2.5">
                     @csrf
                     <input type="text" name="name" placeholder="Nama Ekstra (misal: Oat Milk)" required 
-                           class="sm:col-span-2 px-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
+                           class="sm:col-span-4 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
 
-                    <select name="group_name" required class="px-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
+                    <select name="group_name" required class="sm:col-span-3 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
                         <option value="Susu Alternatif">Susu Alternatif</option>
                         <option value="Sirup & Flavour">Sirup & Flavour</option>
                         <option value="Custom Shot">Custom Shot</option>
@@ -596,24 +720,26 @@
                     </select>
 
                     <input type="number" step="500" name="price" placeholder="Harga (+Rp)" required 
-                           class="px-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-mono text-neutral-900 text-right focus:outline-none focus:border-neutral-900">
+                           class="sm:col-span-2 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-mono text-neutral-900 text-right focus:outline-none focus:border-neutral-900">
 
-                    <select name="ingredient_product_id" class="px-3 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
+                    <select name="ingredient_product_id"
+                            @change="modUnit = $event.target.selectedOptions[0]?.dataset.unit || ''"
+                            class="sm:col-span-3 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
                         <option value="">Potong Bahan (Opsional)...</option>
                         @foreach($rawMaterials as $raw)
-                        <option value="{{ $raw->id }}">{{ $raw->name }}</option>
+                        <option value="{{ $raw->id }}" data-unit="{{ $raw->unit }}">{{ $raw->name }}</option>
                         @endforeach
                     </select>
 
-                    <div class="flex items-center gap-1.5">
-                        <input type="number" step="0.1" name="quantity_deducted" placeholder="Jml" 
-                               class="w-16 px-2 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-mono text-neutral-900 text-right focus:outline-none focus:border-neutral-900">
-                        <input type="text" name="unit" placeholder="Satuan" 
-                               class="w-16 px-2 py-1.5 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
-                        <button type="submit" class="px-3.5 py-1.5 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer shrink-0">
-                            Simpan
-                        </button>
-                    </div>
+                    <input type="number" step="0.1" name="quantity_deducted" placeholder="Jml Potong (Opsional)" 
+                           class="sm:col-span-4 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs font-mono text-neutral-900 text-right focus:outline-none focus:border-neutral-900">
+
+                    <input type="text" name="unit" x-model="modUnit" placeholder="Satuan (ml / gram / pcs)" 
+                           class="sm:col-span-5 w-full min-w-0 px-3 py-2 rounded-xl bg-neutral-50 border border-neutral-200 text-xs text-neutral-900 focus:outline-none focus:border-neutral-900">
+
+                    <button type="submit" class="sm:col-span-3 w-full px-4 py-2 rounded-xl bg-neutral-950 hover:bg-neutral-800 text-white text-xs font-semibold cursor-pointer whitespace-nowrap transition-craft-btn active:scale-[0.97]">
+                        Simpan Modifier
+                    </button>
                 </form>
             </div>
             @endif
@@ -678,10 +804,10 @@
     <div x-show="openProductModal" 
          x-cloak 
          class="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-neutral-900/50 backdrop-blur-xs font-sans"
-         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter="transition-[opacity,transform] ease-[cubic-bezier(0.23,1,0.32,1)] duration-200"
          x-transition:enter-start="opacity-0 scale-95"
          x-transition:enter-end="opacity-100 scale-100"
-         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave="transition-[opacity,transform] ease-out duration-150"
          x-transition:leave-start="opacity-100 scale-100"
          x-transition:leave-end="opacity-0 scale-95">
         
@@ -768,6 +894,7 @@
 function productsApp() {
     return {
         activeTab: '{{ $activeTab }}',
+        highlightedProductId: null,
         openProductModal: false,
         editingProduct: null,
         productForm: {
@@ -811,6 +938,18 @@ function productsApp() {
 
         openRecipeFor(productId, productName) {
             this.activeTab = 'recipes';
+            this.highlightedProductId = productId;
+            this.$nextTick(() => {
+                const target = document.getElementById('recipe-card-' + productId);
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+            setTimeout(() => {
+                if (this.highlightedProductId === productId) {
+                    this.highlightedProductId = null;
+                }
+            }, 2500);
         },
 
         submitVariantForm(e) {

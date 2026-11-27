@@ -60,7 +60,7 @@ class Product extends Model
     }
 
     /**
-     * Hitung estimasi HPP resep berbasis bahan baku riil.
+     * Hitung estimasi HPP resep berbasis bahan baku riil (Resep Bar atau BOM Kemasan).
      */
     public function calculateRecipeCost(): float
     {
@@ -72,6 +72,19 @@ class Product extends Model
         foreach ($this->recipes as $recipe) {
             $ingredientCost = (float) ($recipe->ingredientProduct?->cost_price ?? 0);
             $totalCost += $ingredientCost * (float) $recipe->quantity_required;
+        }
+
+        if ($totalCost > 0) {
+            return $totalCost;
+        }
+
+        if ($this->relationLoaded('boms')) {
+            foreach ($this->boms as $bom) {
+                foreach ($bom->items as $bomItem) {
+                    $materialCost = (float) ($bomItem->materialProduct?->cost_price ?? 0);
+                    $totalCost += $materialCost * (float) $bomItem->quantity_required;
+                }
+            }
         }
 
         return $totalCost > 0 ? $totalCost : (float) $this->cost_price;

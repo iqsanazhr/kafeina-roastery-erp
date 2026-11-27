@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             ProductCategorySeeder::class,
             KafeinaRealDataSeeder::class,
+            ProductModifierSeeder::class,
             SystemSettingSeeder::class,
         ]);
     }

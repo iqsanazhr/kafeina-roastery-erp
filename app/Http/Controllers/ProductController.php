@@ -26,7 +26,13 @@ class ProductController extends Controller
         $status = $request->input('status', 'all'); // all, active, inactive
         $activeTab = $request->input('tab', 'products'); // products, recipes, variants, categories
 
-        $query = Product::with(['category', 'recipes.ingredientProduct', 'variants', 'modifiers']);
+        $query = Product::with([
+            'category',
+            'recipes.ingredientProduct',
+            'boms.items.materialProduct',
+            'variants',
+            'modifiers',
+        ]);
 
         if ($search !== '') {
             $query->where(function ($q) use ($search) {

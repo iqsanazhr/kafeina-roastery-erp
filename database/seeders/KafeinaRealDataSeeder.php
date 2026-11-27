@@ -424,6 +424,15 @@ class KafeinaRealDataSeeder extends Seeder
         BomItem::updateOrCreate(['bom_id' => $bomRetailGayo->id, 'material_product_id' => $prodModels['PKG-POUCH-250G']->id], ['quantity_required' => 1.00, 'unit' => 'pcs']);
         BomItem::updateOrCreate(['bom_id' => $bomRetailGayo->id, 'material_product_id' => $prodModels['PKG-LABEL-250G']->id], ['quantity_required' => 1.00, 'unit' => 'pcs']);
 
+        $bomRetailHouse = Bom::updateOrCreate(
+            ['product_id' => $prodModels['PRD-RET-02']->id],
+            ['name' => 'Kemasan 250g Retail Signature House Blend', 'description' => 'Formula kemasan retail pouch valve house blend 250g']
+        );
+
+        BomItem::updateOrCreate(['bom_id' => $bomRetailHouse->id, 'material_product_id' => $prodModels['RAW-RB-HOUSE']->id], ['quantity_required' => 250.00, 'unit' => 'gram']);
+        BomItem::updateOrCreate(['bom_id' => $bomRetailHouse->id, 'material_product_id' => $prodModels['PKG-POUCH-250G']->id], ['quantity_required' => 1.00, 'unit' => 'pcs']);
+        BomItem::updateOrCreate(['bom_id' => $bomRetailHouse->id, 'material_product_id' => $prodModels['PKG-LABEL-250G']->id], ['quantity_required' => 1.00, 'unit' => 'pcs']);
+
         // 10. ROASTING PROFILES (STANDAR GIESEN W15A ROASTER SENTRAL)
         $profilesData = [
             'PROF-LIGHT-GYO' => [
