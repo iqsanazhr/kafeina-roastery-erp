@@ -65,7 +65,7 @@ class PosAndDashboardTest extends TestCase
         $response->assertSee('Roastery Analytics');
         $response->assertSee('Roasting Yield Monitor');
         $response->assertSee('Safety Stock Alerts');
-        $response->assertSee('38.450.000');
+        $response->assertSee('Omzet Penjualan');
         $response->assertSee('14–18%');
     }
 

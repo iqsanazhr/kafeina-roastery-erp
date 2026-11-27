@@ -95,7 +95,7 @@ class SystemSettingSeeder extends Seeder
             [
                 'group' => 'tax',
                 'key' => 'tax_pb1_rate',
-                'value' => '10.0',
+                'value' => '11.0',
                 'type' => 'decimal',
                 'label' => 'Tarif Pajak Restoran (PB1 %)',
                 'description' => 'Persentase pajak daerah yang otomatis dihitung pada setiap transaksi kasir POS.',

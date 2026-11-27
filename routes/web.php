@@ -22,14 +22,29 @@ use Illuminate\Support\Facades\Route;
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->name('login.post');
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
-Route::post('/switch-account', [AuthController::class, 'switchAccount'])->name('switch-account');
-Route::post('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
-Route::get('/switch-user/{user}', function (User $user) {
-    Auth::login($user);
-    session(['active_user_id' => $user->id]);
+Route::middleware('auth')->group(function () {
+    Route::post('/switch-account', [AuthController::class, 'switchAccount'])->name('switch-account');
+    Route::post('/profile', [AuthController::class, 'updateProfile'])->name('profile.update');
+    Route::get('/switch-user/{user}', function (User $user) {
+        $current = Auth::user();
+        $isAllowed = $current && ($current->isSuperAdmin() || session()->has('impersonator_id'));
 
-    return redirect($user->canAccessModule('dashboard') ? route('dashboard.index') : ($user->canAccessModule('pos') ? route('pos.index') : ($user->canAccessModule('roastery') ? route('roastery.index') : ($user->canAccessModule('procurement') ? route('procurement.index') : ($user->canAccessModule('qc-lab') ? route('qc-lab.index') : route('inventory.index'))))));
-})->name('switch-user.get');
+        if (! $isAllowed) {
+            abort(403, 'Akses ditolak: Alih akun hanya diizinkan untuk Super Administrator.');
+        }
+
+        if ($current->isSuperAdmin() && ! session()->has('impersonator_id')) {
+            session(['impersonator_id' => $current->id]);
+        } elseif ((int) session('impersonator_id') === $user->id) {
+            session()->forget('impersonator_id');
+        }
+
+        Auth::login($user);
+        session(['active_user_id' => $user->id]);
+
+        return redirect($user->canAccessModule('dashboard') ? route('dashboard.index') : ($user->canAccessModule('pos') ? route('pos.index') : ($user->canAccessModule('roastery') ? route('roastery.index') : ($user->canAccessModule('procurement') ? route('procurement.index') : ($user->canAccessModule('qc-lab') ? route('qc-lab.index') : route('inventory.index'))))));
+    })->name('switch-user.get');
+});
 
 // Halaman Awal Mengarah Langsung ke Login
 Route::get('/', function () {

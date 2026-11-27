@@ -65,9 +65,9 @@
 
         <!-- CARD 2: Gudang Terhubung -->
         <div class="bg-white border border-[#eaeaea] rounded-xl p-4 sm:p-5 hover:border-neutral-300 transition-colors font-sans">
-            <div class="flex items-center justify-between text-neutral-500 mb-1.5">
-                <span class="text-[11px] font-medium uppercase tracking-wider">Gudang & Hub Aktif</span>
-                <span class="text-[10px] font-mono text-neutral-400">Jaringan</span>
+            <div class="flex items-center justify-between gap-2 text-neutral-500 mb-1.5">
+                <span class="text-[11px] font-medium uppercase tracking-wider truncate">Gudang & Hub Aktif</span>
+                <span class="text-[10px] font-mono text-neutral-400 shrink-0">Jaringan</span>
             </div>
             <div class="text-2xl font-bold font-sans tabular-nums text-neutral-900 tracking-tight" x-text="warehouses.length"></div>
             <div class="text-[11px] text-neutral-400 mt-2 pt-2 border-t border-[#f5f5f5] flex items-center justify-between">

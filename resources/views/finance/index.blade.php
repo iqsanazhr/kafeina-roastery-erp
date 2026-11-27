@@ -176,7 +176,7 @@
                 </div>
 
                 <div class="py-2 flex justify-between text-neutral-400 pt-3 text-[11px] font-mono">
-                    <span class="font-sans">*Pajak Restoran PB1 11% Terkumpul:</span>
+                    <span class="font-sans">*Pajak Restoran PB1 {{ rtrim(rtrim(number_format((float) \App\Models\SystemSetting::get('tax_pb1_rate', 11), 1, '.', ''), '0'), '.') }}% Terkumpul:</span>
                     <span>Rp {{ number_format($pnl['metrics']['tax_pb1'] ?? 0, 0, ',', '.') }}</span>
                 </div>
             </div>
@@ -258,11 +258,16 @@
                             <td class="py-3.5 px-4 text-right font-mono font-bold text-neutral-950 tabular-nums">
                                 Rp {{ number_format($item['estimated_loss'], 0, ',', '.') }}
                             </td>
-                            <td class="py-3.5 px-4 text-center">
+                            <td class="py-3.5 px-4 text-center whitespace-nowrap">
+                                @php
+                                    $st = $item['status'] ?? 'OPTIMAL';
+                                    $isCritical = in_array($st, ['CRITICAL_LEAK', 'CRITICAL', 'LEAKAGE'], true);
+                                    $isWarning = $st === 'WARNING';
+                                @endphp
                                 <div class="inline-flex items-center gap-1.5 text-xs">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $item['status'] === 'LEAKAGE' || $item['status'] === 'CRITICAL' ? 'bg-rose-500 animate-pulse' : 'bg-emerald-500' }}"></span>
-                                    <span class="font-medium {{ $item['status'] === 'LEAKAGE' || $item['status'] === 'CRITICAL' ? 'text-rose-700' : 'text-neutral-600' }}">
-                                        {{ $item['status'] === 'NORMAL' ? 'Normal' : 'Selisih' }}
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $isCritical ? 'bg-rose-500 animate-pulse' : ($isWarning ? 'bg-amber-500' : 'bg-emerald-500') }}"></span>
+                                    <span class="font-medium {{ $isCritical ? 'text-rose-700' : ($isWarning ? 'text-amber-700' : 'text-emerald-700') }}">
+                                        {{ $isCritical ? 'Kebocoran' : ($isWarning ? 'Peringatan' : 'Normal') }}
                                     </span>
                                 </div>
                             </td>

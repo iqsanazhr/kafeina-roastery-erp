@@ -215,17 +215,16 @@
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse text-xs font-sans">
                     <thead>
-                        <tr class="border-b border-neutral-200 bg-neutral-50/70 text-[11px] font-semibold text-neutral-500 uppercase tracking-wider">
-                            <th class="py-3 px-4 whitespace-nowrap">Produk & SKU</th>
-                            <th class="py-3 px-4 whitespace-nowrap">Kategori</th>
-                            <th class="py-3 px-4 whitespace-nowrap">Tipe</th>
-                            <th class="py-3 px-4 text-right whitespace-nowrap">Harga Jual</th>
-                            <th class="py-3 px-4 text-right whitespace-nowrap">HPP (Est.)</th>
-                            <th class="py-3 px-4 text-center whitespace-nowrap">Gross Margin</th>
-                            <th class="py-3 px-4 text-center whitespace-nowrap">Resep / BOM</th>
-                            <th class="py-3 px-4 text-center whitespace-nowrap">Varian</th>
-                            <th class="py-3 px-4 text-center whitespace-nowrap">Status</th>
-                            <th class="py-3 px-4 text-right whitespace-nowrap">Aksi</th>
+                        <tr class="border-b border-neutral-200 bg-neutral-50/70 text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">
+                            <th class="py-2.5 px-3 whitespace-nowrap">Produk & SKU</th>
+                            <th class="py-2.5 px-3 whitespace-nowrap">Kategori & Tipe</th>
+                            <th class="py-2.5 px-3 text-right whitespace-nowrap">Harga Jual</th>
+                            <th class="py-2.5 px-3 text-right whitespace-nowrap">HPP (Est.)</th>
+                            <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Margin</th>
+                            <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Resep / BOM</th>
+                            <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Varian</th>
+                            <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Status</th>
+                            <th class="py-2.5 px-3 text-right whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100">
@@ -239,87 +238,89 @@
                             $variantsCount = $prod->variants->count();
                         @endphp
                         <tr class="hover:bg-neutral-50/70 transition-colors {{ ! $prod->is_active ? 'opacity-60 bg-neutral-50/40' : '' }}">
-                            <td class="py-3 px-4 min-w-[220px]">
-                                <div class="font-semibold text-neutral-900">{{ $prod->name }}</div>
-                                <div class="text-[11px] font-mono text-neutral-400 mt-0.5 whitespace-nowrap">{{ $prod->sku }} • Satuan: {{ $prod->unit }}</div>
+                            <td class="py-2.5 px-3 max-w-[210px]">
+                                <div class="font-semibold text-neutral-900 truncate" title="{{ $prod->name }}">{{ $prod->name }}</div>
+                                <div class="text-[10px] font-mono text-neutral-400 mt-0.5 whitespace-nowrap">{{ $prod->sku }} • {{ $prod->unit }}</div>
                             </td>
-                            <td class="py-3 px-4 whitespace-nowrap">
-                                <span class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-neutral-100 text-neutral-700 border border-neutral-200/60">
+                            <td class="py-2.5 px-3 max-w-[175px]">
+                                <div class="truncate text-[11px] font-medium text-neutral-700" title="{{ $prod->category?->name ?? 'Uncategorized' }}">
                                     {{ $prod->category?->name ?? 'Uncategorized' }}
-                                </span>
+                                </div>
+                                <div class="mt-0.5">
+                                    @if($prod->is_raw_material)
+                                    <span class="inline-flex items-center whitespace-nowrap px-1.5 py-0.2 rounded text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">Bahan Mentah</span>
+                                    @elseif($prod->unit === 'cup')
+                                    <span class="inline-flex items-center whitespace-nowrap px-1.5 py-0.2 rounded text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">Minuman Bar</span>
+                                    @else
+                                    <span class="inline-flex items-center whitespace-nowrap px-1.5 py-0.2 rounded text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">Barang Jadi</span>
+                                    @endif
+                                </div>
                             </td>
-                            <td class="py-3 px-4 whitespace-nowrap">
-                                @if($prod->is_raw_material)
-                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-50 text-blue-700 border border-blue-200/60">Bahan Mentah</span>
-                                @elseif($prod->unit === 'cup')
-                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-50 text-amber-700 border border-amber-200/60">Minuman Bar</span>
-                                @else
-                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-50 text-purple-700 border border-purple-200/60">Barang Jadi</span>
-                                @endif
-                            </td>
-                            <td class="py-3 px-4 text-right font-mono font-semibold text-neutral-900 whitespace-nowrap tabular-nums">
+                            <td class="py-2.5 px-3 text-right font-mono font-semibold text-neutral-900 whitespace-nowrap tabular-nums">
                                 @if($prod->is_raw_material)
                                 <span class="text-neutral-400">-</span>
                                 @else
                                 Rp {{ number_format($selling, 0, ',', '.') }}
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-right font-mono text-neutral-600 whitespace-nowrap tabular-nums">
+                            <td class="py-2.5 px-3 text-right font-mono text-neutral-600 whitespace-nowrap tabular-nums">
                                 Rp {{ number_format($hpp, 0, ',', '.') }}
                             </td>
-                            <td class="py-3 px-4 text-center font-mono whitespace-nowrap tabular-nums">
+                            <td class="py-2.5 px-2.5 text-center font-mono whitespace-nowrap tabular-nums">
                                 @if(! $prod->is_raw_material && $selling > 0)
-                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[10px] font-bold {{ $margin >= 60 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : ($margin >= 40 ? 'bg-amber-50 text-amber-700 border border-amber-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60') }}">
+                                    <span class="inline-flex items-center whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-bold {{ $margin >= 60 ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : ($margin >= 40 ? 'bg-amber-50 text-amber-700 border border-amber-200/60' : 'bg-rose-50 text-rose-700 border border-rose-200/60') }}">
                                         {{ $margin }}%
                                     </span>
                                 @else
                                     <span class="text-neutral-400 text-[10px]">-</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
                                 @if($prod->is_raw_material)
                                 <span class="text-neutral-400 text-[10px]">-</span>
                                 @elseif($recipesCount > 0)
                                 <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
-                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200/70 hover:bg-emerald-100 transition-colors cursor-pointer">
+                                        class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200/70 hover:bg-emerald-100 transition-colors cursor-pointer">
                                     {{ $recipesCount }} Bahan
                                 </button>
                                 @elseif($bomItemsCount > 0)
                                 <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
                                         title="Produk retail siap jual menggunakan BOM Pengemasan Roastery (dipotong per unit saat checkout POS)"
-                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[11px] font-medium bg-purple-50 text-purple-800 border border-purple-200/70 hover:bg-purple-100 transition-colors cursor-pointer">
-                                    BOM Kemasan ({{ $bomItemsCount }})
+                                        class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-medium bg-purple-50 text-purple-800 border border-purple-200/70 hover:bg-purple-100 transition-colors cursor-pointer">
+                                    BOM ({{ $bomItemsCount }})
                                 </button>
                                 @elseif($prod->unit !== 'cup')
                                 <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
                                         title="Barang jadi retail dipotong langsung per unit di POS"
-                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200/70 hover:bg-neutral-200 transition-colors cursor-pointer">
-                                    Stok Jadi (POS)
+                                        class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600 border border-neutral-200/70 hover:bg-neutral-200 transition-colors cursor-pointer">
+                                    Stok Jadi
                                 </button>
                                 @else
                                 <button type="button" @click="openRecipeFor({{ $prod->id }}, '{{ addslashes($prod->name) }}')"
-                                        class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200 transition-colors cursor-pointer">
-                                    + Atur Resep
+                                        class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-medium bg-neutral-100 text-neutral-600 hover:text-neutral-900 hover:bg-neutral-200 transition-colors cursor-pointer">
+                                    + Resep
                                 </button>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-center whitespace-nowrap">
-                                @if($variantsCount > 0)
-                                <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono bg-neutral-100 text-neutral-700">{{ $variantsCount }} varian</span>
+                            <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
+                                @if($prod->is_raw_material)
+                                <span class="text-neutral-400 text-[10px]">-</span>
+                                @elseif($variantsCount > 0)
+                                <span class="inline-flex items-center whitespace-nowrap px-1.5 py-0.5 rounded text-[10px] font-mono bg-neutral-100 text-neutral-700">{{ $variantsCount }} varian</span>
                                 @else
                                 <span class="text-neutral-400 text-[10px]">Dasar</span>
                                 @endif
                             </td>
-                            <td class="py-3 px-4 text-center whitespace-nowrap">
+                            <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
                                 <form method="POST" action="{{ route('products.toggle', $prod) }}" class="inline">
                                     @csrf
                                     <button type="submit" title="Klik untuk ubah status aktif" 
-                                            class="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 rounded-full text-[10px] font-semibold cursor-pointer transition-colors {{ $prod->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 hover:bg-emerald-100' : 'bg-neutral-100 text-neutral-500 border border-neutral-200/60 hover:bg-neutral-200' }}">
+                                            class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-full text-[10px] font-semibold cursor-pointer transition-colors {{ $prod->is_active ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60 hover:bg-emerald-100' : 'bg-neutral-100 text-neutral-500 border border-neutral-200/60 hover:bg-neutral-200' }}">
                                         {{ $prod->is_active ? 'Aktif' : 'Nonaktif' }}
                                     </button>
                                 </form>
                             </td>
-                            <td class="py-3 px-4 text-right">
+                            <td class="py-2.5 px-3 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button type="button" 
                                             @click="editProduct({{ json_encode($prod) }})"
@@ -331,7 +332,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="10" class="py-12 text-center text-neutral-400 text-xs">
+                            <td colspan="9" class="py-12 text-center text-neutral-400 text-xs">
                                 Tidak ada produk yang sesuai dengan filter pencarian.
                             </td>
                         </tr>

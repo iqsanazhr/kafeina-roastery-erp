@@ -406,11 +406,12 @@
                     </button>
                 </div>
 
-                <!-- 2. Alih Role & Akun Cepat (Real 1-Click Fast Switch) -->
+                <!-- 2. Alih Role & Akun Cepat (Super Admin / Active Impersonator Only) -->
+                @if($currentUser?->isSuperAdmin() || session()->has('impersonator_id'))
                 <div class="py-2">
                     <div class="px-4 pb-1.5 flex items-center justify-between text-[10px] font-semibold text-neutral-400 uppercase tracking-wider font-mono">
                         <span>Beralih Akun & Peran</span>
-                        <span class="text-neutral-400 font-normal">7 Role</span>
+                        <span class="text-neutral-400 font-normal">Super Admin</span>
                     </div>
                     <div class="max-h-44 overflow-y-auto px-2 space-y-0.5 custom-scrollbar">
                         @foreach($allUsers as $u)
@@ -430,6 +431,7 @@
                         @endforeach
                     </div>
                 </div>
+                @endif
 
                 <!-- 3. Tema Tampilan & Pintasan Operasional -->
                 <div class="py-1.5">
@@ -918,6 +920,8 @@
             <div class="absolute left-1/2 -translate-x-1/2 hidden sm:flex items-center justify-center font-medium text-xs sm:text-sm text-neutral-900 tracking-tight select-none">
                 @if(request()->routeIs('dashboard.*'))
                     Dasbor Eksekutif
+                @elseif(request()->routeIs('pos.orders*') || request()->routeIs('sales.*'))
+                    Riwayat Order & Penjualan
                 @elseif(request()->routeIs('pos.*'))
                     Kasir POS Touchscreen
                 @elseif(request()->routeIs('products.*'))

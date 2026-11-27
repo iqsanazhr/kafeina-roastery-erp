@@ -6,6 +6,7 @@ use App\Models\RedeemCode;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 
 class VoucherController extends Controller
@@ -81,7 +82,12 @@ class VoucherController extends Controller
             'code' => ['required', 'string', 'max:30', 'unique:redeem_codes,code'],
             'description' => ['required', 'string', 'max:255'],
             'discount_type' => ['required', 'in:PERCENTAGE,FIXED'],
-            'discount_value' => ['required', 'numeric', 'min:1'],
+            'discount_value' => [
+                'required',
+                'numeric',
+                'min:1',
+                Rule::when($request->input('discount_type') === 'PERCENTAGE', ['max:100']),
+            ],
             'min_order_amount' => ['nullable', 'numeric', 'min:0'],
             'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
             'max_redemptions' => ['nullable', 'integer', 'min:1'],
@@ -119,7 +125,12 @@ class VoucherController extends Controller
             'code' => ['required', 'string', 'max:30', 'unique:redeem_codes,code,'.$voucher->id],
             'description' => ['required', 'string', 'max:255'],
             'discount_type' => ['required', 'in:PERCENTAGE,FIXED'],
-            'discount_value' => ['required', 'numeric', 'min:1'],
+            'discount_value' => [
+                'required',
+                'numeric',
+                'min:1',
+                Rule::when($request->input('discount_type') === 'PERCENTAGE', ['max:100']),
+            ],
             'min_order_amount' => ['nullable', 'numeric', 'min:0'],
             'max_discount_amount' => ['nullable', 'numeric', 'min:0'],
             'max_redemptions' => ['nullable', 'integer', 'min:0'],

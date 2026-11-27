@@ -17,7 +17,6 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->trustProxies(at: '*');
         $middleware->validateCsrfTokens(except: [
             'api/*',
-            'pos/qris/*',
         ]);
         $middleware->alias([
             'role' => RoleMiddleware::class,

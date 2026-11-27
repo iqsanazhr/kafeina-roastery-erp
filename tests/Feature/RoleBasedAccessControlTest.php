@@ -191,4 +191,42 @@ class RoleBasedAccessControlTest extends TestCase
         $detailOtherBranch = $this->actingAs($this->cashierUser)->getJson("/pos/orders/{$otherOrder->id}");
         $detailOtherBranch->assertStatus(403)->assertJson(['success' => false]);
     }
+
+    public function test_guest_and_non_admin_cannot_hijack_super_admin_via_switch_user(): void
+    {
+        // Guest cannot use GET /switch-user/{id}
+        $this->get(route('switch-user.get', $this->superAdminUser->id))
+            ->assertRedirect(route('login'));
+
+        // Guest cannot use POST /switch-account
+        $this->post(route('switch-account'), ['user_id' => $this->superAdminUser->id])
+            ->assertRedirect(route('login'));
+
+        // Non-admin (cashier) cannot escalate via GET /switch-user/{id} or POST /switch-account
+        $this->actingAs($this->cashierUser)
+            ->get(route('switch-user.get', $this->superAdminUser->id))
+            ->assertStatus(403);
+
+        $this->actingAs($this->cashierUser)
+            ->post(route('switch-account'), ['user_id' => $this->superAdminUser->id])
+            ->assertStatus(403);
+
+        // Super Admin can legitimately switch to another user and return back
+        $this->actingAs($this->superAdminUser)
+            ->get(route('switch-user.get', $this->cashierUser->id))
+            ->assertRedirect();
+    }
+
+    public function test_roaster_cannot_create_product_directly_via_http(): void
+    {
+        $this->actingAs($this->roasterUser)
+            ->post(route('products.store'), [
+                'name' => 'Unauthorized Roaster Product',
+                'sku' => 'PRD-ROAST-UNAUTH-'.uniqid(),
+                'category_id' => 1,
+                'unit' => 'cup',
+                'selling_price' => 30000,
+            ])
+            ->assertStatus(403);
+    }
 }

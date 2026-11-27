@@ -73,10 +73,10 @@
     </div>
 
     <!-- TAB HEADER NAVIGATION (Vercel Style Clean Pill Strip) -->
-    <div class="mb-6 border-b border-[#eaeaea] flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none pb-px">
+    <div class="mb-6 border-b border-[#eaeaea] flex items-center flex-wrap gap-1 pb-px">
         <button @click="activeTab = 'branches'"
                 :class="activeTab === 'branches' ? 'border-neutral-900 text-neutral-900 font-semibold bg-white shadow-2xs' : 'border-transparent text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100/50'"
-                class="px-3.5 py-2 rounded-t-xl text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap">
+                class="px-2.5 py-2 rounded-t-xl text-[11px] flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
             </svg>
@@ -86,40 +86,40 @@
 
         <button @click="activeTab = 'warehouses'"
                 :class="activeTab === 'warehouses' ? 'border-neutral-900 text-neutral-900 font-semibold bg-white shadow-2xs' : 'border-transparent text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100/50'"
-                class="px-3.5 py-2 rounded-t-xl text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap">
+                class="px-2.5 py-2 rounded-t-xl text-[11px] flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
             </svg>
-            <span>2. Gudang & Alokasi</span>
+            <span>2. Gudang</span>
             <span class="px-1.5 py-0.2 rounded bg-neutral-100 text-[10px] font-mono text-neutral-600">{{ $warehouses->count() }}</span>
         </button>
 
         <button @click="activeTab = 'users'"
                 :class="activeTab === 'users' ? 'border-neutral-900 text-neutral-900 font-semibold bg-white shadow-2xs' : 'border-transparent text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100/50'"
-                class="px-3.5 py-2 rounded-t-xl text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap">
+                class="px-2.5 py-2 rounded-t-xl text-[11px] flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
             </svg>
-            <span>3. Staf & Hak Akses (RBAC)</span>
+            <span>3. Staf & RBAC</span>
             <span class="px-1.5 py-0.2 rounded bg-neutral-100 text-[10px] font-mono text-neutral-600">{{ $users->count() }}</span>
         </button>
 
         <button @click="activeTab = 'payment'"
                 :class="activeTab === 'payment' ? 'border-neutral-900 text-neutral-900 font-semibold bg-white shadow-2xs' : 'border-transparent text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100/50'"
-                class="px-3.5 py-2 rounded-t-xl text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap">
+                class="px-2.5 py-2 rounded-t-xl text-[11px] flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
             </svg>
-            <span>4. Pembayaran & Midtrans</span>
+            <span>4. Pembayaran & Pajak</span>
         </button>
 
         <button @click="activeTab = 'database'"
                 :class="activeTab === 'database' ? 'border-neutral-900 text-neutral-900 font-semibold bg-white shadow-2xs' : 'border-transparent text-neutral-500 hover:text-neutral-800 hover:bg-neutral-100/50'"
-                class="px-3.5 py-2 rounded-t-xl text-xs flex items-center gap-2 border-b-2 transition-all cursor-pointer whitespace-nowrap">
+                class="px-2.5 py-2 rounded-t-xl text-[11px] flex items-center gap-1.5 border-b-2 transition-colors cursor-pointer whitespace-nowrap">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"/>
             </svg>
-            <span>5. Database & Jejak Audit</span>
+            <span>5. Database & Audit</span>
             <span class="px-1.5 py-0.2 rounded bg-neutral-100 text-[10px] font-mono text-neutral-600">{{ $tableStats['audit_logs'] }}</span>
         </button>
     </div>
@@ -201,50 +201,50 @@
 
             <div class="overflow-x-auto border border-neutral-100 rounded-xl">
                 <table class="w-full text-left text-xs">
-                    <thead class="bg-neutral-50/80 text-neutral-500 uppercase tracking-wider font-semibold border-b border-neutral-200/80">
+                    <thead class="bg-neutral-50/80 text-neutral-500 uppercase tracking-wider font-semibold border-b border-neutral-200/80 text-[10px]">
                         <tr>
-                            <th class="px-4 py-3 font-medium">Kode</th>
-                            <th class="px-4 py-3 font-medium">Nama Cabang</th>
-                            <th class="px-4 py-3 font-medium">Tipe Entitas</th>
-                            <th class="px-4 py-3 font-medium">Alamat & Kontak</th>
-                            <th class="px-4 py-3 font-medium text-center">Gudang</th>
-                            <th class="px-4 py-3 font-medium text-center">Staf</th>
-                            <th class="px-4 py-3 font-medium text-center">Status</th>
-                            <th class="px-4 py-3 font-medium text-right">Aksi</th>
+                            <th class="px-3 py-2.5 font-medium whitespace-nowrap">Kode</th>
+                            <th class="px-3 py-2.5 font-medium whitespace-nowrap">Nama Cabang</th>
+                            <th class="px-3 py-2.5 font-medium whitespace-nowrap">Tipe</th>
+                            <th class="px-3 py-2.5 font-medium whitespace-nowrap">Alamat & Kontak</th>
+                            <th class="px-2.5 py-2.5 font-medium text-center whitespace-nowrap">Gudang</th>
+                            <th class="px-2.5 py-2.5 font-medium text-center whitespace-nowrap">Staf</th>
+                            <th class="px-2.5 py-2.5 font-medium text-center whitespace-nowrap">Status</th>
+                            <th class="px-3 py-2.5 font-medium text-right whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-neutral-100">
                         @foreach($branches as $branch)
                         <tr class="hover:bg-neutral-50/60 transition-colors {{ !$branch->is_active ? 'opacity-60 bg-neutral-50/30' : '' }}">
-                            <td class="px-4 py-3 font-mono font-bold text-neutral-900">{{ $branch->code }}</td>
-                            <td class="px-4 py-3">
-                                <div class="font-semibold text-neutral-900">{{ $branch->name }}</div>
+                            <td class="px-3 py-2.5 font-mono font-bold text-neutral-900 whitespace-nowrap">{{ $branch->code }}</td>
+                            <td class="px-3 py-2.5 max-w-[180px]">
+                                <div class="font-semibold text-neutral-900 truncate" title="{{ $branch->name }}">{{ $branch->name }}</div>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-3 py-2.5 whitespace-nowrap">
                                 @if($branch->type === 'CENTRAL_ROASTERY')
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-200/80">CENTRAL ROASTERY</span>
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-200/80">CENTRAL ROASTERY</span>
                                 @else
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 text-blue-900 border border-blue-200/80">RETAIL BRANCH</span>
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 text-blue-900 border border-blue-200/80">RETAIL BRANCH</span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-neutral-600 max-w-xs truncate">
-                                <div>{{ $branch->address }}</div>
-                                <div class="text-[11px] text-neutral-400 font-mono">{{ $branch->phone ?? '-' }}</div>
+                            <td class="px-3 py-2.5 text-neutral-600 max-w-[175px]">
+                                <div class="truncate" title="{{ $branch->address }}">{{ $branch->address }}</div>
+                                <div class="text-[10px] text-neutral-400 font-mono whitespace-nowrap">{{ $branch->phone ?? '-' }}</div>
                             </td>
-                            <td class="px-4 py-3 text-center font-mono font-semibold">{{ $branch->warehouses_count }}</td>
-                            <td class="px-4 py-3 text-center font-mono font-semibold">{{ $branch->users_count }}</td>
-                            <td class="px-4 py-3 text-center">
+                            <td class="px-2.5 py-2.5 text-center font-mono font-semibold whitespace-nowrap">{{ $branch->warehouses_count }}</td>
+                            <td class="px-2.5 py-2.5 text-center font-mono font-semibold whitespace-nowrap">{{ $branch->users_count }}</td>
+                            <td class="px-2.5 py-2.5 text-center whitespace-nowrap">
                                 @if($branch->is_active)
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                    <span class="inline-flex items-center whitespace-nowrap gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Aktif
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-100 text-neutral-500 border border-neutral-200">
+                                    <span class="inline-flex items-center whitespace-nowrap gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-neutral-100 text-neutral-500 border border-neutral-200">
                                         <span class="w-1.5 h-1.5 rounded-full bg-neutral-400"></span> Nonaktif
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-4 py-3 text-right">
+                            <td class="px-3 py-2.5 text-right whitespace-nowrap">
                                 <div class="flex items-center justify-end gap-1.5">
                                     <button @click="selectedBranch = {{ json_encode($branch) }}; editBranchModalOpen = true" 
                                             class="p-1.5 text-neutral-500 hover:text-black hover:bg-neutral-100 rounded-lg transition-colors cursor-pointer" title="Edit Cabang">
@@ -316,15 +316,15 @@
                                 <span class="font-mono text-neutral-400 text-[11px] mr-1">[{{ $wh->branch?->code ?? '-' }}]</span>
                                 <span>{{ $wh->branch?->name ?? 'Tidak Terikat' }}</span>
                             </td>
-                            <td class="px-4 py-3">
+                            <td class="px-4 py-3 whitespace-nowrap">
                                 @if($wh->type === 'CENTRAL_RAW')
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-200/80">CENTRAL RAW</span>
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-emerald-100 text-emerald-900 border border-emerald-200/80">CENTRAL RAW</span>
                                 @elseif($wh->type === 'CENTRAL_ROASTED')
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-200/80">CENTRAL ROASTED</span>
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-amber-100 text-amber-900 border border-amber-200/80">CENTRAL ROASTED</span>
                                 @elseif($wh->type === 'TRANSIT')
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-100 text-purple-900 border border-purple-200/80">IN-TRANSIT BUFFER</span>
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-purple-100 text-purple-900 border border-purple-200/80">IN-TRANSIT BUFFER</span>
                                 @else
-                                    <span class="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 text-blue-900 border border-blue-200/80">RETAIL BAR</span>
+                                    <span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded-md text-[10px] font-semibold bg-blue-100 text-blue-900 border border-blue-200/80">RETAIL BAR</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 text-center font-mono font-semibold">{{ $wh->stocks_count }} item</td>
@@ -384,8 +384,8 @@
                                 <div class="font-semibold text-neutral-900">{{ $u->name }}</div>
                                 <div class="text-[11px] text-neutral-500 font-mono">{{ $u->email }}</div>
                             </td>
-                            <td class="px-4 py-3">
-                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center whitespace-nowrap px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-neutral-100 text-neutral-800 border border-neutral-200">
                                     {{ $u->role?->display_name ?? $u->role?->name ?? 'No Role' }}
                                 </span>
                             </td>

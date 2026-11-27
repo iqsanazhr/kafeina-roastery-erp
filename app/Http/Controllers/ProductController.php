@@ -65,8 +65,15 @@ class ProductController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        // Data pendukung
-        $categories = ProductCategory::withCount('products')->orderBy('name')->get();
+        // Data pendukung (sembunyikan kategori legacy ALL-CAPS yang kosong agar dropdown bersih)
+        $legacyCategories = ['BEVERAGE', 'INGREDIENT', 'MERCHANDISE', 'ROASTED_BEANS'];
+        $categories = ProductCategory::withCount('products')
+            ->where(function ($q) use ($legacyCategories) {
+                $q->whereNotIn('name', $legacyCategories)
+                    ->orWhereHas('products');
+            })
+            ->orderBy('name')
+            ->get();
         $rawMaterials = Product::where('is_raw_material', true)->orderBy('name')->get();
         $modifiers = ProductModifier::with(['ingredientProduct', 'category'])->orderBy('group_name')->get();
         $allVariants = ProductVariant::with('product')->orderBy('name')->get();
@@ -104,6 +111,10 @@ class ProductController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
+        if (! $request->user()?->canManagePricing()) {
+            abort(403, 'Anda tidak memiliki wewenang untuk menambahkan produk baru.');
+        }
+
         $validated = $request->validate([
             'category_id' => 'required|exists:product_categories,id',
             'sku' => 'required|string|max:50|unique:products,sku',
@@ -165,8 +176,12 @@ class ProductController extends Controller
     /**
      * Toggle status aktif produk.
      */
-    public function toggleActive(Product $product): RedirectResponse
+    public function toggleActive(Request $request, Product $product): RedirectResponse
     {
+        if (! $request->user()?->canManagePricing()) {
+            abort(403, 'Anda tidak memiliki wewenang untuk mengubah status aktif produk.');
+        }
+
         $product->is_active = ! $product->is_active;
         $product->save();
 
@@ -320,6 +335,10 @@ class ProductController extends Controller
      */
     public function storeCategory(Request $request): RedirectResponse
     {
+        if (! $request->user()?->canManagePricing()) {
+            abort(403, 'Anda tidak memiliki wewenang untuk membuat kategori produk.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:product_categories,name',
             'description' => 'nullable|string',
@@ -336,6 +355,10 @@ class ProductController extends Controller
      */
     public function updateCategory(Request $request, ProductCategory $category): RedirectResponse
     {
+        if (! $request->user()?->canManagePricing()) {
+            abort(403, 'Anda tidak memiliki wewenang untuk mengubah kategori produk.');
+        }
+
         $validated = $request->validate([
             'name' => 'required|string|max:100|unique:product_categories,name,'.$category->id,
             'description' => 'nullable|string',

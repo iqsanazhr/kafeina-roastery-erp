@@ -432,6 +432,8 @@ class SettingsController extends Controller
                 'product_categories',
                 'products',
                 'product_recipes',
+                'product_variants',
+                'product_modifiers',
                 'boms',
                 'bom_items',
                 'inventory_warehouses',
@@ -540,7 +542,7 @@ class SettingsController extends Controller
                 fputcsv($handle, ['ID', 'SKU', 'Nama Produk', 'Kategori', 'Harga Jual', 'Status Aktif']);
                 Product::with('category')->orderBy('id')->chunk(100, function ($products) use ($handle) {
                     foreach ($products as $p) {
-                        fputcsv($handle, [$p->id, $p->sku, $p->name, $p->category?->name ?? '-', $p->price, $p->is_active ? 'Aktif' : 'Nonaktif']);
+                        fputcsv($handle, [$p->id, $p->sku, $p->name, $p->category?->name ?? '-', (float) $p->selling_price, $p->is_active ? 'Aktif' : 'Nonaktif']);
                     }
                 });
             } elseif ($type === 'audit_logs') {

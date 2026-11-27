@@ -53,14 +53,14 @@ class RoleMiddleware
 
         // 1. Validasi Autentikasi
         if (! $user) {
-            if ($request->expectsJson() || $request->is('api/*')) {
+            if ($request->expectsJson() || $request->is('api/*') || ! $request->hasSession()) {
                 return response()->json([
                     'status' => 'error',
                     'message' => 'Sesi tidak terautentikasi. Silakan masuk terlebih dahulu.',
                 ], Response::HTTP_UNAUTHORIZED);
             }
 
-            return response('Tidak terautentikasi.', Response::HTTP_UNAUTHORIZED);
+            return redirect()->guest(route('login'));
         }
 
         // 2. Validasi Status Aktif Pengguna

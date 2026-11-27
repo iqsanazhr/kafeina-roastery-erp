@@ -183,37 +183,37 @@
         <div class="overflow-x-auto">
             <table class="w-full text-left text-xs font-sans">
                 <thead>
-                    <tr class="text-neutral-400 border-b border-[#eaeaea] text-[11px] uppercase tracking-wider font-semibold bg-neutral-50/50">
-                        <th class="py-3 px-4">No. Order & Waktu</th>
-                        <th class="py-3 px-4">Cabang & Meja</th>
-                        <th class="py-3 px-4">Pelanggan</th>
-                        <th class="py-3 px-4">Menu & Rincian Item</th>
-                        <th class="py-3 px-4 text-center">Metode Bayar</th>
-                        <th class="py-3 px-4 text-right">Total Bayar</th>
-                        <th class="py-3 px-4 text-center">Status</th>
-                        <th class="py-3 px-4 text-center">Aksi</th>
+                    <tr class="text-neutral-400 border-b border-[#eaeaea] text-[10px] uppercase tracking-wider font-semibold bg-neutral-50/50">
+                        <th class="py-2.5 px-3 whitespace-nowrap">No. Order & Waktu</th>
+                        <th class="py-2.5 px-3 whitespace-nowrap">Cabang & Meja</th>
+                        <th class="py-2.5 px-3 whitespace-nowrap">Pelanggan</th>
+                        <th class="py-2.5 px-3 whitespace-nowrap">Rincian Menu</th>
+                        <th class="py-2.5 px-3 text-center whitespace-nowrap">Metode</th>
+                        <th class="py-2.5 px-3 text-right whitespace-nowrap">Total</th>
+                        <th class="py-2.5 px-3 text-center whitespace-nowrap">Status</th>
+                        <th class="py-2.5 px-3 text-center whitespace-nowrap">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-neutral-100">
                     @forelse($orders as $order)
                     <tr class="hover:bg-neutral-50/80 transition-colors group">
                         <!-- 1. No. Order & Waktu -->
-                        <td class="py-3 px-4">
-                            <div class="font-mono font-semibold text-neutral-900 flex items-center gap-1.5">
-                                <span>{{ $order->order_number }}</span>
+                        <td class="py-2.5 px-3 whitespace-nowrap">
+                            <div class="font-mono font-semibold text-neutral-900 text-[11px]">
+                                {{ $order->order_number }}
                             </div>
-                            <div class="text-[11px] text-neutral-400 font-mono mt-0.5">
-                                {{ $order->created_at->format('d M Y, H:i') }} WIB
+                            <div class="text-[10px] text-neutral-400 font-mono mt-0.5">
+                                {{ $order->created_at->format('d M Y, H:i') }}
                             </div>
                         </td>
 
                         <!-- 2. Cabang & Meja -->
-                        <td class="py-3 px-4">
-                            <div class="font-medium text-neutral-900">
+                        <td class="py-2.5 px-3 max-w-[155px]">
+                            <div class="font-medium text-neutral-900 truncate" title="{{ $order->branch?->name ?? 'Kafeina Outlet' }}">
                                 {{ $order->branch?->name ?? 'Kafeina Outlet' }}
                             </div>
-                            <div class="text-[11px] text-neutral-400 font-sans flex items-center gap-1.5 mt-0.5">
-                                <span class="px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-600 font-mono text-[10px]">
+                            <div class="text-[10px] text-neutral-400 font-sans flex items-center gap-1 mt-0.5 whitespace-nowrap">
+                                <span class="px-1.5 py-0.2 rounded bg-neutral-100 text-neutral-600 font-mono text-[9px]">
                                     {{ $order->order_type }}
                                 </span>
                                 @if($order->table_number && $order->table_number !== '-')
@@ -223,39 +223,31 @@
                         </td>
 
                         <!-- 3. Pelanggan -->
-                        <td class="py-3 px-4">
-                            <div class="font-medium text-neutral-900">
+                        <td class="py-2.5 px-3 max-w-[140px]">
+                            <div class="font-medium text-neutral-900 truncate" title="{{ $order->customer_name ?: 'Tamu Kafeina' }}">
                                 {{ $order->customer_name ?: 'Tamu Kafeina' }}
                             </div>
-                            <div class="text-[11px] text-neutral-400 font-sans mt-0.5">
-                                Kasir: {{ $order->cashier?->name ?? 'Kasir On Duty' }}
+                            <div class="text-[10px] text-neutral-400 font-sans mt-0.5 truncate">
+                                {{ explode(' (', $order->cashier?->name ?? 'Kasir')[0] }}
                             </div>
                         </td>
 
                         <!-- 4. Menu & Rincian Item -->
-                        <td class="py-3 px-4 max-w-xs">
-                            <div class="space-y-1">
+                        <td class="py-2.5 px-3 max-w-[190px]">
+                            <div class="space-y-0.5">
                                 @foreach($order->items as $item)
-                                    <div class="flex items-center justify-between text-[11px] gap-2">
+                                    <div class="flex items-center justify-between text-[11px] gap-1.5 min-w-0">
                                         <span class="text-neutral-700 truncate font-medium">
                                             <strong class="font-mono text-neutral-900">{{ $item->quantity }}x</strong> 
                                             {{ $item->product?->name ?? 'Item Menu' }}
                                         </span>
-                                        <span class="font-mono text-neutral-400 shrink-0 text-[10px]">
-                                            Rp {{ number_format($item->subtotal, 0, ',', '.') }}
-                                        </span>
                                     </div>
                                 @endforeach
                             </div>
-                            @if($order->notes)
-                                <div class="text-[10px] text-neutral-400 italic mt-1 bg-neutral-50 px-1.5 py-0.5 rounded border border-neutral-100">
-                                    Catatan: {{ $order->notes }}
-                                </div>
-                            @endif
                         </td>
 
                         <!-- 5. Metode Bayar -->
-                        <td class="py-3 px-4 text-center">
+                        <td class="py-2.5 px-3 text-center whitespace-nowrap">
                             @if($order->payment_method === 'QRIS_MIDTRANS')
                                 <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-medium bg-sky-50 text-sky-700 border border-sky-200">
                                     <svg class="w-3 h-3 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

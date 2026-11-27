@@ -42,12 +42,23 @@ class AuthController extends Controller
     }
 
     /**
-     * Fast switch account for demo and multi-role operations.
+     * Fast switch account for Super Admin multi-role supervision.
      */
     public function switchAccount(Request $request)
     {
+        $current = Auth::user();
+        if (! $current || (! $current->isSuperAdmin() && ! session()->has('impersonator_id'))) {
+            abort(403, 'Akses ditolak: Alih akun hanya diizinkan untuk Super Administrator.');
+        }
+
         $userId = $request->input('user_id');
         $user = User::with(['role', 'branch'])->findOrFail($userId);
+
+        if ($current->isSuperAdmin() && ! session()->has('impersonator_id')) {
+            session(['impersonator_id' => $current->id]);
+        } elseif ((int) session('impersonator_id') === $user->id) {
+            session()->forget('impersonator_id');
+        }
 
         Auth::login($user);
         session(['active_user_id' => $user->id]);

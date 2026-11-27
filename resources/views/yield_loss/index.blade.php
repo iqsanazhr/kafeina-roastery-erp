@@ -105,16 +105,16 @@
                         </select>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2.5">
+                    <div class="grid grid-cols-2 gap-2.5 items-end">
                         <div>
-                            <label class="block text-neutral-700 font-medium mb-1">Green Beans In (kg):</label>
+                            <label class="block text-neutral-700 font-medium mb-1 whitespace-nowrap">Green Beans In (kg):</label>
                             <input type="number" step="0.05" x-model.number="execForm.green_weight_kg" 
-                                   class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all font-mono font-bold text-sm" />
+                                   class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors font-mono font-bold text-sm" />
                         </div>
                         <div>
-                            <label class="block text-neutral-700 font-medium mb-1">Roasted Out (kg):</label>
+                            <label class="block text-neutral-700 font-medium mb-1 whitespace-nowrap">Roasted Out (kg):</label>
                             <input type="number" step="0.05" x-model.number="execForm.roasted_weight_kg" 
-                                   class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-all font-mono font-bold text-sm" />
+                                   class="w-full px-3 py-2 bg-neutral-50 hover:bg-neutral-100/70 focus:bg-white border border-neutral-200 focus:border-neutral-900 rounded-xl text-neutral-900 outline-none transition-colors font-mono font-bold text-sm" />
                         </div>
                     </div>
 
@@ -225,7 +225,7 @@
                     <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                     <span>Prinsip Kehilangan Bobot (Yield Loss Dynamics)</span>
                 </div>
-                Susut bobot sangrai terjadi akibat evaporasi kelembapan (*moisture loss*) sebesar 10–12% serta pirolisis bahan organik (reaksi Maillard & dekomposisi polisakarida) sebesar 3–6%. Susut &lt;14% mengindikasikan biji mentah (*under-developed*); susut &gt;18% mengindikasikan degradasi seluler berlebih (*over-roasted/gosong*).
+                Susut bobot sangrai terjadi akibat evaporasi kelembapan (<em>moisture loss</em>) sebesar 10–12% serta pirolisis bahan organik (reaksi Maillard &amp; dekomposisi polisakarida) sebesar 3–6%. Susut &lt;14% mengindikasikan biji mentah (<em>under-developed</em>); susut &gt;18% mengindikasikan degradasi seluler berlebih (<em>over-roasted/gosong</em>).
             </div>
         </div>
 

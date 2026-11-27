@@ -36,10 +36,10 @@
 
             <!-- SPOTLIGHT COMMAND-PALETTE DROPDOWN PANEL -->
             <div x-show="searchOpen"
-                 x-transition:enter="transition-all duration-150 ease-out"
+                 x-transition:enter="transition-[opacity,transform] duration-150 ease-out"
                  x-transition:enter-start="opacity-0 translate-y-1 scale-[0.98]"
                  x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-                 x-transition:leave="transition-all duration-100 ease-in"
+                 x-transition:leave="transition-[opacity,transform] duration-100 ease-out"
                  x-transition:leave-start="opacity-100 translate-y-0 scale-100"
                  x-transition:leave-end="opacity-0 translate-y-1 scale-[0.98]"
                  class="absolute left-0 right-0 top-full mt-2 z-50 bg-white/95 backdrop-blur-xl border border-neutral-200/90 rounded-2xl shadow-xl overflow-hidden text-xs max-h-[360px] overflow-y-auto divide-y divide-neutral-100"
@@ -200,10 +200,10 @@
                     <div class="h-full bg-neutral-300 transition-all duration-300" :style="'width: ' + ((currentKpi.cash_revenue / (currentKpi.revenue || 1)) * 100) + '%;'" title="Tunai"></div>
                     <div class="h-full bg-amber-500 transition-all duration-300" :style="'width: ' + ((currentKpi.qris_revenue / (currentKpi.revenue || 1)) * 100) + '%;'" title="QRIS"></div>
                 </div>
-                <div class="flex items-center justify-between text-[11px] font-sans tabular-nums text-neutral-500 whitespace-nowrap"
+                <div class="flex items-center justify-between gap-2 text-[11px] font-sans tabular-nums text-neutral-500 whitespace-nowrap"
                      :title="'Tunai: Rp ' + formatNumber(currentKpi.cash_revenue) + ' | QRIS: Rp ' + formatNumber(currentKpi.qris_revenue)">
-                    <span>Tunai: <b class="text-neutral-800 font-semibold" x-text="'Rp ' + (currentKpi.cash_revenue / 1000000).toFixed(1).replace('.', ',') + ' Jt'">Rp 12,3 Jt</b></span>
-                    <span>QRIS: <b class="text-amber-700 font-semibold" x-text="'Rp ' + (currentKpi.qris_revenue / 1000000).toFixed(1).replace('.', ',') + ' Jt'">Rp 26,1 Jt</b></span>
+                    <span class="truncate">Tunai: <b class="text-neutral-800 font-semibold" x-text="formatShortIdr(currentKpi.cash_revenue)">Rp 0</b></span>
+                    <span class="truncate">QRIS: <b class="text-amber-700 font-semibold" x-text="formatShortIdr(currentKpi.qris_revenue)">Rp 0</b></span>
                 </div>
             </div>
         </div>
@@ -458,8 +458,8 @@
 
                         <!-- Vertical Guideline / Crosshair on Hover -->
                         <line x-show="heroHoverIdx !== null && activeHoverPoint" 
-                              :x1="activeHoverPoint?.x" y1="0" 
-                              :x2="activeHoverPoint?.x" y2="160" 
+                              :x1="activeHoverPoint ? activeHoverPoint.x : 0" y1="0" 
+                              :x2="activeHoverPoint ? activeHoverPoint.x : 0" y2="160" 
                               :stroke="activeTheme.color" 
                               stroke-width="1.5" 
                               stroke-dasharray="3,3" 
@@ -467,14 +467,14 @@
 
                         <!-- Active Point Outer Halo when Hovered -->
                         <circle x-show="heroHoverIdx !== null && activeHoverPoint"
-                                :cx="activeHoverPoint?.x" :cy="activeHoverPoint?.y" r="8" 
+                                :cx="activeHoverPoint ? activeHoverPoint.x : 0" :cy="activeHoverPoint ? activeHoverPoint.y : 0" r="8" 
                                 :fill="activeTheme.color" 
                                 fill-opacity="0.25" 
                                 class="animate-ping" />
 
                         <!-- Active Point Circle -->
                         <circle x-show="heroHoverIdx !== null && activeHoverPoint"
-                                :cx="activeHoverPoint?.x" :cy="activeHoverPoint?.y" 
+                                :cx="activeHoverPoint ? activeHoverPoint.x : 0" :cy="activeHoverPoint ? activeHoverPoint.y : 0" 
                                 r="5" 
                                 :fill="activeTheme.color" 
                                 stroke="#ffffff" 
@@ -958,125 +958,68 @@ function dashboardApp() {
             return { path, area, points, lastPoint: last };
         },
 
-        // Dynamic Period-Aware KPIs (Hari Ini, 7 Hari, 30 Hari)
+        // Dynamic Period-Aware KPIs from Real-Time Database (Hari Ini, 7 Hari, 30 Hari)
         get currentKpi() {
             const period = this.periodFilter;
             const k = this.kpi || {};
-            const rev7dList = k.revenue_trend_7d || [
-                {day: 'Sen', val: 31.4}, {day: 'Sel', val: 33.2}, {day: 'Rab', val: 29.8},
-                {day: 'Kam', val: 34.6}, {day: 'Jum', val: 37.1}, {day: 'Sab', val: 43.5}, {day: 'Min', val: 38.45}
-            ];
-            const orders7dList = k.orders_trend_7d || [
-                {day: 'Sen', val: 395}, {day: 'Sel', val: 418}, {day: 'Rab', val: 372},
-                {day: 'Kam', val: 430}, {day: 'Jum', val: 465}, {day: 'Sab', val: 548}, {day: 'Min', val: 482}
-            ];
-            const margin7dList = k.margin_trend_7d || [
-                {day: 'Sen', val: 67.2}, {day: 'Sel', val: 67.8}, {day: 'Rab', val: 66.5},
-                {day: 'Kam', val: 68.1}, {day: 'Jum', val: 69.0}, {day: 'Sab', val: 70.4}, {day: 'Min', val: 68.4}
-            ];
+            const periods = k.periods || {};
+            const p = periods[period] || periods['7d'] || periods['today'];
 
-            const todayRev = k.daily_revenue || 38450000;
-            const todayOrders = k.transaction_count || 482;
-            const todayCash = k.cash_revenue || Math.round(todayRev * 0.32);
-            const todayQris = k.qris_revenue || (todayRev - todayCash);
-            const todayMargin = k.gross_profit_margin || 68.4;
-            const todayProfit = k.gross_profit_amount || Math.round(todayRev * (todayMargin / 100));
-            const todayAov = k.average_order_value || Math.round(todayRev / (todayOrders || 1));
-            const todayLoss = k.average_yield_loss_pct || 15.7;
-            const todayGrowth = k.growth_desc ? k.growth_desc.replace(' vs Target', '') : '+14.2%';
-
-            // 7 Days Aggregates
-            const sumRev7d = Math.round(rev7dList.reduce((acc, i) => acc + (i.val * 1000000), 0)) || (todayRev * 6.45);
-            const sumOrders7d = orders7dList.reduce((acc, i) => acc + i.val, 0) || (todayOrders * 6.45);
-            const avgMargin7d = Math.round((margin7dList.reduce((acc, i) => acc + i.val, 0) / margin7dList.length) * 10) / 10 || 68.1;
-            const profit7d = Math.round(sumRev7d * (avgMargin7d / 100));
-            const aov7d = Math.round(sumRev7d / (sumOrders7d || 1));
-            const cash7d = Math.round(sumRev7d * (todayCash / (todayRev || 1)));
-            const qris7d = sumRev7d - cash7d;
-
-            // 30 Days Aggregates (Monthly Scale)
-            const sumRev30d = Math.round(sumRev7d * 4.37);
-            const sumOrders30d = Math.round(sumOrders7d * 4.37);
-            const avgMargin30d = 68.3;
-            const profit30d = Math.round(sumRev30d * (avgMargin30d / 100));
-            const aov30d = Math.round(sumRev30d / (sumOrders30d || 1));
-            const cash30d = Math.round(sumRev30d * (todayCash / (todayRev || 1)));
-            const qris30d = sumRev30d - cash30d;
-
-            if (period === 'today') {
+            if (p) {
                 return {
-                    revenue: todayRev,
-                    cash_revenue: todayCash,
-                    qris_revenue: todayQris,
-                    orders: todayOrders,
-                    orders_badge: 'Puncak: 19:00',
-                    margin: todayMargin,
-                    profit: todayProfit,
-                    aov: todayAov,
-                    yield_loss: todayLoss,
-                    yield_rate: (100 - todayLoss).toFixed(1) + '%',
-                    growth: todayGrowth,
-                };
-            } else if (period === '30d') {
-                return {
-                    revenue: sumRev30d,
-                    cash_revenue: cash30d,
-                    qris_revenue: qris30d,
-                    orders: sumOrders30d,
-                    orders_badge: 'Puncak: Pekan 3',
-                    margin: avgMargin30d,
-                    profit: profit30d,
-                    aov: aov30d,
-                    yield_loss: 15.8,
-                    yield_rate: '84.2%',
-                    growth: '+15.4%',
-                };
-            } else {
-                // Default 7d
-                return {
-                    revenue: sumRev7d,
-                    cash_revenue: cash7d,
-                    qris_revenue: qris7d,
-                    orders: sumOrders7d,
-                    orders_badge: 'Puncak: Sab (548)',
-                    margin: avgMargin7d,
-                    profit: profit7d,
-                    aov: aov7d,
-                    yield_loss: 15.6,
-                    yield_rate: '84.4%',
-                    growth: '+11.8%',
+                    revenue: Number(p.revenue || 0),
+                    cash_revenue: Number(p.cash_revenue || 0),
+                    qris_revenue: Number(p.qris_revenue || 0),
+                    orders: Number(p.orders || 0),
+                    orders_badge: p.orders_badge || 'Live DB',
+                    margin: Number(p.margin || 0),
+                    profit: Number(p.profit || 0),
+                    aov: Number(p.aov || 0),
+                    yield_loss: Number(p.yield_loss || k.average_yield_loss_pct || 0),
+                    yield_rate: p.yield_rate || ((100 - Number(k.average_yield_loss_pct || 0)).toFixed(1) + '%'),
+                    growth: p.growth || 'Live DB',
                 };
             }
+
+            return {
+                revenue: Number(k.daily_revenue || 0),
+                cash_revenue: Number(k.cash_revenue || 0),
+                qris_revenue: Number(k.qris_revenue || 0),
+                orders: Number(k.transaction_count || 0),
+                orders_badge: 'Live DB',
+                margin: Number(k.gross_profit_margin || 0),
+                profit: Number(k.gross_profit_amount || 0),
+                aov: Number(k.average_order_value || 0),
+                yield_loss: Number(k.average_yield_loss_pct || 0),
+                yield_rate: (100 - Number(k.average_yield_loss_pct || 0)).toFixed(1) + '%',
+                growth: 'Live DB',
+            };
         },
 
         get sparkLabels() {
             if (this.periodFilter === 'today') {
-                return ['08:00', '10:00', '12:00', '15:00', '18:00', '20:00', '22:00'];
+                const hourly = this.kpi?.hourly_revenue || [];
+                return hourly.length ? hourly.slice(0, 7).map(h => h.hour) : ['07:00', '09:00', '11:00', '13:00', '15:00', '17:00', '19:00'];
             }
             if (this.periodFilter === '30d') {
-                return ['01-05', '06-10', '11-15', '16-20', '21-25', '26-30'];
+                const buckets = this.kpi?.trend_30d || [];
+                return buckets.length ? buckets.map(b => b.label) : ['P1', 'P2', 'P3', 'P4', 'P5', 'P6'];
             }
-            return ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+            const days7 = this.kpi?.revenue_trend_7d || [];
+            return days7.length ? days7.map(d => d.day) : ['H-6', 'H-5', 'H-4', 'H-3', 'H-2', 'H-1', 'Ini'];
         },
 
         get revenueSpark() {
             let vals = [];
             if (this.periodFilter === 'today') {
                 const hourly = this.kpi?.hourly_revenue || [];
-                if (hourly.length >= 7) {
-                    vals = hourly.slice(0, 7).map(h => h.val);
-                } else {
-                    vals = [2.1, 3.8, 5.4, 4.2, 6.5, 9.8, 6.65];
-                }
+                vals = hourly.length ? hourly.slice(0, 7).map(h => Number(h.val || 0)) : [0, 0, 0, 0, 0, 0, 0];
             } else if (this.periodFilter === '30d') {
-                const scale = (this.currentKpi.revenue / 1084200000) || 1;
-                vals = [162.5, 174.2, 181.0, 178.4, 193.6, 194.5].map(v => Math.round(v * scale * 10) / 10);
+                const buckets = this.kpi?.trend_30d || [];
+                vals = buckets.length ? buckets.map(b => Number(b.rev || 0)) : [0, 0, 0, 0, 0, 0];
             } else {
-                const list = this.kpi?.revenue_trend_7d || [
-                    {day: 'Sen', val: 31.4}, {day: 'Sel', val: 33.2}, {day: 'Rab', val: 29.8},
-                    {day: 'Kam', val: 34.6}, {day: 'Jum', val: 37.1}, {day: 'Sab', val: 43.5}, {day: 'Min', val: 38.45}
-                ];
-                vals = list.map(i => i.val);
+                const list = this.kpi?.revenue_trend_7d || [];
+                vals = list.length ? list.map(i => Number(i.val || 0)) : [0, 0, 0, 0, 0, 0, 0];
             }
             return this.calculateCurve(vals, 160, 44, 6, 32);
         },
@@ -1085,36 +1028,20 @@ function dashboardApp() {
             let list = [];
             if (this.periodFilter === 'today') {
                 const hourly = this.kpi?.hourly_revenue || [];
-                if (hourly.length >= 7) {
-                    list = hourly.slice(0, 7).map((h, i) => ({ day: this.sparkLabels[i] || h.hour, val: h.orders || 40 }));
-                } else {
-                    list = [
-                        {day: '08:00', val: 28}, {day: '10:00', val: 48}, {day: '12:00', val: 68},
-                        {day: '15:00', val: 52}, {day: '18:00', val: 82}, {day: '20:00', val: 124}, {day: '22:00', val: 80}
-                    ];
-                }
+                list = hourly.slice(0, 7).map(h => ({ day: h.hour, val: Number(h.orders || 0) }));
             } else if (this.periodFilter === '30d') {
-                const scale = (this.currentKpi.orders / 13840) || 1;
-                list = [
-                    {day: '01-05', val: Math.round(2050 * scale)},
-                    {day: '06-10', val: Math.round(2210 * scale)},
-                    {day: '11-15', val: Math.round(2305 * scale)},
-                    {day: '16-20', val: Math.round(2270 * scale)},
-                    {day: '21-25', val: Math.round(2460 * scale)},
-                    {day: '26-30', val: Math.round(2545 * scale)},
-                ];
+                const buckets = this.kpi?.trend_30d || [];
+                list = buckets.map(b => ({ day: b.label, val: Number(b.orders || 0) }));
             } else {
-                list = this.kpi?.orders_trend_7d || [
-                    {day: 'Sen', val: 395}, {day: 'Sel', val: 418}, {day: 'Rab', val: 372},
-                    {day: 'Kam', val: 430}, {day: 'Jum', val: 465}, {day: 'Sab', val: 548}, {day: 'Min', val: 482}
-                ];
+                const days7 = this.kpi?.orders_trend_7d || [];
+                list = days7.map(i => ({ day: i.day, val: Number(i.val || 0) }));
             }
 
-            const max = Math.max(...list.map(i => i.val)) || 1;
+            const max = Math.max(...list.map(i => i.val), 1);
             const chartH = 34;
 
             return list.map((item, i) => {
-                const h = Math.max(6, Math.round(((item.val / max) * chartH)));
+                const h = item.val > 0 ? Math.max(6, Math.round((item.val / max) * chartH)) : 3;
                 const isCurrent = i === list.length - 1;
                 return {
                     day: item.day,
@@ -1127,20 +1054,16 @@ function dashboardApp() {
 
         get marginSpark() {
             let vals = [];
-            if (this.periodFilter === 'today') {
-                vals = [66.5, 67.2, 68.0, 67.8, 68.5, 69.2, 68.4];
-            } else if (this.periodFilter === '30d') {
-                vals = [67.8, 68.1, 68.5, 67.9, 68.6, 68.3];
+            if (this.periodFilter === '30d') {
+                const buckets = this.kpi?.trend_30d || [];
+                vals = buckets.length ? buckets.map(b => Number(b.margin || 0)) : [0, 0, 0, 0, 0, 0];
             } else {
-                const list = this.kpi?.margin_trend_7d || [
-                    {day: 'Sen', val: 67.2}, {day: 'Sel', val: 67.8}, {day: 'Rab', val: 66.5},
-                    {day: 'Kam', val: 68.1}, {day: 'Jum', val: 69.0}, {day: 'Sab', val: 70.4}, {day: 'Min', val: 68.4}
-                ];
-                vals = list.map(i => i.val);
+                const list = this.kpi?.margin_trend_7d || [];
+                vals = list.length ? list.map(i => Number(i.val || 0)) : [0, 0, 0, 0, 0, 0, 0];
             }
             const curve = this.calculateCurve(vals, 160, 44, 6, 30);
-            const min = Math.min(...vals, 64.0);
-            const max = Math.max(...vals, 72.0);
+            const min = Math.min(...vals, 60.0);
+            const max = Math.max(...vals, 75.0);
             const targetY = (6 + 30) - (((65.0 - min) / ((max - min) || 1)) * 30);
             return {
                 ...curve,
@@ -1149,7 +1072,7 @@ function dashboardApp() {
         },
 
         get yieldBandLeft() {
-            const val = parseFloat(this.currentKpi.yield_loss) || 15.7;
+            const val = parseFloat(this.currentKpi.yield_loss) || 15.5;
             const pct = Math.max(5, Math.min(95, ((val - 10.0) / 12.0) * 100));
             return Math.round(pct * 10) / 10;
         },
@@ -1198,207 +1121,138 @@ function dashboardApp() {
             };
         },
 
-        // Hero Chart Logic with Period Awareness & Rich Context
+        // Hero Chart Logic powered by 100% Real-Time Database Aggregates & Dynamic Calendar Dates
         get heroRawData() {
             const p = this.periodFilter;
             const m = this.heroMetric;
 
-            // 1. TODAY DATASET
+            // 1. TODAY DATASET (Real Today Hourly Slots)
             if (p === 'today') {
-                const hourly = this.kpi?.hourly_revenue || [
-                    {hour: '07:00', val: 1.8, orders: 24},
-                    {hour: '09:00', val: 3.5, orders: 45},
-                    {hour: '11:00', val: 5.6, orders: 72},
-                    {hour: '13:00', val: 4.8, orders: 60},
-                    {hour: '15:00', val: 4.2, orders: 53},
-                    {hour: '17:00', val: 5.1, orders: 65},
-                    {hour: '19:00', val: 9.8, orders: 125},
-                    {hour: '21:00', val: 3.65, orders: 38},
-                ];
-                const titles = [
-                    '07:00 - 09:00 (Sarapan Pagi)',
-                    '09:00 - 11:00 (WFC Coffee Break)',
-                    '11:00 - 13:00 (Makan Siang)',
-                    '13:00 - 15:00 (Afternoon Chill)',
-                    '15:00 - 17:00 (Coffee & Pastry)',
-                    '17:00 - 19:00 (Sunset Hangout)',
-                    '19:00 - 21:00 (EVENING PRIME PEAK)',
-                    '21:00 - 23:00 (Late Night Closing)'
-                ];
-                const statuses = ['Sarapan', 'WFC Ramai', 'Makan Siang', 'Takeaway', 'Santai Sore', 'Kopi Sore', 'PUNCAK TERPADAT', 'Closing'];
-                const favs = [
-                    'Americano & Espresso', 'Cafe Latte & Croissant', 'V60 Pour Over & Lunch',
-                    'Iced Caramel Macchiato', 'Matcha Latte & Brownies', 'Specialty Filter Beans',
-                    'Signature Cold Drip & Dessert', 'Decaf Coffee & Tea'
-                ];
-
+                const hourly = this.kpi?.hourly_revenue || [];
                 if (m === 'revenue') {
-                    return hourly.map((i, idx) => {
-                        const cashVal = (i.val * 0.32).toFixed(1).replace('.', ',');
-                        const qrisVal = (i.val * 0.68).toFixed(1).replace('.', ',');
-                        return {
-                            label: i.hour,
-                            val: i.val,
-                            fullTitle: titles[idx] || (i.hour + ' WIB (Hari Ini)'),
-                            status: statuses[idx] || 'Normal',
-                            displayVal: 'Rp ' + i.val.toFixed(2).replace('.', ',') + ' Juta',
-                            detail1Label: 'Pembayaran QRIS (68%):',
-                            detail1Val: 'Rp ' + qrisVal + ' Jt',
-                            detail2Label: 'Tunai Kasir (32%):',
-                            detail2Val: 'Rp ' + cashVal + ' Jt',
-                        };
-                    });
+                    return hourly.map(i => ({
+                        label: i.hour,
+                        val: Number(i.val || 0),
+                        fullTitle: i.title || (i.hour + ' WIB (Hari Ini)'),
+                        status: i.orders > 0 ? 'Aktif' : 'Belum Ada Order',
+                        displayVal: this.formatShortIdr(i.raw_revenue || 0),
+                        detail1Label: 'QRIS & Transfer:',
+                        detail1Val: this.formatShortIdr(i.qris_revenue || 0),
+                        detail2Label: 'Tunai Kasir:',
+                        detail2Val: this.formatShortIdr(i.cash_revenue || 0),
+                    }));
                 }
                 if (m === 'orders') {
-                    return hourly.map((i, idx) => {
-                        const aovVal = Math.round((i.val * 1000000) / (i.orders || 1));
+                    return hourly.map(i => {
+                        const aovVal = i.orders > 0 ? Math.round((i.raw_revenue || 0) / i.orders) : 0;
                         return {
                             label: i.hour,
-                            val: i.orders,
-                            fullTitle: titles[idx] || (i.hour + ' WIB (Hari Ini)'),
-                            status: statuses[idx] || 'Normal',
-                            displayVal: i.orders + ' Struk POS',
+                            val: Number(i.orders || 0),
+                            fullTitle: i.title || (i.hour + ' WIB (Hari Ini)'),
+                            status: i.orders > 0 ? 'Tercatat' : 'Sepi',
+                            displayVal: (i.orders || 0) + ' Struk POS',
                             detail1Label: 'Rata-Rata Transaksi:',
                             detail1Val: 'Rp ' + this.formatNumber(aovVal) + ' / Struk',
-                            detail2Label: 'Menu Terlaris:',
-                            detail2Val: favs[idx] || 'Signature Coffee',
+                            detail2Label: 'Total Omzet Sesi:',
+                            detail2Val: this.formatShortIdr(i.raw_revenue || 0),
                         };
                     });
                 }
-                // hourly / rush hour
-                return hourly.map((i, idx) => ({
+                return hourly.map(i => ({
                     label: i.hour,
-                    val: i.val,
-                    fullTitle: titles[idx] || (i.hour + ' WIB'),
-                    status: statuses[idx] || 'Aktif',
-                    displayVal: 'Rp ' + i.val.toFixed(2).replace('.', ',') + ' Juta',
-                    detail1Label: 'Menu Paling Laris:',
-                    detail1Val: favs[idx] || 'Signature Coffee',
-                    detail2Label: 'Volume Penjualan:',
-                    detail2Val: i.orders + ' Cup Minuman',
+                    val: Number(i.val || 0),
+                    fullTitle: i.title || (i.hour + ' WIB'),
+                    status: i.orders > 0 ? 'Aktif' : 'Standby',
+                    displayVal: this.formatShortIdr(i.raw_revenue || 0),
+                    detail1Label: 'Volume Struk:',
+                    detail1Val: (i.orders || 0) + ' Transaksi',
+                    detail2Label: 'Non-Tunai:',
+                    detail2Val: this.formatShortIdr(i.qris_revenue || 0),
                 }));
             }
 
-            // 2. 30 DAYS DATASET (5-Day Buckets)
+            // 2. 30 DAYS DATASET (Real 6 x 5-Day Calendar Buckets)
             if (p === '30d') {
-                const scaleRev = (this.currentKpi.revenue / 1084200000) || 1;
-                const scaleOrders = (this.currentKpi.orders / 13840) || 1;
-                const periods = [
-                    {label: '01-05', fullTitle: '01 - 05 Nov 2026', rev: 162.5 * scaleRev, orders: Math.round(2050 * scaleOrders), status: 'Awal Bulan'},
-                    {label: '06-10', fullTitle: '06 - 10 Nov 2026', rev: 174.2 * scaleRev, orders: Math.round(2210 * scaleOrders), status: 'Tumbuh +7.2%'},
-                    {label: '11-15', fullTitle: '11 - 15 Nov 2026', rev: 181.0 * scaleRev, orders: Math.round(2305 * scaleOrders), status: 'Mid-Month Stabil'},
-                    {label: '16-20', fullTitle: '16 - 20 Nov 2026', rev: 178.4 * scaleRev, orders: Math.round(2270 * scaleOrders), status: 'Konsisten'},
-                    {label: '21-25', fullTitle: '21 - 25 Nov 2026', rev: 193.6 * scaleRev, orders: Math.round(2460 * scaleOrders), status: 'Payday Rush'},
-                    {label: '26-30', fullTitle: '26 - 30 Nov 2026', rev: 194.5 * scaleRev, orders: Math.round(2545 * scaleOrders), status: 'PUNCAK BULAN'},
-                ];
-
+                const periods = this.kpi?.trend_30d || [];
                 if (m === 'revenue') {
-                    return periods.map(i => {
-                        const cashVal = (i.rev * 0.32).toFixed(1).replace('.', ',');
-                        const qrisVal = (i.rev * 0.68).toFixed(1).replace('.', ',');
-                        return {
-                            label: i.label,
-                            val: Math.round(i.rev * 10) / 10,
-                            fullTitle: i.fullTitle,
-                            status: i.status,
-                            displayVal: 'Rp ' + (Math.round(i.rev * 10) / 10).toFixed(1).replace('.', ',') + ' Jt',
-                            detail1Label: 'Pembayaran QRIS (68%):',
-                            detail1Val: 'Rp ' + qrisVal + ' Jt',
-                            detail2Label: 'Tunai Kasir (32%):',
-                            detail2Val: 'Rp ' + cashVal + ' Jt',
-                        };
-                    });
+                    return periods.map(i => ({
+                        label: i.label,
+                        val: Number(i.rev || 0),
+                        fullTitle: i.full_title || i.label,
+                        status: i.orders > 0 ? (i.orders + ' Struk') : 'Tanpa Order',
+                        displayVal: this.formatShortIdr(i.raw_revenue || 0),
+                        detail1Label: 'QRIS & Transfer:',
+                        detail1Val: this.formatShortIdr(i.qris_revenue || 0),
+                        detail2Label: 'Tunai Kasir:',
+                        detail2Val: this.formatShortIdr(i.cash_revenue || 0),
+                    }));
                 }
                 if (m === 'orders') {
-                    return periods.map(i => {
-                        const aovVal = Math.round((i.rev * 1000000) / (i.orders || 1));
-                        return {
-                            label: i.label,
-                            val: i.orders,
-                            fullTitle: i.fullTitle,
-                            status: i.status,
-                            displayVal: this.formatNumber(i.orders) + ' Struk POS',
-                            detail1Label: 'Rata-Rata Transaksi:',
-                            detail1Val: 'Rp ' + this.formatNumber(aovVal) + ' / Struk',
-                            detail2Label: 'Hari Operasional:',
-                            detail2Val: '5 Hari Kerja',
-                        };
-                    });
+                    return periods.map(i => ({
+                        label: i.label,
+                        val: Number(i.orders || 0),
+                        fullTitle: i.full_title || i.label,
+                        status: '5 Hari',
+                        displayVal: this.formatNumber(i.orders || 0) + ' Struk POS',
+                        detail1Label: 'Rata-Rata Transaksi:',
+                        detail1Val: 'Rp ' + this.formatNumber(i.aov || 0) + ' / Struk',
+                        detail2Label: 'Total Omzet:',
+                        detail2Val: this.formatShortIdr(i.raw_revenue || 0),
+                    }));
                 }
-                // hourly across 30 days
-                return (this.kpi?.hourly_revenue || []).map((i, idx) => ({
+                const hourly30 = this.kpi?.hourly_revenue_30d || this.kpi?.hourly_revenue || [];
+                const total30 = Math.max(1, hourly30.reduce((s, x) => s + Number(x.raw_revenue || 0), 0));
+                return hourly30.map(i => ({
                     label: i.hour,
-                    val: i.val,
-                    fullTitle: (i.hour + ' WIB (Rata-rata 30 Hari)'),
+                    val: Number(i.val || 0),
+                    fullTitle: (i.title || i.hour + ' WIB') + ' (30 Hari)',
                     status: '30 Hari',
-                    displayVal: 'Rp ' + (i.val * 4.3).toFixed(1).replace('.', ',') + ' Jt',
-                    detail1Label: 'Rata-rata Sesi:',
-                    detail1Val: (i.orders * 4) + ' Cup Minuman',
+                    displayVal: this.formatShortIdr(i.raw_revenue || 0),
+                    detail1Label: 'Total Transaksi:',
+                    detail1Val: (i.orders || 0) + ' Struk',
                     detail2Label: 'Kontribusi Omzet:',
-                    detail2Val: ((i.val / 38.45) * 100).toFixed(1) + '%',
+                    detail2Val: (((i.raw_revenue || 0) / total30) * 100).toFixed(1) + '%',
                 }));
             }
 
-            // 3. 7 DAYS DATASET (Default)
+            // 3. 7 DAYS DATASET (Real Last 7 Calendar Days)
             if (m === 'revenue') {
-                const dates = ['Senin, 02 Nov', 'Selasa, 03 Nov', 'Rabu, 04 Nov', 'Kamis, 05 Nov', 'Jumat, 06 Nov', 'Sabtu, 07 Nov', 'Minggu, 08 Nov (Hari Ini)'];
-                const statuses = ['Awal Pekan', 'Tumbuh +5.7%', 'Midweek Stabil', 'Ramai Sore', 'Awal Akhir Pekan', 'PUNCAK PEKAN', 'Hari Ini (Aktif)'];
-                return (this.kpi?.revenue_trend_7d || []).map((i, idx) => {
-                    const cashVal = (i.val * 0.32).toFixed(1).replace('.', ',');
-                    const qrisVal = (i.val * 0.68).toFixed(1).replace('.', ',');
-                    return {
-                        label: i.day,
-                        val: i.val,
-                        fullTitle: dates[idx] || (i.day + ' • Pekan Ini'),
-                        status: statuses[idx] || 'Normal',
-                        displayVal: 'Rp ' + i.val.toFixed(2).replace('.', ',') + ' Juta',
-                        detail1Label: 'Pembayaran QRIS (68%):',
-                        detail1Val: 'Rp ' + qrisVal + ' Jt',
-                        detail2Label: 'Tunai Kasir (32%):',
-                        detail2Val: 'Rp ' + cashVal + ' Jt',
-                    };
-                });
+                return (this.kpi?.revenue_trend_7d || []).map((i, idx, arr) => ({
+                    label: i.day,
+                    val: Number(i.val || 0),
+                    fullTitle: i.full_date || i.day,
+                    status: idx === arr.length - 1 ? 'Hari Ini' : 'Live DB',
+                    displayVal: this.formatShortIdr(i.raw_revenue || 0),
+                    detail1Label: 'QRIS & Transfer:',
+                    detail1Val: this.formatShortIdr(i.qris_revenue || 0),
+                    detail2Label: 'Tunai Kasir:',
+                    detail2Val: this.formatShortIdr(i.cash_revenue || 0),
+                }));
             }
             if (m === 'orders') {
-                const dates = ['Senin, 02 Nov', 'Selasa, 03 Nov', 'Rabu, 04 Nov', 'Kamis, 05 Nov', 'Jumat, 06 Nov', 'Sabtu, 07 Nov', 'Minggu, 08 Nov (Hari Ini)'];
-                const statuses = ['Normal', 'Normal', 'Stabil', 'Ramai', 'Ramai Malam', 'PUNCAK STRUK', 'Hari Ini'];
-                return (this.kpi?.orders_trend_7d || []).map((i, idx) => {
-                    return {
-                        label: i.day,
-                        val: i.val,
-                        fullTitle: dates[idx] || (i.day + ' • Transaksi'),
-                        status: statuses[idx] || 'Normal',
-                        displayVal: i.val + ' Struk POS',
-                        detail1Label: 'Rata-Rata Transaksi:',
-                        detail1Val: 'Rp 79.771 / Struk',
-                        detail2Label: 'Sesi Kasir Aktif:',
-                        detail2Val: '2 Shift Barista',
-                    };
-                });
+                return (this.kpi?.orders_trend_7d || []).map((i, idx, arr) => ({
+                    label: i.day,
+                    val: Number(i.val || 0),
+                    fullTitle: i.full_date || i.day,
+                    status: idx === arr.length - 1 ? 'Hari Ini' : 'Live DB',
+                    displayVal: (i.val || 0) + ' Struk POS',
+                    detail1Label: 'Rata-Rata Transaksi:',
+                    detail1Val: 'Rp ' + this.formatNumber(i.aov || 0) + ' / Struk',
+                    detail2Label: 'Sumber Data:',
+                    detail2Val: 'Database POS Real-Time',
+                }));
             }
-            // hourly
-            const titles = [
-                '07:00 - 09:00 (Morning Rush)', '09:00 - 11:00 (WFC Coffee Break)',
-                '11:00 - 13:00 (Lunch Meeting)', '13:00 - 15:00 (Afternoon Chill)',
-                '15:00 - 17:00 (Coffee & Pastry)', '17:00 - 19:00 (Sunset Hangout)',
-                '19:00 - 21:00 (EVENING PRIME PEAK)', '21:00 - 23:00 (Late Night Closing)'
-            ];
-            const favs = [
-                'Americano & Espresso', 'Cafe Latte & Croissant', 'V60 Pour Over & Lunch',
-                'Iced Caramel Macchiato', 'Matcha Latte & Brownies', 'Specialty Filter Beans',
-                'Signature Cold Drip & Dessert', 'Decaf Coffee & Tea'
-            ];
-            const statuses = ['Sarapan', 'WFC Ramai', 'Makan Siang', 'Takeaway', 'Santai Sore', 'Kopi Sore', 'PUNCAK TERPADAT', 'Closing'];
-            return (this.kpi?.hourly_revenue || []).map((i, idx) => ({
+            const hourly = this.kpi?.hourly_revenue || [];
+            return hourly.map(i => ({
                 label: i.hour,
-                val: i.val,
-                fullTitle: titles[idx] || (i.hour + ' WIB'),
-                status: statuses[idx] || 'Aktif',
-                displayVal: 'Rp ' + i.val.toFixed(2).replace('.', ',') + ' Juta',
-                detail1Label: 'Menu Paling Laris:',
-                detail1Val: favs[idx] || 'Signature Coffee',
-                detail2Label: 'Volume Penjualan:',
-                detail2Val: i.orders + ' Cup Minuman',
+                val: Number(i.val || 0),
+                fullTitle: i.title || (i.hour + ' WIB'),
+                status: i.orders > 0 ? 'Aktif' : 'Standby',
+                displayVal: this.formatShortIdr(i.raw_revenue || 0),
+                detail1Label: 'Volume Transaksi:',
+                detail1Val: (i.orders || 0) + ' Struk POS',
+                detail2Label: 'QRIS & Transfer:',
+                detail2Val: this.formatShortIdr(i.qris_revenue || 0),
             }));
         },
 
@@ -1742,6 +1596,17 @@ function dashboardApp() {
         formatNumber(val) {
             if (!val || isNaN(val)) return '0';
             return new Intl.NumberFormat('id-ID').format(Math.round(val));
+        },
+
+        formatShortIdr(val) {
+            const n = Number(val || 0);
+            if (n >= 1000000) {
+                return 'Rp ' + (n / 1000000).toFixed(2).replace('.', ',') + ' Jt';
+            }
+            if (n >= 1000) {
+                return 'Rp ' + Math.round(n / 1000).toLocaleString('id-ID') + ' Rb';
+            }
+            return 'Rp ' + this.formatNumber(n);
         }
     };
 }

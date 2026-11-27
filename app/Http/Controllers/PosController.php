@@ -13,9 +13,11 @@ use App\Models\ProductRecipe;
 use App\Models\RecipeDeduction;
 use App\Models\RedeemCode;
 use App\Models\StockCard;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\WarehouseStock;
 use App\Services\MidtransQrisService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -768,8 +770,86 @@ class PosController extends Controller
             default => 'senopati',
         };
 
+        // Synchronize live master products from DB (name, price, active status, variants, modifiers)
+        $dbProducts = Product::with(['category', 'variants', 'modifiers', 'recipes.ingredientProduct'])
+            ->where('is_raw_material', false)
+            ->get()
+            ->keyBy('sku');
+
+        $syncedProducts = [];
+        foreach ($products as $item) {
+            $dbProd = $dbProducts->get($item['id']);
+            if ($dbProd && ! $dbProd->is_active) {
+                continue;
+            }
+            if ($dbProd) {
+                $item['name'] = $dbProd->name;
+                $item['price'] = (float) $dbProd->selling_price;
+                if ($dbProd->variants->isNotEmpty()) {
+                    $variantList = [];
+                    foreach ($dbProd->variants as $v) {
+                        $variantList[] = [
+                            'id' => $v->id,
+                            'name' => $v->name,
+                            'price_adjustment' => (float) $v->price_adjustment,
+                        ];
+                    }
+                    $item['variants'] = $variantList;
+                }
+            }
+            $syncedProducts[] = $item;
+        }
+        $products = $syncedProducts;
+
+        $existingSkus = array_column($products, 'id');
+        foreach ($dbProducts as $sku => $dbProd) {
+            if (! $dbProd->is_active || in_array($sku, $existingSkus, true)) {
+                continue;
+            }
+            $catKey = match (true) {
+                str_contains(strtolower((string) $dbProd->category?->name), 'manual') => 'manual_brew',
+                str_contains(strtolower((string) $dbProd->category?->name), 'retail') => 'retail',
+                str_contains(strtolower((string) $dbProd->category?->name), 'tea') => 'tea_bev',
+                default => 'espresso',
+            };
+            $products[] = [
+                'id' => $dbProd->sku,
+                'image' => '/images/pos/prd-esp-01-espresso.png',
+                'name' => $dbProd->name,
+                'category' => $catKey,
+                'price' => (float) $dbProd->selling_price,
+                'recipe_yield' => $dbProd->description ?: 'Menu Katalog Master Kafeina',
+                'stock' => 50,
+                'stock_status' => 'in_stock',
+                'image_tag' => $dbProd->category?->name ?? 'Menu Kafeina',
+                'temperature' => ['Hot', 'Iced'],
+                'can_custom_shot' => $catKey === 'espresso',
+                'base_shots' => 2,
+                'extras' => [],
+                'modifiers' => [],
+                'badge_color' => 'amber',
+            ];
+        }
+
+        // Load real active PosShift & real today's branch sales from DB
+        $activeDbShift = PosShift::where('branch_id', $branch->id)
+            ->where('status', 'OPEN')
+            ->latest('opened_at')
+            ->first();
+
+        $todayBranchOrders = PosOrder::where('branch_id', $branch->id)
+            ->where('payment_status', 'PAID')
+            ->where('order_type', '!=', 'NON_REVENUE')
+            ->whereDate('created_at', now('Asia/Jakarta')->toDateString())
+            ->get();
+
+        $openingCash = (float) ($activeDbShift?->opening_cash ?? 500000);
+        $systemCashSales = (float) $todayBranchOrders->where('payment_method', 'CASH')->sum('total_amount');
+        $systemQrisSales = (float) $todayBranchOrders->whereIn('payment_method', ['QRIS_MIDTRANS', 'BANK_TRANSFER'])->sum('total_amount');
+        $systemTotalSales = $systemCashSales + $systemQrisSales;
+
         $shift = [
-            'shift_id' => 'SFT-'.date('Ymd').'-01',
+            'shift_id' => $activeDbShift?->shift_code ?? ('SFT-'.date('Ymd').'-01'),
             'is_open' => true,
             'cashier_name' => $cashierName,
             'cashier_role' => $cashierRole,
@@ -777,13 +857,15 @@ class PosController extends Controller
             'outlet_name' => $branch->name,
             'outlet_code' => $branch->code,
             'branch_slug' => $activeBranchSlug,
-            'opening_cash' => 500000,
-            'started_at' => '07:00 WIB',
-            'system_cash_sales' => 3850000,
-            'system_qris_sales' => 8420000,
-            'system_total_sales' => 12270000,
-            'expected_physical_cash' => 4350000, // opening_cash (500k) + cash_sales (3850k)
-            'transaction_count' => 64,
+            'opening_cash' => $openingCash,
+            'started_at' => $activeDbShift?->opened_at
+                ? Carbon::parse($activeDbShift->opened_at)->setTimezone('Asia/Jakarta')->format('H:i').' WIB'
+                : '07:00 WIB',
+            'system_cash_sales' => $systemCashSales,
+            'system_qris_sales' => $systemQrisSales,
+            'system_total_sales' => $systemTotalSales,
+            'expected_physical_cash' => $openingCash + $systemCashSales,
+            'transaction_count' => $todayBranchOrders->count(),
         ];
 
         $redeemCodes = RedeemCode::orderBy('created_at', 'desc')->get();
@@ -1336,10 +1418,17 @@ class PosController extends Controller
     }
 
     /**
-     * API: Simulate QRIS Payment Success (for Sandbox Testing).
+     * API: Simulate QRIS Payment Success (for Sandbox Testing Only).
      */
     public function simulateQrisPayment(Request $request, MidtransQrisService $qrisService): JsonResponse
     {
+        if (app()->environment('production') && (bool) SystemSetting::get('midtrans_is_production', false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Simulasi pembayaran dinonaktifkan pada mode produksi Midtrans.',
+            ], 403);
+        }
+
         $orderNumber = (string) $request->input('order_number');
         if (! $orderNumber) {
             return response()->json(['success' => false, 'message' => 'Order number diperlukan.'], 422);
@@ -1390,10 +1479,17 @@ class PosController extends Controller
     }
 
     /**
-     * API: Simulate Virtual Account Payment Success (for Sandbox Testing).
+     * API: Simulate Virtual Account Payment Success (for Sandbox Testing Only).
      */
     public function simulateVaPayment(Request $request, MidtransQrisService $qrisService): JsonResponse
     {
+        if (app()->environment('production') && (bool) SystemSetting::get('midtrans_is_production', false)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Simulasi pembayaran dinonaktifkan pada mode produksi Midtrans.',
+            ], 403);
+        }
+
         $orderNumber = (string) $request->input('order_number');
         if (! $orderNumber) {
             return response()->json(['success' => false, 'message' => 'Order number diperlukan.'], 422);

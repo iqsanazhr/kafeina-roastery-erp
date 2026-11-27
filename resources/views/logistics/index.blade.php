@@ -102,10 +102,10 @@
                 </svg>
                 <input type="text" 
                        x-model="searchQuery"
-                       placeholder="Cari nomor MR, Surat Jalan, cabang, atau driver..." 
+                       placeholder="Cari nomor MR, Surat Jalan, atau cabang..." 
                        @keydown.escape="searchQuery = ''"
-                       class="bg-transparent border-none text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none flex-1 font-sans">
-                <kbd class="px-1.5 py-0.5 rounded bg-neutral-200/60 border border-neutral-300/80 text-[10px] font-mono text-neutral-500">ESC</kbd>
+                       class="bg-transparent border-none text-xs text-neutral-900 placeholder-neutral-400 focus:outline-none flex-1 min-w-0 pr-2 font-sans">
+                <kbd class="px-1.5 py-0.5 rounded bg-neutral-200/60 border border-neutral-300/80 text-[10px] font-mono text-neutral-500 shrink-0">ESC</kbd>
             </div>
         </div>
 
@@ -173,7 +173,7 @@
                                     <template x-if="mr.items && mr.items.length > 0">
                                         <div>
                                             <span class="font-medium text-neutral-900" x-text="mr.items[0].product ? mr.items[0].product.name : 'Roasted Beans'"></span>
-                                            <span class="text-neutral-400 font-mono text-[11px]" x-text="' (' + mr.items[0].quantity + ')'"></span>
+                                            <span class="text-neutral-500 font-mono text-[11px] whitespace-nowrap" x-text="' (' + Number(mr.items[0].quantity_requested ?? mr.items[0].quantity ?? 0) + ' ' + (mr.items[0].product?.unit ?? 'unit') + ')'"></span>
                                         </div>
                                     </template>
                                     <template x-if="!mr.items || mr.items.length === 0">
@@ -198,7 +198,7 @@
                                     </div>
                                 </td>
                                 <td class="py-3.5 px-4 text-right">
-                                    <button type="button" class="px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[11px] font-medium cursor-pointer transition-colors">
+                                    <button type="button" class="px-2.5 py-1 rounded-lg bg-neutral-100 hover:bg-neutral-200 text-neutral-800 text-[11px] font-medium cursor-pointer transition-colors whitespace-nowrap">
                                         Detail →
                                     </button>
                                 </td>
