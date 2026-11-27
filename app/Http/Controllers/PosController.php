@@ -542,14 +542,14 @@ class PosController extends Controller
                 'badge_color' => 'yellow',
             ],
 
-            // Roasted Beans Retail
+            // Roasted Beans Retail (SKU kanonikal selaras dengan /products & BOM /roastery)
             [
-                'id' => 'PRD-RT-01',
+                'id' => 'PRD-RET-01',
                 'image' => '/images/pos/prd-rt-01-gayobeans.png',
-                'name' => 'Aceh Gayo Honey Anaerobic 250g',
+                'name' => 'Aceh Gayo Honey Specialty Whole Beans 250g',
                 'category' => 'retail',
                 'price' => 135000,
-                'recipe_yield' => 'Roast Date: 05 Nov 2026 | Degassed Ready | SCA Score 86.5',
+                'recipe_yield' => 'Degassed Ready 250g | SCA Score 86.5 | Valve Pouch',
                 'stock' => 45,
                 'stock_status' => 'in_stock',
                 'image_tag' => 'Valve Bag with Degassing Membrane',
@@ -562,48 +562,12 @@ class PosController extends Controller
                 'badge_color' => 'rose',
             ],
             [
-                'id' => 'PRD-RT-02',
-                'image' => '/images/pos/prd-rt-02-ijenbeans.png',
-                'name' => 'Ijen Natural Carbonic Maceration 250g',
-                'category' => 'retail',
-                'price' => 165000,
-                'recipe_yield' => 'Roast Date: 06 Nov 2026 | Light Filter Roast | SCA Score 88.0',
-                'stock' => 28,
-                'stock_status' => 'in_stock',
-                'image_tag' => 'Micro-lot Experimental Fermentation',
-                'temperature' => ['Whole Beans', 'Grind: Filter V60', 'Grind: Aeropress'],
-                'can_custom_shot' => false,
-                'extras' => [
-                    ['id' => 'tin_can', 'name' => 'Upgrade Nitrogen Vacuum Tin (+Valve)', 'price' => 15000, 'category' => 'Kemasan'],
-                ],
-                'modifiers' => ['Whole Beans (Biji Utuh)', 'Grind: Medium (V60)', 'Grind: Aeropress'],
-                'badge_color' => 'rose',
-            ],
-            [
-                'id' => 'PRD-RT-03',
-                'image' => '/images/pos/prd-rt-03-torajabeans.png',
-                'name' => 'Toraja Sapan Specialty Washed 250g',
+                'id' => 'PRD-RET-02',
+                'image' => '/images/pos/prd-rt-04-houseblend.png',
+                'name' => 'Kafeina Signature House Blend 250g',
                 'category' => 'retail',
                 'price' => 125000,
-                'recipe_yield' => 'Roast Date: 04 Nov 2026 | Medium Roast | SCA Score 85.0',
-                'stock' => 38,
-                'stock_status' => 'in_stock',
-                'image_tag' => 'Classic Indonesian Clean Heritage Cup',
-                'temperature' => ['Whole Beans', 'Grind: Filter V60', 'Grind: Espresso'],
-                'can_custom_shot' => false,
-                'extras' => [
-                    ['id' => 'tin_can', 'name' => 'Upgrade Nitrogen Vacuum Tin (+Valve)', 'price' => 15000, 'category' => 'Kemasan'],
-                ],
-                'modifiers' => ['Whole Beans', 'Grind: Medium', 'Grind: Fine'],
-                'badge_color' => 'rose',
-            ],
-            [
-                'id' => 'PRD-RT-04',
-                'image' => '/images/pos/prd-rt-04-houseblend.png',
-                'name' => 'Kafeina House Blend "Midnight Velvet" 500g',
-                'category' => 'retail',
-                'price' => 195000,
-                'recipe_yield' => '60% Gayo Washed + 40% Toraja Natural | Medium-Dark Roastery Blend',
+                'recipe_yield' => '60% Gayo + 40% Ijen | Medium-Dark Roastery Blend 250g',
                 'stock' => 50,
                 'stock_status' => 'in_stock',
                 'image_tag' => 'Heavy Chocolate Body & Thick Hazelnut Crema',
@@ -613,24 +577,6 @@ class PosController extends Controller
                     ['id' => 'tin_can', 'name' => 'Upgrade Nitrogen Vacuum Tin (+Valve)', 'price' => 15000, 'category' => 'Kemasan'],
                 ],
                 'modifiers' => ['Whole Beans', 'Grind: Espresso', 'Grind: Mokapot', 'Grind: French Press'],
-                'badge_color' => 'rose',
-            ],
-            [
-                'id' => 'PRD-RT-05',
-                'image' => '/images/pos/prd-rt-05-geishatin.png',
-                'name' => 'Panama Geisha Limited Tin 150g',
-                'category' => 'retail',
-                'price' => 380000,
-                'recipe_yield' => 'Boquete Geisha Micro-lot | SCA Score 91.5 | Nitrogen Flushed Tin',
-                'stock' => 6,
-                'stock_status' => 'low_stock',
-                'image_tag' => 'World Competition Class Luxury Lot',
-                'temperature' => ['Whole Beans'],
-                'can_custom_shot' => false,
-                'extras' => [
-                    ['id' => 'gift_box', 'name' => 'Luxury Wooden Gift Box & Ribbon', 'price' => 35000, 'category' => 'Kemasan'],
-                ],
-                'modifiers' => ['Whole Beans Only (Recommended for Hand Grinder)'],
                 'badge_color' => 'rose',
             ],
 
@@ -771,11 +717,26 @@ class PosController extends Controller
             default => 'senopati',
         };
 
-        // Synchronize live master products from DB (name, price, active status, variants, modifiers)
+        // Synchronize live master products & modifiers from DB (/products)
         $dbProducts = Product::with(['category', 'variants', 'modifiers', 'recipes.ingredientProduct'])
             ->where('is_raw_material', false)
             ->get()
             ->keyBy('sku');
+
+        $dbModifiers = ProductModifier::where('is_active', true)
+            ->orderBy('group_name')
+            ->orderBy('name')
+            ->get();
+
+        $liveBeverageExtras = [];
+        foreach ($dbModifiers as $mod) {
+            $liveBeverageExtras[] = [
+                'id' => 'mod_'.$mod->id,
+                'name' => $mod->name,
+                'price' => (float) $mod->price,
+                'category' => $mod->group_name ?: 'Ekstra',
+            ];
+        }
 
         $syncedProducts = [];
         foreach ($products as $item) {
@@ -797,6 +758,9 @@ class PosController extends Controller
                     }
                     $item['variants'] = $variantList;
                 }
+            }
+            if (in_array($item['category'], ['espresso', 'tea_bev'], true) && count($liveBeverageExtras) > 0) {
+                $item['extras'] = $liveBeverageExtras;
             }
             $syncedProducts[] = $item;
         }
@@ -826,7 +790,7 @@ class PosController extends Controller
                 'temperature' => ['Hot', 'Iced'],
                 'can_custom_shot' => $catKey === 'espresso',
                 'base_shots' => 2,
-                'extras' => [],
+                'extras' => in_array($catKey, ['espresso', 'tea_bev'], true) ? $liveBeverageExtras : [],
                 'modifiers' => [],
                 'badge_color' => 'amber',
             ];
@@ -1070,10 +1034,11 @@ class PosController extends Controller
                 ->first() ?? InventoryWarehouse::where('branch_id', $branch->id)->first();
 
             foreach ($items as $item) {
-                // Find product by SKU, ID, or Name
+                // Find finished product by SKU, ID, or Name (jangan pernah fallback ke RAW-GB bahan mentah!)
                 $product = Product::where('sku', $item['id'] ?? '')->first()
-                    ?? Product::find($item['id'] ?? 0)
-                    ?? Product::where('name', 'LIKE', '%'.($item['name'] ?? '').'%')->first()
+                    ?? (is_numeric($item['id'] ?? null) ? Product::find((int) $item['id']) : null)
+                    ?? Product::where('is_raw_material', false)->where('name', 'LIKE', '%'.($item['name'] ?? '').'%')->first()
+                    ?? Product::where('is_raw_material', false)->first()
                     ?? Product::first();
 
                 if ($product) {

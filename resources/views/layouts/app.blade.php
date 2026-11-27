@@ -33,12 +33,26 @@
          x-transition:enter="transition-opacity ease-out duration-200"
          x-transition:enter-start="opacity-0"
          x-transition:enter-end="opacity-100"
-         x-transition:leave="transition-opacity ease-in duration-150"
+         x-transition:leave="transition-opacity ease-out duration-150"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0"
          class="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden"
          @click="sidebarOpen = false"
          style="display: none;"></div>
+
+    @php
+        $sidebarHomeUrl = $currentUser?->canAccessModule('dashboard')
+            ? route('dashboard.index')
+            : ($currentUser?->canAccessModule('pos')
+                ? route('pos.index')
+                : ($currentUser?->canAccessModule('roastery')
+                    ? route('roastery.index')
+                    : ($currentUser?->canAccessModule('procurement')
+                        ? route('procurement.index')
+                        : ($currentUser?->canAccessModule('qc-lab')
+                            ? route('qc-lab.index')
+                            : route('inventory.index')))));
+    @endphp
 
     <!-- VERCEL-STYLE MINIMALIST LIGHT SIDEBAR (Collapsible Slim Rail Desktop & Mobile) -->
     <aside :class="{
@@ -53,8 +67,8 @@
         <div class="p-3 border-b border-[#eaeaea] shrink-0" :class="sidebarCollapsed ? 'px-1.5 py-3' : 'space-y-3 p-3.5'">
             <!-- Workspace Selector & Toggle Button -->
             <div class="flex items-center" :class="sidebarCollapsed ? 'flex-col items-center gap-2' : 'justify-between'">
-                <a href="{{ route('dashboard.index') }}" class="flex items-center gap-2.5 min-w-0 group" :class="sidebarCollapsed ? 'justify-center' : 'flex-1'" :title="sidebarCollapsed ? 'KAFEINA Roastery' : ''">
-                    <div class="w-7 h-7 rounded-lg bg-neutral-950 flex items-center justify-center text-white shadow-xs shrink-0 border border-neutral-800 group-hover:scale-105 transition-all">
+                <a href="{{ $sidebarHomeUrl }}" class="flex items-center gap-2.5 min-w-0 group" :class="sidebarCollapsed ? 'justify-center' : 'flex-1'" :title="sidebarCollapsed ? 'KAFEINA Roastery' : ''">
+                    <div class="w-7 h-7 rounded-lg bg-neutral-950 flex items-center justify-center text-white shadow-xs shrink-0 border border-neutral-800 group-hover:scale-105 transition-transform duration-150">
                         <svg class="w-4.5 h-4.5" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <rect x="8" y="7" width="5" height="26" rx="2.5" fill="#FFFFFF"/>
                             <path d="M16 19.5C16 13 22 8 29 8C29 15 23 20 16 19.5Z" fill="#FFFFFF"/>
@@ -114,7 +128,7 @@
         <div class="flex-1 overflow-y-auto px-2.5 py-3 space-y-4 scrollbar-none">
             
             @php
-                $canSection1 = $currentUser?->canAccessModule('dashboard') || $currentUser?->canAccessModule('pos') || $currentUser?->canAccessModule('vouchers') || $currentUser?->canAccessModule('products');
+                $canSection1 = $currentUser?->canAccessModule('dashboard') || $currentUser?->canAccessModule('pos') || $currentUser?->canAccessModule('sales') || $currentUser?->canAccessModule('vouchers') || $currentUser?->canAccessModule('products');
                 $canSection2 = $currentUser?->canAccessModule('procurement') || $currentUser?->canAccessModule('qc-lab') || $currentUser?->canAccessModule('roastery') || $currentUser?->canAccessModule('yield-loss') || $currentUser?->canAccessModule('inventory') || $currentUser?->canAccessModule('logistics');
                 $canSection3 = $currentUser?->canAccessModule('finance');
             @endphp
@@ -130,7 +144,7 @@
                     @if($currentUser?->canAccessModule('dashboard'))
                     <a href="{{ route('dashboard.index') }}"
                        x-show="!sidebarSearch || 'dasbor eksekutif overview analytics home'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Dasbor Eksekutif (⌘0)' : ''" {{ request()->routeIs('dashboard.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('dashboard.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Dasbor Eksekutif (⌘0)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('dashboard.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
@@ -145,7 +159,7 @@
                     @if($currentUser?->canAccessModule('pos'))
                     <a href="{{ route('pos.index') }}"
                        x-show="!sidebarSearch || 'kasir pos point of sale terminal barista cashier'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Kasir POS (⌘1)' : ''" {{ request()->routeIs('pos.index') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('pos.index') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Kasir POS (⌘1)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('pos.index') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
@@ -160,7 +174,7 @@
                     @if($currentUser?->canAccessModule('pos') || $currentUser?->canAccessModule('sales'))
                     <a href="{{ route('sales.index') }}"
                        x-show="!sidebarSearch || 'riwayat order penjualan transaksi customer sales history receipt'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Riwayat Order (⌘2)' : ''" {{ request()->routeIs('sales.*') || request()->routeIs('pos.orders*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('sales.*') || request()->routeIs('pos.orders*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Riwayat Order (⌘2)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('sales.*') || request()->routeIs('pos.orders*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
@@ -175,7 +189,7 @@
                     @if($currentUser?->canAccessModule('vouchers'))
                     <a href="{{ route('vouchers.index') }}"
                        x-show="!sidebarSearch || 'voucher diskon promo kuota kode coupon discount'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Voucher & Kuota Promo (⌘3)' : ''" {{ request()->routeIs('vouchers.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('vouchers.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Voucher & Kuota Promo (⌘3)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('vouchers.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z" />
@@ -190,7 +204,7 @@
                     @if($currentUser?->canAccessModule('products'))
                     <a href="{{ route('products.index') }}"
                        x-show="!sidebarSearch || 'produk resep varian harga katalog menu modifier bom product recipe'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Katalog & Resep (⌘4 / ⌘P)' : ''" {{ request()->routeIs('products.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('products.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Katalog & Resep (⌘4 / ⌘P)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('products.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
@@ -215,7 +229,7 @@
                     @if($currentUser?->canAccessModule('procurement'))
                     <a href="{{ route('procurement.index') }}"
                        x-show="!sidebarSearch || 'pengadaan procurement mitra petani kopi purchase order po'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Pengadaan (Procurement) (⌘5)' : ''" {{ request()->routeIs('procurement.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('procurement.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Pengadaan (Procurement) (⌘5)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('procurement.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -230,7 +244,7 @@
                     @if($currentUser?->canAccessModule('qc-lab'))
                     <a href="{{ route('qc-lab.index') }}"
                        x-show="!sidebarSearch || 'qc lab laboratorium mutu fisik green beans cupping score'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'QC Lab & Laboratorium (⌘6)' : ''" {{ request()->routeIs('qc-lab.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('qc-lab.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'QC Lab & Laboratorium (⌘6)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('qc-lab.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
@@ -245,7 +259,7 @@
                     @if($currentUser?->canAccessModule('roastery'))
                     <a href="{{ route('roastery.index') }}"
                        x-show="!sidebarSearch || 'roastery work orders bom sangrai giesen diedrich produksi'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Roastery & Work Orders (⌘7)' : ''" {{ request()->routeIs('roastery.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('roastery.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Roastery & Work Orders (⌘7)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('roastery.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
@@ -261,7 +275,7 @@
                     @if($currentUser?->canAccessModule('yield-loss'))
                     <a href="{{ route('yield-loss.index') }}"
                        x-show="!sidebarSearch || 'yield loss monitor susut sangrai hpp riil profil suhu agtron'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Yield Loss (Monitor Susut) (⌘8)' : ''" {{ request()->routeIs('yield-loss.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('yield-loss.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Yield Loss (Monitor Susut) (⌘8)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('yield-loss.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3" />
@@ -276,7 +290,7 @@
                     @if($currentUser?->canAccessModule('inventory'))
                     <a href="{{ route('inventory.index') }}"
                        x-show="!sidebarSearch || 'inventori multi-cabang stok saldo rop safety stock gudang warehouse'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Inventori Multi-Cabang (⌘9)' : ''" {{ request()->routeIs('inventory.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('inventory.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Inventori Multi-Cabang (⌘9)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('inventory.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -291,7 +305,7 @@
                     @if($currentUser?->canAccessModule('logistics'))
                     <a href="{{ route('logistics.index') }}"
                        x-show="!sidebarSearch || 'logistik distribusi surat jalan delivery notes mr qr transit armada'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Logistik & Distribusi (⌘D)' : ''" {{ request()->routeIs('logistics.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('logistics.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Logistik & Distribusi (⌘D)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('logistics.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
@@ -316,7 +330,7 @@
                     @if($currentUser?->canAccessModule('finance'))
                     <a href="{{ route('finance.index') }}"
                        x-show="!sidebarSearch || 'laba rugi riil finance p&l keuangan laporan audit omzet'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Laba Rugi Riil (P&L) (⌘L)' : ''" {{ request()->routeIs('finance.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}">
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('finance.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Laba Rugi Riil (P&L) (⌘L)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('finance.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -339,7 +353,7 @@
                 <div class="space-y-0.5">
                     <a href="{{ route('settings.index') }}"
                        x-show="!sidebarSearch || 'pengaturan sistem master data branches warehouses users rbac midtrans payment database audit'.includes(sidebarSearch.toLowerCase())" 
-                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Pengaturan Sistem (⌘S)' : ''" {{ request()->routeIs('settings.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}>
+                       class="flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-craft-btn group {{ request()->routeIs('settings.*') ? 'bg-neutral-100 text-black font-semibold' : 'text-neutral-600 hover:text-black hover:bg-neutral-50' }}" :class="sidebarCollapsed ? 'justify-center px-1' : 'justify-between px-2.5'" :title="sidebarCollapsed ? 'Pengaturan Sistem (⌘S)' : ''">
                         <div class="flex items-center gap-2.5">
                             <svg class="w-4 h-4 shrink-0 {{ request()->routeIs('settings.*') ? 'text-black' : 'text-neutral-500 group-hover:text-black' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />

@@ -10,6 +10,7 @@ use App\Models\PosOrderItem;
 use App\Models\PurchaseOrder;
 use App\Models\PurchaseOrderItem;
 use App\Models\Supplier;
+use App\Models\SystemSetting;
 use App\Models\User;
 use App\Models\WarehouseStock;
 use App\Models\WorkOrder;
@@ -26,7 +27,14 @@ class DashboardController extends Controller
      */
     public function index(Request $request): View
     {
+        $user = auth()->user();
         $selectedBranch = (string) $request->query('branch', 'all');
+        if ($user && ! $user->canSwitchBranch()) {
+            $assignedSlug = $user->getAssignedBranchSlug();
+            if ($assignedSlug !== 'all') {
+                $selectedBranch = $assignedSlug;
+            }
+        }
         $now = Carbon::now('Asia/Jakarta');
         $todayStart = $now->copy()->startOfDay();
         $todayEnd = $now->copy()->endOfDay();
@@ -74,7 +82,9 @@ class DashboardController extends Controller
 
         $kpi = $kpiMatrix[$selectedBranch] ?? $kpiMatrix['all'];
 
-        // Real Roasting Batch Monitor from WorkOrders
+        // Real Roasting Batch Monitor from WorkOrders (selaras dengan SystemSetting)
+        $minYieldLoss = (float) SystemSetting::get('roastery_min_yield_loss', 14.0);
+        $maxYieldLoss = (float) SystemSetting::get('roastery_max_yield_loss', 18.0);
         $roastBatches = [];
         foreach ($completedWorkOrders->take(10) as $wo) {
             $greenKg = round(((float) $wo->green_weight_grams) / 1000, 2);
@@ -82,9 +92,9 @@ class DashboardController extends Controller
             $lossPct = (float) ($wo->yield_loss_percentage ?? ($greenKg > 0 ? round((($greenKg - $roastedKg) / $greenKg) * 100, 2) : 0));
 
             $status = 'OPTIMAL';
-            if ($lossPct > 0 && $lossPct < 14.0) {
+            if ($lossPct > 0 && $lossPct < $minYieldLoss) {
                 $status = 'UNDER_DEVELOPED';
-            } elseif ($lossPct > 18.0) {
+            } elseif ($lossPct > $maxYieldLoss) {
                 $status = 'OVER_ROASTED';
             }
 
@@ -106,17 +116,18 @@ class DashboardController extends Controller
                 'drop_temp' => $wo->roast_end_time ? Carbon::parse($wo->roast_end_time)->setTimezone('Asia/Jakarta')->format('d M H:i') : '-',
                 'dtr_pct' => $dtrPct,
                 'notes' => $wo->notes ?: ($status === 'OPTIMAL'
-                    ? 'Toleransi susut 14–18% terpenuhi sesuai standar Kafeina Roastery.'
+                    ? "Toleransi susut {$minYieldLoss}–{$maxYieldLoss}% terpenuhi sesuai standar Kafeina Roastery."
                     : ($status === 'UNDER_DEVELOPED'
-                        ? 'PERINGATAN: Susut < 14% — periksa kadar air biji mentah atau DTR.'
-                        : 'PERINGATAN: Susut > 18% — risiko over-development / bitter.')),
+                        ? "PERINGATAN: Susut < {$minYieldLoss}% — periksa kadar air biji mentah atau DTR."
+                        : "PERINGATAN: Susut > {$maxYieldLoss}% — risiko over-development / bitter.")),
             ];
         }
 
-        // Real Safety Stock Alerts from WarehouseStock
+        // Real Safety Stock Alerts from WarehouseStock (kecualikan akun virtual TRANSIT)
         $selectedBranchModel = $branchMap[$selectedBranch] ?? null;
         $stocksQuery = WarehouseStock::with(['product.category', 'warehouse.branch'])
-            ->whereHas('product', fn ($q) => $q->where('is_active', true));
+            ->whereHas('product', fn ($q) => $q->where('is_active', true))
+            ->whereHas('warehouse', fn ($q) => $q->where('type', '!=', 'TRANSIT'));
 
         if ($selectedBranchModel) {
             $stocksQuery->whereHas('warehouse', fn ($q) => $q->where('branch_id', $selectedBranchModel->id));
@@ -580,36 +591,59 @@ class DashboardController extends Controller
         $supplier = Supplier::first();
         $branch = Branch::where('type', 'CENTRAL_ROASTERY')->first() ?? Branch::first();
 
-        // Derive critical items dynamically from WarehouseStock below safety_stock_threshold
+        // Derive critical purchasable raw materials dynamically from WarehouseStock (exclude WH-TRANSIT & internal RAW-RB%)
         $lowStocks = WarehouseStock::with('product')
-            ->whereHas('product', fn ($q) => $q->where('is_active', true))
+            ->whereHas('warehouse', fn ($q) => $q->where('type', '!=', 'TRANSIT'))
+            ->whereHas('product', fn ($q) => $q->where('is_active', true)
+                ->where('is_raw_material', true)
+                ->where('sku', 'NOT LIKE', 'RAW-RB%'))
             ->whereColumn('quantity', '<=', 'safety_stock_threshold')
             ->limit(5)
             ->get();
 
         $criticalItems = [];
         foreach ($lowStocks as $stock) {
-            $deficit = max(10.0, (float) $stock->safety_stock_threshold - (float) $stock->quantity);
-            $unitCost = max(1000.0, (float) ($stock->product?->cost_price ?? 125000));
+            $product = $stock->product;
+            if (! $product) {
+                continue;
+            }
+
+            $deficitBase = max(0.0, (float) $stock->safety_stock_threshold - (float) $stock->quantity);
+            $baseCost = (float) $product->cost_price;
+
+            // Konversi satuan dasar gudang (gram/ml -> kg/liter) agar 100% sinkron dengan Procurement & Goods Receipt
+            if (in_array($product->unit, ['gram', 'ml'], true)) {
+                $orderQty = max(1.0, ceil($deficitBase / 1000.0));
+                $unitPrice = max(1000.0, round($baseCost * 1000.0));
+            } else {
+                $orderQty = max(10.0, ceil($deficitBase));
+                $unitPrice = max(100.0, round($baseCost > 0 ? $baseCost : 1000.0));
+            }
+
             $criticalItems[] = [
-                'product_id' => $stock->product_id,
-                'name' => $stock->product?->name ?? 'Bahan Baku Kritis',
-                'qty' => round($deficit, 2),
-                'unit_price' => $unitCost,
+                'product_id' => $product->id,
+                'name' => "[{$product->sku}] {$product->name}",
+                'qty' => round($orderQty, 2),
+                'unit_price' => $unitPrice,
             ];
         }
 
-        // Fallback if all stocks are currently above threshold
+        // Fallback if all purchasable raw material stocks are currently above threshold
         if (empty($criticalItems)) {
             $criticalItems = [
-                ['product_id' => null, 'name' => 'Green Beans Aceh Gayo Honey', 'qty' => 65.0, 'unit_price' => 125000.0],
-                ['product_id' => null, 'name' => 'Cold Cup PET 12oz + Flat Lid', 'qty' => 2000.0, 'unit_price' => 850.0],
-                ['product_id' => null, 'name' => 'Greenfields Fresh Milk Pasteurisasi 1L', 'qty' => 32.0, 'unit_price' => 24000.0],
+                ['product_id' => null, 'name' => 'Green Beans Aceh Gayo Honey', 'qty' => 50.0, 'unit_price' => 130000.0],
+                ['product_id' => null, 'name' => 'Greenfields Fresh Milk Pasteurisasi 1L', 'qty' => 30.0, 'unit_price' => 25000.0],
+                ['product_id' => null, 'name' => 'Cold Cup PET 12oz + Flat Lid', 'qty' => 500.0, 'unit_price' => 1400.0],
             ];
         }
 
         $totalAmount = (float) array_sum(array_map(fn ($item) => $item['qty'] * $item['unit_price'], $criticalItems));
-        $poNumber = 'PO-KONS-'.date('Ymd').'-'.str_pad((string) (PurchaseOrder::count() + 1), 3, '0', STR_PAD_LEFT);
+        $seq = PurchaseOrder::max('id') ? ((int) PurchaseOrder::max('id') + 1) : 1;
+        $poNumber = 'PO-KONS-'.date('Ymd').'-'.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+        while (PurchaseOrder::where('po_number', $poNumber)->exists()) {
+            $seq++;
+            $poNumber = 'PO-KONS-'.date('Ymd').'-'.str_pad((string) $seq, 3, '0', STR_PAD_LEFT);
+        }
 
         $po = PurchaseOrder::create([
             'po_number' => $poNumber,

@@ -31,9 +31,10 @@ class InventoryController extends Controller
         $warehouses = InventoryWarehouse::with('branch')->get();
         $products = Product::all();
 
-        // Safety Stock Alerts dinamis dari saldo stok <= threshold
+        // Safety Stock Alerts dinamis dari saldo stok <= threshold (kecualikan gudang virtual TRANSIT)
         $safetyStockAlerts = [];
         $lowStocks = WarehouseStock::with(['warehouse.branch', 'product'])
+            ->whereHas('warehouse', fn ($q) => $q->where('type', '!=', 'TRANSIT'))
             ->whereColumn('quantity', '<=', 'safety_stock_threshold')
             ->get();
 
