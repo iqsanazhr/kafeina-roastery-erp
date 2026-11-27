@@ -14,9 +14,7 @@ class AuthController extends Controller
      */
     public function showLogin()
     {
-        $users = User::with(['role', 'branch'])->where('is_active', true)->get();
-
-        return view('auth.login', compact('users'));
+        return view('auth.login');
     }
 
     /**
@@ -31,9 +29,13 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
-            session(['active_user_id' => Auth::id()]);
+            /** @var User|null $authenticatedUser */
+            $authenticatedUser = Auth::user();
+            session(['active_user_id' => $authenticatedUser?->id]);
 
-            return redirect()->intended(route('dashboard.index'));
+            $defaultHome = $authenticatedUser ? $authenticatedUser->getDefaultHomeRoute() : route('dashboard.index');
+
+            return redirect()->intended($defaultHome);
         }
 
         return back()->withErrors([
@@ -63,7 +65,8 @@ class AuthController extends Controller
         Auth::login($user);
         session(['active_user_id' => $user->id]);
 
-        return back()->with('success', 'Berhasil beralih akun ke '.$user->name.' ('.($user->role->display_name ?? 'User').')');
+        return redirect($user->getDefaultHomeRoute())
+            ->with('success', 'Berhasil beralih akun ke '.$user->name.' ('.($user->role->display_name ?? 'User').')');
     }
 
     /**

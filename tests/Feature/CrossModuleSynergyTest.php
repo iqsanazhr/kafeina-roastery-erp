@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Models\Branch;
 use App\Models\InventoryWarehouse;
+use App\Models\PosOrder;
 use App\Models\Product;
 use App\Models\ProductModifier;
 use App\Models\PurchaseOrder;
@@ -139,5 +140,107 @@ class CrossModuleSynergyTest extends TestCase
         $posRes->assertSee('href="'.route('pos.index').'"', false);
         // Pastikan tidak ada kutip ganda rusak dari bug atribut sidebar lama
         $posRes->assertDontSee(':title="sidebarCollapsed ? \'Kasir POS (⌘1)\' : \'\'" bg-neutral-100', false);
+        // Pastikan label struk tidak lagi hardcoded PB1 11%
+        $posRes->assertDontSee('<span>PB1 11%:</span>', false);
+    }
+
+    public function test_login_switch_account_and_403_cta_route_to_authorized_home(): void
+    {
+        $roaster = User::where('email', 'roaster@kafeina.id')->firstOrFail();
+
+        // Set password deterministik dalam transaksi uji
+        $this->cashier->update(['password' => 'secret1234']);
+
+        // Login Kasir tanpa intended URL langsung diarahkan ke /pos (bukan /dashboard yang 403)
+        $loginRes = $this->post(route('login.post'), [
+            'email' => $this->cashier->email,
+            'password' => 'secret1234',
+        ]);
+        $loginRes->assertRedirect(route('pos.index'));
+
+        // Switch Account Super Admin ke Roaster langsung diarahkan ke /roastery
+        $switchRes = $this->actingAs($this->superAdmin)
+            ->from(route('settings.index'))
+            ->post(route('switch-account'), ['user_id' => $roaster->id]);
+        $switchRes->assertRedirect(route('roastery.index'));
+
+        // Halaman 403 untuk Roaster mengarahkan tombol CTA ke /roastery, bukan hardcoded /pos
+        $forbiddenRes = $this->actingAs($roaster)->get(route('finance.index'));
+        $forbiddenRes->assertStatus(403);
+        $forbiddenRes->assertSee('href="'.route('roastery.index').'"', false);
+        $forbiddenRes->assertDontSee('Buka Kasir POS');
+    }
+
+    public function test_pos_checkout_enforces_branch_isolation_and_deducts_extra_shots_safely(): void
+    {
+        $bragaCashier = User::where('email', 'cashier.braga@kafeina.id')->firstOrFail();
+        $bragaBranch = Branch::where('code', 'OUT-BRG')->firstOrFail();
+        $whBarBraga = InventoryWarehouse::where('branch_id', $bragaBranch->id)->where('type', 'RETAIL_BAR')->firstOrFail();
+        $houseBeans = Product::where('sku', 'RAW-RB-HOUSE')->firstOrFail();
+        $latte = Product::where('sku', 'PRD-ESP-03')->firstOrFail();
+
+        WarehouseStock::updateOrCreate(
+            ['warehouse_id' => $whBarBraga->id, 'product_id' => $houseBeans->id],
+            ['quantity' => 5000, 'safety_stock_threshold' => 500]
+        );
+
+        // Kasir Braga mencoba mengirim branch_code Senopati + 2 extraShots + 1 extra kosong (harus diabaikan)
+        $res = $this->actingAs($bragaCashier)->postJson(route('pos.checkout'), [
+            'branch_code' => 'OUT-SENO',
+            'customer_name' => 'Audit Isolation Guest',
+            'order_type' => 'Take Away',
+            'payment_method' => 'cash',
+            'paid_amount' => 100000,
+            'items' => [
+                [
+                    'id' => $latte->sku,
+                    'name' => $latte->name,
+                    'price' => 38000,
+                    'qty' => 1,
+                    'extraShots' => 2,
+                    'selectedExtras' => [
+                        ['name' => ''],
+                    ],
+                ],
+            ],
+        ]);
+
+        $res->assertOk()->assertJson(['success' => true]);
+
+        $orderNumber = (string) $res->json('order.order_number');
+        $order = PosOrder::where('order_number', $orderNumber)->firstOrFail();
+
+        // Order tetap tercatat di cabang Braga (isolasi cabang ketat)
+        $this->assertEquals($bragaBranch->id, $order->branch_id);
+
+        // Biji house blend terpotong: resep dasar 18g + 2 extraShots * 18g = 54g -> sisa 4946g
+        $remainingBeans = (float) WarehouseStock::where('warehouse_id', $whBarBraga->id)
+            ->where('product_id', $houseBeans->id)
+            ->value('quantity');
+        $this->assertEquals(4946.0, $remainingBeans);
+    }
+
+    public function test_material_request_rejects_self_transfer_and_unmatched_product_name(): void
+    {
+        $senoBranch = Branch::where('code', 'OUT-SENO')->firstOrFail();
+        $hqBranch = Branch::where('code', 'HQ-CENTRAL')->firstOrFail();
+
+        // 1. Self-transfer (cabang sama) harus ditolak 422
+        $selfTransfer = $this->actingAs($this->superAdmin)->postJson(route('inventory.mr.store'), [
+            'from_branch_id' => $senoBranch->id,
+            'to_branch_id' => $senoBranch->id,
+            'product_name' => 'Fresh Milk',
+            'quantity' => 5,
+        ]);
+        $selfTransfer->assertStatus(422)->assertJson(['success' => false]);
+
+        // 2. Nama produk tidak dikenal harus ditolak 422 (tidak diam-diam fallback ke RAW-GB-GAYO)
+        $unknownProduct = $this->actingAs($this->superAdmin)->postJson(route('inventory.mr.store'), [
+            'from_branch_id' => $senoBranch->id,
+            'to_branch_id' => $hqBranch->id,
+            'product_name' => 'PRODUK-FIKTIF-TIDAK-ADA-XYZ',
+            'quantity' => 5,
+        ]);
+        $unknownProduct->assertStatus(422)->assertJson(['success' => false]);
     }
 }

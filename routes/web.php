@@ -42,7 +42,7 @@ Route::middleware('auth')->group(function () {
         Auth::login($user);
         session(['active_user_id' => $user->id]);
 
-        return redirect($user->canAccessModule('dashboard') ? route('dashboard.index') : ($user->canAccessModule('pos') ? route('pos.index') : ($user->canAccessModule('roastery') ? route('roastery.index') : ($user->canAccessModule('procurement') ? route('procurement.index') : ($user->canAccessModule('qc-lab') ? route('qc-lab.index') : route('inventory.index'))))));
+        return redirect($user->getDefaultHomeRoute());
     })->name('switch-user.get');
 });
 

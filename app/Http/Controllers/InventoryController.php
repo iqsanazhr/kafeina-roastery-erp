@@ -203,11 +203,13 @@ class InventoryController extends Controller
         try {
             $validated = $request->validate([
                 'from_branch_id' => 'required|exists:branches,id',
-                'to_branch_id' => 'required|exists:branches,id',
+                'to_branch_id' => 'required|exists:branches,id|different:from_branch_id',
                 'product_id' => 'nullable|exists:products,id',
                 'product_name' => 'nullable|string',
                 'quantity' => 'required|numeric|min:1',
                 'notes' => 'nullable|string',
+            ], [
+                'to_branch_id.different' => 'Cabang peminta dan cabang pengirim tidak boleh sama.',
             ]);
 
             if (empty($validated['product_id']) && empty($validated['product_name'])) {
@@ -222,7 +224,12 @@ class InventoryController extends Controller
                 $product = Product::find((int) $validated['product_id']);
             }
             if (! $product && ! empty($validated['product_name'])) {
-                $product = Product::where('name', 'LIKE', '%'.$validated['product_name'].'%')->first() ?? Product::first();
+                $searchName = trim((string) $validated['product_name']);
+                if ($searchName !== '') {
+                    $product = Product::where('name', 'LIKE', '%'.$searchName.'%')
+                        ->orWhere('sku', $searchName)
+                        ->first();
+                }
             }
 
             if (! $product) {

@@ -75,6 +75,9 @@ class User extends Authenticatable
         return $this->belongsTo(Role::class, 'role_id');
     }
 
+    /**
+     * @return BelongsTo<Branch, $this>
+     */
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class, 'branch_id');
@@ -250,6 +253,27 @@ class User extends Authenticatable
             str_contains($code, 'MLO') || str_contains($code, 'MALIOBORO') => 'malioboro',
             str_contains($code, 'HQ') || str_contains($code, 'ROAST') || str_contains($code, 'CENTRAL') => 'central',
             default => 'all',
+        };
+    }
+
+    /**
+     * Resolve the first authorized ERP landing route for this user's role.
+     */
+    public function getDefaultHomeRoute(): string
+    {
+        return match (true) {
+            $this->canAccessModule('dashboard') => route('dashboard.index'),
+            $this->canAccessModule('pos') => route('pos.index'),
+            $this->canAccessModule('roastery') => route('roastery.index'),
+            $this->canAccessModule('procurement') => route('procurement.index'),
+            $this->canAccessModule('qc-lab') => route('qc-lab.index'),
+            $this->canAccessModule('inventory') => route('inventory.index'),
+            $this->canAccessModule('logistics') => route('logistics.index'),
+            $this->canAccessModule('sales') => route('sales.index'),
+            $this->canAccessModule('products') => route('products.index'),
+            $this->canAccessModule('vouchers') => route('vouchers.index'),
+            $this->canAccessModule('finance') => route('finance.index'),
+            default => route('login'),
         };
     }
 }

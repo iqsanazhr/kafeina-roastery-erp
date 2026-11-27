@@ -921,43 +921,31 @@ class PosController extends Controller
         $totalAmount = $paymentMethod === 'non_revenue' ? 0 : ($taxableAmount + $serviceCharge + $pb1Tax);
         $changeAmount = max(0, $paidAmount - $totalAmount);
 
-        // Resolve Cashier & Branch (Retail Bar Enforced)
-        $branchInput = strtolower(trim((string) ($request->input('branch_code') ?? $request->input('branch') ?? $request->query('branch', ''))));
-        $branch = null;
+        // Resolve Cashier & Branch (Strict Branch Isolation for Restricted Users + Dynamic Branch Code Support)
+        $authUser = auth()->user();
+        $branch = $this->resolveScopedBranch($request, $authUser);
 
-        if ($branchInput === 'senopati' || str_contains($branchInput, 'seno')) {
-            $branch = Branch::where('code', 'OUT-SENO')->first();
-        } elseif ($branchInput === 'braga' || str_contains($branchInput, 'brg')) {
-            $branch = Branch::where('code', 'OUT-BRG')->first();
-        } elseif ($branchInput === 'malioboro' || str_contains($branchInput, 'mlo')) {
-            $branch = Branch::where('code', 'OUT-MLO')->first();
-        } elseif ($branchInput === 'central' || str_contains($branchInput, 'hq')) {
-            $branch = Branch::where('code', 'HQ-CENTRAL')->first();
-        }
-
-        if (! $branch) {
-            $user = auth()->user();
-            if ($user && ! $user->canSwitchBranch() && $user->branch && $user->branch->type === 'RETAIL_BRANCH') {
-                $branch = $user->branch;
-            } else {
-                $branch = Branch::where('code', 'OUT-SENO')->first() ?? Branch::where('type', 'RETAIL_BRANCH')->first() ?? Branch::first();
-            }
-        }
-
-        $user = auth()->user()
+        $user = $authUser
             ?? User::where('branch_id', $branch->id)->whereHas('role', fn ($q) => $q->whereIn('name', ['cashier', 'branch_cashier', 'barista', 'lead_barista']))->first()
             ?? User::whereHas('role', fn ($q) => $q->whereIn('name', ['cashier', 'branch_cashier']))->first()
             ?? User::first();
 
-        // Resolve or create Shift
+        // Resolve or create Shift (collision-safe shift_code)
         $shift = PosShift::where('status', 'OPEN')
             ->where('branch_id', $branch->id)
             ->latest()
             ->first();
 
         if (! $shift) {
+            $shiftSeq = PosShift::max('id') ? ((int) PosShift::max('id') + 1) : 1;
+            $shiftCode = 'SFT-'.date('Ymd').'-'.str_pad((string) $shiftSeq, 3, '0', STR_PAD_LEFT);
+            while (PosShift::where('shift_code', $shiftCode)->exists()) {
+                $shiftSeq++;
+                $shiftCode = 'SFT-'.date('Ymd').'-'.str_pad((string) $shiftSeq, 3, '0', STR_PAD_LEFT);
+            }
+
             $shift = PosShift::create([
-                'shift_code' => 'SFT-'.date('Ymd').'-01',
+                'shift_code' => $shiftCode,
                 'branch_id' => $branch->id,
                 'cashier_user_id' => $user->id,
                 'status' => 'OPEN',
@@ -982,7 +970,17 @@ class PosController extends Controller
             }
         }
 
-        $orderNumber = $request->input('order_number') ?: ('ORD-'.date('Ymd').'-'.str_pad((string) (PosOrder::count() + 1), 4, '0', STR_PAD_LEFT));
+        $requestedOrderNumber = trim((string) $request->input('order_number', ''));
+        if ($requestedOrderNumber !== '' && ! PosOrder::where('order_number', $requestedOrderNumber)->exists()) {
+            $orderNumber = $requestedOrderNumber;
+        } else {
+            $orderSeq = PosOrder::max('id') ? ((int) PosOrder::max('id') + 1) : 1;
+            $orderNumber = 'ORD-'.date('Ymd').'-'.str_pad((string) $orderSeq, 4, '0', STR_PAD_LEFT);
+            while (PosOrder::where('order_number', $orderNumber)->exists()) {
+                $orderSeq++;
+                $orderNumber = 'ORD-'.date('Ymd').'-'.str_pad((string) $orderSeq, 4, '0', STR_PAD_LEFT);
+            }
+        }
 
         $dbOrder = DB::transaction(function () use (
             $shift, $user, $branch, $orderNumber, $orderType, $customerName, $tableNumber,
@@ -1093,8 +1091,13 @@ class PosController extends Controller
                         $extras = $item['selectedExtras'] ?? $item['extras'] ?? [];
                         if (! empty($extras) && is_array($extras)) {
                             foreach ($extras as $extra) {
-                                $extraName = is_array($extra) ? ($extra['name'] ?? '') : (string) $extra;
-                                $mod = ProductModifier::where('name', $extraName)
+                                $extraName = trim(is_array($extra) ? (string) ($extra['name'] ?? '') : (string) $extra);
+                                if ($extraName === '') {
+                                    continue;
+                                }
+
+                                $mod = ProductModifier::with('ingredientProduct')
+                                    ->where('name', $extraName)
                                     ->orWhere('name', 'LIKE', "%{$extraName}%")
                                     ->first();
 
@@ -1130,6 +1133,55 @@ class PosController extends Controller
                                             'notes' => "Auto-deduct POS Ekstra [{$mod->name}] Order [{$order->order_number}]",
                                         ]);
                                     }
+                                }
+                            }
+                        }
+
+                        // Auto-deduct bahan baku untuk stepper Extra Espresso Shots (di luar selectedExtras)
+                        $extraShotsCount = max(0, (int) ($item['extraShots'] ?? $item['extra_shots'] ?? 0));
+                        if ($extraShotsCount > 0) {
+                            $shotModifier = ProductModifier::with('ingredientProduct')
+                                ->where('name', 'LIKE', '%Extra Espresso Shot%')
+                                ->whereNotNull('ingredient_product_id')
+                                ->first();
+
+                            $shotIngredient = $shotModifier?->ingredientProduct
+                                ?? Product::where('sku', 'RAW-RB-HOUSE')->first();
+                            $shotUnitQty = $shotModifier && (float) $shotModifier->quantity_deducted > 0
+                                ? (float) $shotModifier->quantity_deducted
+                                : 18.0;
+
+                            if ($shotIngredient) {
+                                $shotDeductQty = $shotUnitQty * $extraShotsCount * ($item['qty'] ?? 1);
+                                $shotStock = WarehouseStock::where('warehouse_id', $barWarehouse->id)
+                                    ->where('product_id', $shotIngredient->id)
+                                    ->first();
+
+                                if ($shotStock) {
+                                    $shotStock->quantity = max(0, $shotStock->quantity - $shotDeductQty);
+                                    $shotStock->save();
+
+                                    RecipeDeduction::create([
+                                        'pos_order_item_id' => $orderItem->id,
+                                        'ingredient_product_id' => $shotIngredient->id,
+                                        'warehouse_id' => $barWarehouse->id,
+                                        'quantity_deducted' => $shotDeductQty,
+                                        'unit' => $shotModifier?->unit ?? $shotIngredient->unit ?? 'gram',
+                                        'deduction_timestamp' => now(),
+                                    ]);
+
+                                    StockCard::create([
+                                        'warehouse_id' => $barWarehouse->id,
+                                        'product_id' => $shotIngredient->id,
+                                        'lot_id' => null,
+                                        'reference_type' => 'POS_SALE',
+                                        'reference_id' => $order->id,
+                                        'quantity_in' => 0,
+                                        'quantity_out' => $shotDeductQty,
+                                        'balance_after' => $shotStock->quantity,
+                                        'cost_per_unit' => (float) $shotIngredient->cost_price,
+                                        'notes' => "Auto-deduct POS +{$extraShotsCount} Extra Shot [{$product->name}] Order [{$order->order_number}]",
+                                    ]);
                                 }
                             }
                         }
@@ -1178,7 +1230,9 @@ class PosController extends Controller
                 'items' => $items,
                 'subtotal' => $subtotal,
                 'discount' => $discountAmount,
+                'service_charge' => $serviceCharge,
                 'tax_pb1' => $pb1Tax,
+                'tax_pb1_rate' => $taxPb1Rate,
                 'total' => $totalAmount,
                 'payment_method' => $paymentMethod,
                 'paid_amount' => $paymentMethod === 'non_revenue' ? 0 : $paidAmount,
@@ -1196,13 +1250,9 @@ class PosController extends Controller
     public function openShift(Request $request): JsonResponse
     {
         $openingCash = max(0.0, (float) $request->input('opening_cash', 500000));
-        $user = auth()->user() ?? User::first();
-        $branchCode = strtoupper(trim((string) $request->input('branch_code', '')));
-
-        $branch = ($branchCode !== '' ? Branch::where('code', $branchCode)->first() : null)
-            ?? ($user && $user->branch ? $user->branch : null)
-            ?? Branch::where('code', 'OUT-SENO')->first()
-            ?? Branch::first();
+        $authUser = auth()->user();
+        $user = $authUser ?? User::first();
+        $branch = $this->resolveScopedBranch($request, $authUser);
 
         $shift = DB::transaction(function () use ($branch, $user, $openingCash): PosShift {
             $seq = PosShift::max('id') ? ((int) PosShift::max('id') + 1) : 1;
@@ -1214,7 +1264,7 @@ class PosController extends Controller
 
             return PosShift::create([
                 'shift_code' => $shiftCode,
-                'branch_id' => $branch ? $branch->id : 1,
+                'branch_id' => $branch->id,
                 'cashier_user_id' => $user ? $user->id : 1,
                 'opening_cash' => $openingCash,
                 'opened_at' => now(),
@@ -1246,17 +1296,14 @@ class PosController extends Controller
         $totalPhysicalCash = (float) $request->input('total_physical_cash', 0);
         $supervisorPin = trim((string) $request->input('supervisor_pin', ''));
         $notes = trim((string) $request->input('notes', ''));
-        $branchCode = strtoupper(trim((string) $request->input('branch_code', '')));
         $user = auth()->user();
 
-        $branch = ($branchCode !== '' ? Branch::where('code', $branchCode)->first() : null)
-            ?? ($user && $user->branch ? $user->branch : null)
-            ?? Branch::where('code', 'OUT-SENO')->first()
-            ?? Branch::first();
+        $branch = $this->resolveScopedBranch($request, $user);
 
-        $activeShift = $branch
-            ? PosShift::where('branch_id', $branch->id)->where('status', 'OPEN')->latest('opened_at')->first()
-            : PosShift::where('status', 'OPEN')->latest('opened_at')->first();
+        $activeShift = PosShift::where('branch_id', $branch->id)
+            ->where('status', 'OPEN')
+            ->latest('opened_at')
+            ->first();
 
         // Hitung kas sistem riil dari shift aktif bila tersedia; fallback ke input klien untuk backward compatibility
         if ($activeShift && ! $request->has('system_cash_expected')) {
@@ -1577,5 +1624,38 @@ class PosController extends Controller
         }
 
         return response()->json(['message' => 'OK']);
+    }
+
+    /**
+     * Resolve active POS branch while strictly enforcing branch isolation for restricted roles.
+     */
+    private function resolveScopedBranch(Request $request, ?User $user): Branch
+    {
+        if ($user && ! $user->canSwitchBranch() && $user->branch) {
+            return $user->branch;
+        }
+
+        $branchInput = strtolower(trim((string) ($request->input('branch_code') ?? $request->input('branch') ?? $request->query('branch', ''))));
+        $branch = null;
+
+        if ($branchInput !== '') {
+            if ($branchInput === 'senopati' || str_contains($branchInput, 'seno')) {
+                $branch = Branch::where('code', 'OUT-SENO')->first();
+            } elseif ($branchInput === 'braga' || str_contains($branchInput, 'brg')) {
+                $branch = Branch::where('code', 'OUT-BRG')->first();
+            } elseif ($branchInput === 'malioboro' || str_contains($branchInput, 'mlo')) {
+                $branch = Branch::where('code', 'OUT-MLO')->first();
+            } elseif ($branchInput === 'central' || str_contains($branchInput, 'hq')) {
+                $branch = Branch::where('code', 'HQ-CENTRAL')->first();
+            } else {
+                $branch = Branch::whereRaw('LOWER(code) = ?', [$branchInput])->first();
+            }
+        }
+
+        return $branch
+            ?? ($user && $user->branch && $user->branch->type === 'RETAIL_BRANCH' ? $user->branch : null)
+            ?? Branch::where('code', 'OUT-SENO')->first()
+            ?? Branch::where('type', 'RETAIL_BRANCH')->first()
+            ?? Branch::firstOrFail();
     }
 }

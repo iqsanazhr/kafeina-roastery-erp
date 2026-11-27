@@ -41,17 +41,7 @@
          style="display: none;"></div>
 
     @php
-        $sidebarHomeUrl = $currentUser?->canAccessModule('dashboard')
-            ? route('dashboard.index')
-            : ($currentUser?->canAccessModule('pos')
-                ? route('pos.index')
-                : ($currentUser?->canAccessModule('roastery')
-                    ? route('roastery.index')
-                    : ($currentUser?->canAccessModule('procurement')
-                        ? route('procurement.index')
-                        : ($currentUser?->canAccessModule('qc-lab')
-                            ? route('qc-lab.index')
-                            : route('inventory.index')))));
+        $sidebarHomeUrl = $currentUser ? $currentUser->getDefaultHomeRoute() : route('login');
     @endphp
 
     <!-- VERCEL-STYLE MINIMALIST LIGHT SIDEBAR (Collapsible Slim Rail Desktop & Mobile) -->

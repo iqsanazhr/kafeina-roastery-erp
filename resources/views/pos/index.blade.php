@@ -1326,7 +1326,8 @@
                     <div class="py-2 border-b border-dashed border-neutral-400 text-[10px] space-y-0.5">
                         <div class="flex justify-between"><span>Subtotal:</span><span x-text="'Rp ' + formatNumber(receiptData.subtotal)"></span></div>
                         <div class="flex justify-between" x-show="receiptData.discount > 0"><span>Diskon:</span><span x-text="'- Rp ' + formatNumber(receiptData.discount)"></span></div>
-                        <div class="flex justify-between"><span>PB1 11%:</span><span x-text="'Rp ' + formatNumber(receiptData.tax_pb1)"></span></div>
+                        <div class="flex justify-between" x-show="(receiptData.service_charge || 0) > 0"><span>Service (<span x-text="receiptData.service_charge_rate ?? serviceChargeRate"></span>%):</span><span x-text="'Rp ' + formatNumber(receiptData.service_charge)"></span></div>
+                        <div class="flex justify-between"><span>PB1 <span x-text="receiptData.tax_pb1_rate ?? taxPb1Rate"></span>%:</span><span x-text="'Rp ' + formatNumber(receiptData.tax_pb1)"></span></div>
                         <div class="flex justify-between font-bold text-xs pt-1 border-t border-dashed border-neutral-400"><span>TOTAL:</span><span x-text="'Rp ' + formatNumber(receiptData.total)"></span></div>
                         <div class="flex justify-between"><span>Bayar (<span x-text="receiptData.payment_method"></span>):</span><span x-text="'Rp ' + formatNumber(receiptData.paid_amount)"></span></div>
                         <div class="flex justify-between" x-show="receiptData.payment_reference"><span>Ref/EDC/VA:</span><span class="font-bold truncate max-w-[150px]" x-text="receiptData.payment_reference"></span></div>
@@ -2771,7 +2772,10 @@ function posApp() {
                 discount: this.discountAmount,
                 discount_amount: this.discountAmount,
                 redeem_code: this.appliedPromo ? this.appliedPromo.code : null,
+                service_charge: this.serviceCharge,
+                service_charge_rate: this.serviceChargeRate,
                 tax_pb1: this.taxPb1,
+                tax_pb1_rate: this.taxPb1Rate,
                 total: this.grandTotal,
                 payment_method: method,
                 payment_reference: paymentRef,
